@@ -180,14 +180,15 @@ class CurveModel:
             fe_bounds = np.array([[-np.inf, np.inf]]*self.fe_sizes.sum())
         if re_bounds is None:
             re_bounds = np.array([[-np.inf, np.inf]]*self.num_params)
+
+        fe_bounds = np.array(fe_bounds)
+        re_bounds = np.array(re_bounds)
+
         if fixed_params is not None:
             for param in fixed_params:
                 param_id = self.param_idx[param]
                 fe_bounds[param_id] = x0[param_id, None]
                 re_bounds[param_id] = 0.0
-
-        fe_bounds = np.array(fe_bounds)
-        re_bounds = np.array(re_bounds)
 
         re_bounds = np.repeat(re_bounds[None, :, :], self.num_groups, axis=0)
         bounds = np.vstack([fe_bounds,
