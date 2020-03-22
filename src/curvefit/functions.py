@@ -23,7 +23,17 @@ def erf(t, params):
 
 # log error function
 def log_erf(t, params):
-    return np.log(erf(t, params))
+    tmp = erf(t, params)
+    result = np.zeros(t.size, dtype=params.dtype)
+    zidx = tmp == 0.0
+    oidx = ~zidx
+    result[oidx] = np.log(tmp[oidx])
+    if params.ndim == 2:
+        result[zidx] = np.log(params[2][zidx]) - \
+                       (params[0][zidx]*(t[zidx] - params[1][zidx]))**2
+    else:
+        result[zidx] = np.log(params[2]) - (params[0]*(t[zidx] - params[1]))**2
+    return result
 
 
 # derivative of erf function

@@ -53,10 +53,10 @@ class CurveModel:
             df[name].values
             for name in self.col_covs
         ]
-        self.fe_sizes = [
+        self.fe_sizes = np.array([
             cov.shape[1]
             for cov in self.covs
-        ]
+        ])
         self.fe_idx = utils.sizes_to_indices(self.fe_sizes)
 
         # parameter information
@@ -102,7 +102,9 @@ class CurveModel:
         params = np.vstack([
             cov.dot(fe[i])
             for i, cov in enumerate(self.covs)
-        ]) + np.repeat(re, self.group_sizes, axis=0).T
+        ]) + np.repeat(re,
+                       [self.group_sizes[name]
+                        for name in self.group_names], axis=0).T
 
         for i in range(self.num_params):
             params[i] = self.link_fun[i](params[i])
@@ -122,8 +124,8 @@ class CurveModel:
         """
         fe, re = self.unzip_x(x)
         params = self.compute_params(x)
-        residual = (self.obs - self.fun(self.t, params))/self.obs
-        val = 0.5*sum(residual**2) + 0.5*sum(re**2/self.re_var)
+        residual = (self.obs - self.fun(self.t, params))/self.obs_se
+        val = 0.5*np.sum(residual**2) + 0.5*np.sum(re**2/self.re_var)
         return val
 
     def gradient(self, x, eps=1e-16):
@@ -149,38 +151,48 @@ class CurveModel:
         return grad
 
     def fit_params(self,
-                   x0,
-                   bounds=None,
+                   fe_init,
+                   re_init=None,
+                   fe_bounds=None,
+                   re_bounds=None,
                    re_var=None,
                    fixed_params=None,
                    options=None):
         """Fit the parameters.
 
         Args:
-            x0 (numpy.ndarray):
-                Initial value for the model parameters.
-            bounds (numpy.ndarray, optional):
-                Bounds for each model parameter.
+            fe_init (numpy.ndarray):
+                Initial value for the fixed effects.
+            fe_bounds (numpy.ndarray, optional):
+                Bounds for fixed effects.
+            re_bounds (numpy.ndarray, optional):
+                Bounds for random effects.
             param_fixed (list{str}, optional):
                 A list of parameter names that will be fixed at initial value.
             options (dict, optional):
                 Options for the optimizer.
         """
         self.re_var = re_var if re_var is not None else self.re_var
-        if bounds is None:
-            bounds = np.array([[-np.inf, np.inf]]*x0.size)
+        if fe_bounds is None:
+            fe_bounds = np.array([[-np.inf, np.inf]]*self.fe_sizes.sum())
+        if re_bounds is None:
+            re_bounds = np.array([[-np.inf, np.inf]]*self.num_params)
+        fe_bounds = np.array(fe_bounds)
+        re_bounds = np.array(re_bounds)
         if fixed_params is not None:
-            fe_bounds = bounds[:self.fe_sizes.sum()]
-            re_bounds = bounds[self.fe_sizes.sum():].reshape(
-                self.num_groups, self.num_params, 2)
             for param in fixed_params:
                 param_id = self.param_idx[param]
                 fe_bounds[param_id] = x0[param_id, None]
-                re_bounds[:, param_id, :] = 0.0
+                re_bounds[param_id] = 0.0
 
-            bounds = np.vstack([fe_bounds,
-                                re_bounds.reshape(
-                                    self.num_groups*self.num_params, 2)])
+        re_bounds = np.repeat(re_bounds[None, :, :], self.num_groups, axis=0)
+        bounds = np.vstack([fe_bounds,
+                            re_bounds.reshape(
+                                self.num_groups*self.num_params, 2)])
+
+        if re_init is None:
+            re_init = np.zeros(self.num_groups*self.num_params)
+        x0 = np.hstack([fe_init, re_init])
 
         result = minimize(fun=self.objective,
                   x0=x0,
@@ -193,8 +205,7 @@ class CurveModel:
         self.params = self.compute_params(self.result.x)
 
     def predict(self, t, group_name):
-        idx = np.where(self.group_names == group_name)[0]
-        params = self.params[idx][0]
+        params = self.params[:, self.group_idx[group_name]][:, 0]
 
         return self.fun(t, params)
 
