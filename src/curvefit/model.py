@@ -173,27 +173,26 @@ class CurveModel:
                 Options for the optimizer.
         """
         self.re_var = re_var if re_var is not None else self.re_var
+        if re_init is None:
+            re_init = np.zeros(self.num_groups*self.num_params)
+        x0 = np.hstack([fe_init, re_init])
         if fe_bounds is None:
             fe_bounds = np.array([[-np.inf, np.inf]]*self.fe_sizes.sum())
         if re_bounds is None:
             re_bounds = np.array([[-np.inf, np.inf]]*self.num_params)
-        fe_bounds = np.array(fe_bounds)
-        re_bounds = np.array(re_bounds)
         if fixed_params is not None:
             for param in fixed_params:
                 param_id = self.param_idx[param]
                 fe_bounds[param_id] = x0[param_id, None]
                 re_bounds[param_id] = 0.0
 
+        fe_bounds = np.array(fe_bounds)
+        re_bounds = np.array(re_bounds)
+
         re_bounds = np.repeat(re_bounds[None, :, :], self.num_groups, axis=0)
         bounds = np.vstack([fe_bounds,
                             re_bounds.reshape(
                                 self.num_groups*self.num_params, 2)])
-
-
-        if re_init is None:
-            re_init = np.zeros(self.num_groups*self.num_params)
-        x0 = np.hstack([fe_init, re_init])
 
         result = minimize(fun=self.objective,
                   x0=x0,

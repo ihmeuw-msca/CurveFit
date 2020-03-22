@@ -25,7 +25,17 @@ def expit(t, params):
 
 # log logistic function
 def log_expit(t, params):
-    return np.log(expit(t, params))
+    tmp = expit(t, params)
+    result = np.zeros(t.size, dtype=params.dtype)
+    zidx = tmp == 0.0
+    oidx = ~zidx
+    result[oidx] = np.log(tmp[oidx])
+    if params.ndim == 2:
+        result[zidx] = np.log(params[2][zidx]) + \
+                       params[0][zidx]*(t[zidx] - params[1][zidx])
+    else:
+        result[zidx] = np.log(params[2]) + params[0]*(t[zidx] - params[1])
+    return result
 
 
 # error function cdf of the normal distribution
