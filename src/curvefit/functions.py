@@ -8,12 +8,24 @@ from scipy import special
 
 # logistic function
 def expit(t, params):
-    return params[2]*special.expit(params[0]*(t - params[1]))
+    tmp = params[0]*(t - params[1])
+    negidx = tmp < 0.0
+    posidx = ~negidx
+    result = np.zeros(t.size, dtype=params.dtype)
+    if params.ndim == 2:
+        result[negidx] = params[2][negidx]*np.exp(tmp[negidx])/ \
+                         (1.0 + np.exp(tmp[negidx]))
+        result[posidx] = params[2][posidx]/(1.0 + np.exp(-tmp[posidx]))
+    else:
+        result[negidx] = params[2]*np.exp(tmp[negidx])/ \
+                         (1.0 + np.exp(tmp[negidx]))
+        result[posidx] = params[2]/(1.0 + np.exp(-tmp[posidx]))
+    return result
 
 
 # log logistic function
 def log_expit(t, params):
-    return np.log(logistic(t, params))
+    return np.log(expit(t, params))
 
 
 # error function cdf of the normal distribution

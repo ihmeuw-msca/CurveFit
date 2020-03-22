@@ -190,6 +190,7 @@ class CurveModel:
                             re_bounds.reshape(
                                 self.num_groups*self.num_params, 2)])
 
+
         if re_init is None:
             re_init = np.zeros(self.num_groups*self.num_params)
         x0 = np.hstack([fe_init, re_init])
