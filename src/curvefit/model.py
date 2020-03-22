@@ -14,19 +14,23 @@ class CurveModel:
     def __init__(self, df,
                  col_t,
                  col_obs,
+                 col_covs,
                  col_group,
-                 fun,
                  param_names,
+                 link_fun,
+                 fun,
                  col_obs_se=None):
         """Constructor function of LogisticCurveModel.
         """
         # input data
         self.df = df.copy()
-        self.col_obs = col_obs
         self.col_t = col_t
+        self.col_obs = col_obs
+        self.col_covs = col_covs
         self.col_group = col_group
-        self.fun = fun
         self.param_names = np.array(param_names)
+        self.link_fun = link_fun
+        self.fun = fun
         self.col_obs_se = col_obs_se
 
         self.group_names = np.sort(self.df[self.col_group].unique())
@@ -45,6 +49,15 @@ class CurveModel:
             self.df[self.col_obs_se].values
         self.t = self.df[self.col_t].values
         self.group = self.df[self.col_group].values
+        self.covs = [
+            df[name].values
+            for name in self.col_covs
+        ]
+        self.fe_sizes = [
+            cov.shape[1]
+            for cov in self.covs
+        ]
+        self.fe_idx = utils.sizes_to_indices(self.fe_sizes)
 
         # parameter information
         self.param_idx = {
@@ -70,37 +83,54 @@ class CurveModel:
         self.param_shared = []
         self.result = None
         self.params = None
+        self.re_var = np.ones(self.num_params)
 
+    def unzip_x(self, x):
+        """Unzip raw input to fixed effects and random effects.
+        """
+        fe = [
+            x[self.fe_idx[i]]
+            for i in range(self.num_params)
+        ]
+        re = x[self.fe_sizes.sum():].reshape(self.num_groups, self.num_params)
+        return fe, re
 
-    def objective(self, params):
+    def compute_params(self, x):
+        """Compute parameters from raw vector.
+        """
+        fe, re = self.unzip_x(x)
+        params = np.vstack([
+            cov.dot(fe[i])
+            for i, cov in enumerate(self.covs)
+        ]) + np.repeat(re, self.group_sizes, axis=0).T
+
+        for i in range(self.num_params):
+            params[i] = self.link_fun[i](params[i])
+
+        return params
+
+    def objective(self, x):
         """Objective function.
 
         Args:
-            params (numpy.ndarray):
+            x (numpy.ndarray):
                 Model parameters.
 
         Returns:
             float:
                 Objective value.
         """
-        params = params.reshape((self.num_groups, self.num_params))
-        for name in self.param_shared:
-            params[:, self.param_idx[name]] = params[0, self.param_idx[name]]
-        y = [self.fun(self.t[self.group_idx[name]],
-                      params[i])
-             for i, name in enumerate(self.group_names)]
-        residual = np.hstack([
-            (self.obs[self.group_idx[name]] -
-             y[i])/self.obs_se[self.group_idx[name]]
-            for i, name in enumerate(self.group_names)
-        ])
-        return 0.5*sum(residual**2)
+        fe, re = self.unzip_x(x)
+        params = self.compute_params(x)
+        residual = (self.obs - self.fun(self.t, params))/self.obs
+        val = 0.5*sum(residual**2) + 0.5*sum(re**2/self.re_var)
+        return val
 
-    def gradient(self, params, eps=1e-16):
+    def gradient(self, x, eps=1e-16):
         """Gradient function.
 
         Args:
-            params (numpy.ndarray):
+            x (numpy.ndarray):
                 Model parameters.
             eps (float, optional):
                 Tolerance for automatic differentiation.
@@ -109,51 +139,48 @@ class CurveModel:
             numpy.ndarray:
                 Gradient w.r.t. the model parameters.
         """
-        params_c = params + 0j
-        grad = np.zeros(params.size)
-        for i in range(params.size):
-            params_c[i] += eps*1j
-            grad[i] = self.objective(params_c).imag/eps
-            params_c[i] -= eps*1j
+        x_c = x + 0j
+        grad = np.zeros(x.size)
+        for i in range(x.size):
+            x_c[i] += eps*1j
+            grad[i] = self.objective(x_c).imag/eps
+            x_c[i] -= eps*1j
 
         return grad
 
     def fit_params(self,
-                   param_init,
-                   param_fixed=[],
-                   param_shared=[],
-                   param_bounds={},
-                   options={}):
+                   x0,
+                   bounds=None,
+                   re_var=None,
+                   fixed_params=None,
+                   options=None):
         """Fit the parameters.
 
         Args:
-            param_init (dict{str, float}):
+            x0 (numpy.ndarray):
                 Initial value for the model parameters.
+            bounds (numpy.ndarray, optional):
+                Bounds for each model parameter.
             param_fixed (list{str}, optional):
                 A list of parameter names that will be fixed at initial value.
-            param_bounds (dict{str, list{float, float}}, optional):
-                Bounds for each model parameter.
             options (dict, optional):
                 Options for the optimizer.
         """
-        self.param_shared = param_shared.copy()
-        # convert information to optimizer
-        x0 = np.zeros((self.num_groups, self.num_params))
-        for param in param_init:
-            x0[:, self.param_idx[param]] = param_init[param]
-        x0 = x0.ravel()
+        self.re_var = re_var if re_var is not None else self.re_var
+        if bounds is None:
+            bounds = np.array([[-np.inf, np.inf]]*x0.size)
+        if fixed_params is not None:
+            fe_bounds = bounds[:self.fe_sizes.sum()]
+            re_bounds = bounds[self.fe_sizes.sum():].reshape(
+                self.num_groups, self.num_params, 2)
+            for param in fixed_params:
+                param_id = self.param_idx[param]
+                fe_bounds[param_id] = x0[param_id, None]
+                re_bounds[:, param_id, :] = 0.0
 
-        bounds = np.array([[[-np.inf, np.inf]]*self.num_params]*self.num_groups)
-        for param in param_bounds:
-            bounds[:, self.param_idx[param]] = param_bounds[param]
-        for param in param_fixed:
-            bounds[:, self.param_idx[param]] = param_init[param]
-        bounds = bounds.reshape(self.num_params*self.num_groups, 2)
-        
-        self.param_init = param_init
-        self.param_bounds = param_bounds
-        self.param_fixed = param_fixed
-        self.options = options
+            bounds = np.vstack([fe_bounds,
+                                re_bounds.reshape(
+                                    self.num_groups*self.num_params, 2)])
 
         result = minimize(fun=self.objective,
                   x0=x0,
@@ -163,14 +190,11 @@ class CurveModel:
                   options=options)
 
         self.result = result
-        self.params = result.x.reshape(self.num_groups, self.num_params)
+        self.params = self.compute_params(self.result.x)
 
-    def predict(self, t, group_name='all', agg_fun=np.mean):
-        if group_name == 'all':
-            params = agg_fun(self.params, axis=0)
-        else:
-            idx = np.where(self.group_names == group_name)[0]
-            params = self.params[idx][0]
+    def predict(self, t, group_name):
+        idx = np.where(self.group_names == group_name)[0]
+        params = self.params[idx][0]
 
         return self.fun(t, params)
 
@@ -188,11 +212,10 @@ class CurveModel:
                 Vector that contains all the standard error for each
                 observation.
         """
-        y = [self.fun(self.t[self.group_idx[name]], self.params[i])
-             for i, name in enumerate(self.group_names)]
+        residual = self.obs - self.fun(self.t, self.params)
         residual = [
-            self.obs[self.group_idx[name]] - y[i]
-            for i, name in enumerate(self.group_names)
+            residual[self.group_idx[name]]
+            for name in enumerate(self.group_names)
         ]
         obs_se = []
         for j, name in enumerate(self.group_names):
@@ -209,41 +232,41 @@ class CurveModel:
             obs_se.append(sub_obs_se)
         return np.hstack(obs_se)
 
-    @classmethod
-    def sample_soln(cls, model,
-                    radius=3.0,
-                    se_floor=0.5,
-                    sample_size=1):
-        """Sample solution using fit-refit
-
-        Args:
-            model (CurveModel):
-                Model subject.
-            radius (float, optional):
-                Radius variable for the estimate_obs_se.
-            sample_size(int, optional):
-                Sample size of the solution.
-
-        Returns:
-            numpy.ndarray:
-                Solution samples
-        """
-        assert model.result is not None, 'Please fit the model'
-
-        obs_se = model.estimate_obs_se(radius=radius,
-                                       se_floor=se_floor)
-        params_samples = []
-        for i in range(sample_size):
-            model_copy = deepcopy(model)
-            model_copy.obs = model.predict(model.t) + \
-                np.random.randn(model.num_obs)*obs_se
-            model_copy.obs_se = obs_se
-            model_copy.fit_params(
-                param_init=model.param_init,
-                param_bounds=model.param_bounds,
-                param_fixed=model.param_fixed,
-                options=model.options
-            )
-            params_samples.append(model_copy.params)
-
-        return np.vstack(params_samples)
+    # @classmethod
+    # def sample_soln(cls, model,
+    #                 radius=3.0,
+    #                 se_floor=0.5,
+    #                 sample_size=1):
+    #     """Sample solution using fit-refit
+    #
+    #     Args:
+    #         model (CurveModel):
+    #             Model subject.
+    #         radius (float, optional):
+    #             Radius variable for the estimate_obs_se.
+    #         sample_size(int, optional):
+    #             Sample size of the solution.
+    #
+    #     Returns:
+    #         numpy.ndarray:
+    #             Solution samples
+    #     """
+    #     assert model.result is not None, 'Please fit the model'
+    #
+    #     obs_se = model.estimate_obs_se(radius=radius,
+    #                                    se_floor=se_floor)
+    #     params_samples = []
+    #     for i in range(sample_size):
+    #         model_copy = deepcopy(model)
+    #         model_copy.obs = model.predict(model.t) + \
+    #             np.random.randn(model.num_obs)*obs_se
+    #         model_copy.obs_se = obs_se
+    #         model_copy.fit_params(
+    #             param_init=model.param_init,
+    #             param_bounds=model.param_bounds,
+    #             param_fixed=model.param_fixed,
+    #             options=model.options
+    #         )
+    #         params_samples.append(model_copy.params)
+    #
+    #     return np.vstack(params_samples)
