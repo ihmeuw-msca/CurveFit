@@ -4,6 +4,6 @@
     ~~~~~~~~
     `curvefit` package.
 """
-from .curve import CurveModel
+from .model import CurveModel
 from .functions import *
 from . import utils
