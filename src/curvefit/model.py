@@ -58,6 +58,8 @@ class CurveModel:
             for cov in self.covs
         ])
         self.fe_idx = utils.sizes_to_indices(self.fe_sizes)
+        self.num_fe = self.fe_sizes.sum()
+        self.num_re = self.num_groups*self.num_params
 
         # parameter information
         self.param_idx = {
@@ -83,15 +85,16 @@ class CurveModel:
         self.param_shared = []
         self.result = None
         self.params = None
-        self.re_var = np.ones(self.num_params)
+        self.fe_gprior = np.array([[0.0, np.inf]]*self.num_fe)
+        self.re_gprior = np.array([[0.0, np.inf]]*self.num_params)
 
     def unzip_x(self, x):
         """Unzip raw input to fixed effects and random effects.
         """
-        fe = [
+        fe = np.array([
             x[self.fe_idx[i]]
             for i in range(self.num_params)
-        ]
+        ])
         re = x[self.fe_sizes.sum():].reshape(self.num_groups, self.num_params)
         return fe, re
 
@@ -125,7 +128,15 @@ class CurveModel:
         fe, re = self.unzip_x(x)
         params = self.compute_params(x)
         residual = (self.obs - self.fun(self.t, params))/self.obs_se
-        val = 0.5*np.sum(residual**2) + 0.5*np.sum(re**2/self.re_var)
+        val = 0.5*np.sum(residual**2)
+        # gprior from fixed effects
+        val += 0.5*np.sum(
+            (fe - self.fe_gprior.T[0])**2/self.fe_gprior.T[1]**2
+        )
+        # gprior from random effects
+        val += 0.5*np.sum(
+            (re - self.re_gprior.T[0])**2/self.re_gprior.T[1]**2
+        )
         return val
 
     def gradient(self, x, eps=1e-16):
@@ -155,7 +166,8 @@ class CurveModel:
                    re_init=None,
                    fe_bounds=None,
                    re_bounds=None,
-                   re_var=None,
+                   fe_gprior=None,
+                   re_gprior=None,
                    fixed_params=None,
                    options=None):
         """Fit the parameters.
@@ -172,7 +184,10 @@ class CurveModel:
             options (dict, optional):
                 Options for the optimizer.
         """
-        self.re_var = re_var if re_var is not None else self.re_var
+        if fe_gprior is not None:
+            self.fe_gprior = fe_gprior
+        if re_gprior is not None:
+            self.re_gprior = re_gprior
         if re_init is None:
             re_init = np.zeros(self.num_groups*self.num_params)
         x0 = np.hstack([fe_init, re_init])
@@ -227,7 +242,7 @@ class CurveModel:
         residual = self.obs - self.fun(self.t, self.params)
         residual = [
             residual[self.group_idx[name]]
-            for name in enumerate(self.group_names)
+            for name in self.group_names
         ]
         obs_se = []
         for j, name in enumerate(self.group_names):
