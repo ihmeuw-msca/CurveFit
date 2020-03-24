@@ -4,6 +4,7 @@
 """
 import numpy as np
 import pandas as pd
+from copy import deepcopy
 
 
 def create_fe_table(models):
@@ -92,13 +93,18 @@ def create_cov_mat(models,
 
     fe_cov_mat = {}
     for location, model in models.items():
+        fe_hess_mat_empirical_location = fe_hess_mat_empirical.copy()
+        # fe_hess_mat_empirical_location[:, 2] /= np.sqrt(50.0 +
+        #                                                 500.0/model.num_obs**2)
+        # fe_hess_mat_empirical_location[2, :] /= np.sqrt(50.0 +
+        #                                                 500.0/model.num_obs**2)
         fe_hess_mat_location = create_fe_hess_mat(model,
                                                   eps=eps,
                                                   add_prior=add_prior,
                                                   transform_id=transform_id,
                                                   transform_fun=transform_fun)
         fe_cov_mat_location = np.linalg.inv(
-            fe_hess_mat_empirical + fe_hess_mat_location
+            fe_hess_mat_location + fe_hess_mat_empirical_location
         )
         fe_cov_mat.update({
             location: fe_cov_mat_location
@@ -146,3 +152,19 @@ def create_draws(t, models,
 
     return draws
 
+
+def swap_cov(models, col_covs):
+    new_models = {}
+    for location, model in models.items():
+        new_model = deepcopy(model)
+        new_model.col_covs = col_covs
+        new_model.covs = [
+            new_model.df[name].values
+            for name in new_model.col_covs
+        ]
+        new_model.params = new_model.compute_params(new_model.result.x)
+        new_models.update({
+            location: new_model
+        })
+
+    return new_models
