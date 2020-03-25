@@ -151,6 +151,7 @@ class CurveModel:
                 Objective value.
         """
         fe, re = self.unzip_x(x)
+        fe = fe.ravel()
         params = self.compute_params(x)
         residual = (self.obs - self.fun(self.t, params))/self.obs_se
         val = 0.5*np.sum(residual**2)
