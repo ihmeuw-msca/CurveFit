@@ -210,9 +210,9 @@ class CurveModel:
                 Options for the optimizer.
         """
         if fe_gprior is not None:
-            self.fe_gprior = fe_gprior
+            self.fe_gprior = np.array(fe_gprior)
         if re_gprior is not None:
-            self.re_gprior = re_gprior
+            self.re_gprior = np.array(re_gprior)
         if re_init is None:
             re_init = np.zeros(self.num_groups*self.num_params)
         x0 = np.hstack([fe_init, re_init])
