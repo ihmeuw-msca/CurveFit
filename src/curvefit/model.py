@@ -21,6 +21,31 @@ class CurveModel:
                  fun,
                  col_obs_se=None):
         """Constructor function of LogisticCurveModel.
+
+        Args:
+            df (pandas.DataFrame):
+                Data frame that contains all the information.
+            col_t (str):
+                The column name in the data frame that contains independent
+                variable.
+            col_obs (str):
+                The column name in the data frame that contains dependent
+                variable.
+            col_covs (list{list{str}}):
+                List of list of column name in the data frame used as
+                covariates. The outer list len should be number of parameters.
+            col_group (str):
+                The column name in the data frame that contains the grouping
+                information.
+            param_names (list{str}):
+                Names of the parameters in the specific functional form.
+            link_fun (list{function}):
+                List of link functions for each parameter.
+            fun (function):
+                Specific functional form that the curve will fit to.
+            col_obs_se (str | None, optional):
+                Column name of the observation standard error. When `None`,
+                assume all the observation standard error to be all one.
         """
         # input data
         self.df = df.copy()
