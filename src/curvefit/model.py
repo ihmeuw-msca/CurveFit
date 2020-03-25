@@ -116,10 +116,10 @@ class CurveModel:
     def unzip_x(self, x):
         """Unzip raw input to fixed effects and random effects.
         """
-        fe = np.array([
+        fe = [
             x[self.fe_idx[i]]
             for i in range(self.num_params)
-        ])
+        ]
         re = x[self.fe_sizes.sum():].reshape(self.num_groups, self.num_params)
         return fe, re
 
@@ -151,7 +151,7 @@ class CurveModel:
                 Objective value.
         """
         fe, re = self.unzip_x(x)
-        fe = fe.ravel()
+        fe = np.hstack(fe)
         params = self.compute_params(x)
         residual = (self.obs - self.fun(self.t, params))/self.obs_se
         val = 0.5*np.sum(residual**2)
