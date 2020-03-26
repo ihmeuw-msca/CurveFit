@@ -69,17 +69,13 @@ def create_vcov_mat(model_all,
     re_info_mat = create_re_info_mat(model_all,
                                      eps=eps,
                                      add_prior=add_prior)
-    fe_info_mat = create_fe_info_mat(model_all,
-                                     eps=eps,
-                                     add_prior=add_prior)
-    inv_fe_info_mat = np.linalg.inv(fe_info_mat)
     vcov_mat = []
     for i in range(model_all.num_groups):
         re_info_mat[i][re_diag_id, re_diag_id] = \
             np.maximum(re_diag_floor, re_info_mat[i][re_diag_id, re_diag_id])
         sub_vcov_mat = np.linalg.inv(
             re_empirical_mat + re_info_mat[i]
-        ) + inv_fe_info_mat
+        )
         vcov_mat.append(sub_vcov_mat)
 
     return vcov_mat
@@ -93,10 +89,12 @@ def create_params_samples(model_all, num_draws=1000):
         np.random.multivariate_normal(re[i], vcov_mat[i], size=num_draws)
         for i in range(model_all.num_groups)
     ])
+
     x_samples = np.hstack([
         np.repeat(fe[None, :], num_draws, axis=0),
         re_samples
     ])
+
     params_samples = np.dstack([
         model_all.compute_params(x_samples[i], expand=False)
         for i in range(num_draws)
@@ -117,6 +115,30 @@ def create_draws(t, model_all, num_draws=1000):
     }
     fe, re = model_all.unzip_x(model_all.result.x)
     re_empirical_mat = np.linalg.inv(np.cov(re.T))
+
+    return draws
+
+
+def create_draws_for_all(t, model_all, covs, num_draws=1000):
+    assert covs.size == model_all.num_fe
+    covs = covs.reshape(1, model_all.num_fe)
+
+    fe, re = model_all.unzip_x(model_all.result.x)
+    re_empirical_cov_mat = np.cov(re.T)
+    re_samples = np.random.multivariate_normal(np.zeros(model_all.num_fe),
+                                               re_empirical_cov_mat,
+                                               size=num_draws)
+    fe_samples = fe + re_samples
+    for i in range(model_all.num_fe):
+        fe_samples[:, i] = model_all.var_link_fun[i](fe_samples[:, i])
+    params_samples = covs*fe_samples
+    for i in range(model_all.num_params):
+        params_samples[:, i] = model_all.link_fun[i](params_samples[:, i])
+
+    draws = np.vstack([
+        model_all.fun(t, params)
+        for params in params_samples
+    ])
 
     return draws
 
