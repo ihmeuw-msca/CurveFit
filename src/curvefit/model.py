@@ -18,6 +18,7 @@ class CurveModel:
                  col_group,
                  param_names,
                  link_fun,
+                 var_link_fun,
                  fun,
                  col_obs_se=None):
         """Constructor function of LogisticCurveModel.
@@ -41,6 +42,9 @@ class CurveModel:
                 Names of the parameters in the specific functional form.
             link_fun (list{function}):
                 List of link functions for each parameter.
+            var_link_fun (list{function}):
+                List of link functions for the variables including fixed effects
+                and random effects.
             fun (function):
                 Specific functional form that the curve will fit to.
             col_obs_se (str | None, optional):
@@ -55,6 +59,7 @@ class CurveModel:
         self.col_group = col_group
         self.param_names = np.array(param_names)
         self.link_fun = link_fun
+        self.var_link_fun = var_link_fun
         self.fun = fun
         self.col_obs_se = col_obs_se
 
@@ -84,7 +89,7 @@ class CurveModel:
         ])
         self.fe_idx = utils.sizes_to_indices(self.fe_sizes)
         self.num_fe = self.fe_sizes.sum()
-        self.num_re = self.num_groups*self.num_params
+        self.num_re = self.num_groups*self.num_fe
 
         # parameter information
         self.param_idx = {
@@ -94,9 +99,14 @@ class CurveModel:
 
         # group information
         self.group_sizes = {
-            name: (self.group == name).sum()
+            name: np.sum(self.group == name)
             for name in self.group_names
         }
+        self.order_group_sizes = np.array([
+            self.group_sizes[name]
+            for name in self.group_names
+        ])
+        self.order_group_idx = np.cumsum(self.order_group_sizes) - 1
         group_idx = utils.sizes_to_indices([
             self.group_sizes[name]
             for name in self.group_names
@@ -111,28 +121,33 @@ class CurveModel:
         self.result = None
         self.params = None
         self.fe_gprior = np.array([[0.0, np.inf]]*self.num_fe)
-        self.re_gprior = np.array([[0.0, np.inf]]*self.num_params)
+        self.re_gprior = np.array([[0.0, np.inf]]*self.num_fe)
 
     def unzip_x(self, x):
         """Unzip raw input to fixed effects and random effects.
         """
-        fe = [
-            x[self.fe_idx[i]]
-            for i in range(self.num_params)
-        ]
-        re = x[self.fe_sizes.sum():].reshape(self.num_groups, self.num_params)
+        fe = x[:self.num_fe]
+        re = x[self.num_fe:].reshape(self.num_groups, self.num_fe)
         return fe, re
 
-    def compute_params(self, x):
+    def compute_params(self, x, expand=True):
         """Compute parameters from raw vector.
         """
         fe, re = self.unzip_x(x)
+        covs = self.covs
+        if expand:
+            re = np.repeat(re, self.order_group_sizes, axis=0)
+        else:
+            covs = [
+                self.covs[i][self.order_group_idx, :]
+                for i in range(len(self.covs))
+            ]
         params = np.vstack([
-            cov.dot(fe[i])
-            for i, cov in enumerate(self.covs)
-        ]) + np.repeat(re,
-                       [self.group_sizes[name]
-                        for name in self.group_names], axis=0).T
+            np.sum(cov*self.var_link_fun[i](
+                fe[self.fe_idx[i]] + re[:, self.fe_idx[i]]
+            ), axis=1)
+            for i, cov in enumerate(covs)
+        ])
 
         for i in range(self.num_params):
             params[i] = self.link_fun[i](params[i])
@@ -151,7 +166,6 @@ class CurveModel:
                 Objective value.
         """
         fe, re = self.unzip_x(x)
-        fe = np.hstack(fe)
         params = self.compute_params(x)
         residual = (self.obs - self.fun(self.t, params))/self.obs_se
         val = 0.5*np.sum(residual**2)
@@ -215,12 +229,12 @@ class CurveModel:
         if re_gprior is not None:
             self.re_gprior = np.array(re_gprior)
         if re_init is None:
-            re_init = np.zeros(self.num_groups*self.num_params)
+            re_init = np.zeros(self.num_re)
         x0 = np.hstack([fe_init, re_init])
         if fe_bounds is None:
-            fe_bounds = np.array([[-np.inf, np.inf]]*self.fe_sizes.sum())
+            fe_bounds = np.array([[-np.inf, np.inf]]*self.num_fe)
         if re_bounds is None:
-            re_bounds = np.array([[-np.inf, np.inf]]*self.num_params)
+            re_bounds = np.array([[-np.inf, np.inf]]*self.num_fe)
 
         fe_bounds = np.array(fe_bounds)
         re_bounds = np.array(re_bounds)
@@ -233,8 +247,7 @@ class CurveModel:
 
         re_bounds = np.repeat(re_bounds[None, :, :], self.num_groups, axis=0)
         bounds = np.vstack([fe_bounds,
-                            re_bounds.reshape(
-                                self.num_groups*self.num_params, 2)])
+                            re_bounds.reshape(self.num_re, 2)])
 
         result = minimize(fun=self.objective,
                   x0=x0,
@@ -244,10 +257,14 @@ class CurveModel:
                   options=options)
 
         self.result = result
-        self.params = self.compute_params(self.result.x)
+        self.params = self.compute_params(self.result.x, expand=False)
 
-    def predict(self, t, group_name):
-        params = self.params[:, self.group_idx[group_name]][:, 0]
+    def predict(self, t, group_name='all'):
+        if group_name == 'all':
+            params = self.params.mean(axis=1)
+        else:
+            params = self.params[:,
+                                 np.where(self.group_names==group_name)[0][0]]
 
         return self.fun(t, params)
 

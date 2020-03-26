@@ -3,152 +3,120 @@
     Uncertainty Estimation
 """
 import numpy as np
-import pandas as pd
 from copy import deepcopy
 
 
-def create_fe_table(models):
-    df_fe = pd.DataFrame({}, columns=['Location', 'fe0', 'fe1', 'fe2'])
-    for location, model in models.items():
-        df_fe = df_fe.append({
-            'Location': location,
-            'fe0': model.result.x[0],
-            'fe1': model.result.x[1],
-            'fe2': model.result.x[2]
-        }, ignore_index=True)
-    df_fe.sort_values('Location', inplace=True)
-    return df_fe
-
-
-def pred(x, model,
-         transform_id=None,
-         transform_fun=None):
+def pred(x, model):
     x = x.copy()
-    if transform_id is not None:
-        assert transform_fun is not None
-        x[transform_id] = transform_fun[0](x[transform_id])
     params = model.compute_params(x)
     return model.fun(model.t, params)
 
 
-def jac_pred(x, model,
-             transform_id=None,
-             transform_fun=None,
-             eps=1e-16):
-    # !! Log transform the positive parameter
+def jac_pred(x, model, eps=1e-16):
     x = x.copy()
-    if transform_id is not None:
-        assert transform_fun is not None
-        x[transform_id] = transform_fun[0](x[transform_id])
-        inv_transform_fun = transform_fun[::-1]
-    else:
-        inv_transform_fun = None
     x_c = x + 0j
     jac_mat = np.zeros((model.num_obs, x.size))
     for i in range(x.size):
         x_c[i] += eps*1j
-        jac_mat[:, i] = pred(x_c, model,
-                             transform_id=transform_id,
-                             transform_fun=inv_transform_fun).imag/eps
+        jac_mat[:, i] = pred(x_c, model).imag/eps
         x_c[i] -= eps*1j
     return jac_mat
 
 
-def create_fe_hess_mat(model,
+def create_fe_info_mat(model,
                        eps=1e-16,
-                       add_prior=True,
-                       transform_id=None,
-                       transform_fun=None):
+                       add_prior=True):
     # jacobian matrix
-    jac_mat = jac_pred(model.result.x, model,
-                       transform_id=transform_id,
-                       transform_fun=transform_fun,
-                       eps=eps)
+    jac_mat = jac_pred(model.result.x, model, eps=eps)
 
-    # fixed effects covariance matrix
+    # fixed effects information matrix
     fe_jac_mat = jac_mat[:, :model.num_fe]
-    fe_hess_mat = (fe_jac_mat.T/model.obs_se**2).dot(fe_jac_mat)
+    fe_info_mat = (fe_jac_mat.T/model.obs_se**2).dot(fe_jac_mat)
 
     # prior information
     if add_prior:
-        fe_hess_mat += np.diag(1.0/model.fe_gprior[:, 1]**2)
+        fe_info_mat += np.diag(1.0/model.fe_gprior[:, 1]**2)
 
-    return fe_hess_mat
+    return fe_info_mat
+
+def create_re_info_mat(model,
+                       eps=1e-16,
+                       add_prior=True):
+    # jacobian matrix
+    jac_mat = jac_pred(model.result.x, model, eps=eps)
+
+    # random effects information matrix
+    re_jac_mat = jac_mat[:, model.num_fe:].reshape(model.num_groups,
+                                                   model.num_obs,
+                                                   model.num_fe)
+    re_info_mat = []
+    for i in range(model.num_groups):
+        sub_re_info_mat = (re_jac_mat[i].T/model.obs_se**2).dot(re_jac_mat[i])
+        if add_prior:
+            sub_re_info_mat += np.diag(1.0/model.re_gprior[:, 1]**2)
+        re_info_mat.append(sub_re_info_mat)
+
+    return re_info_mat
+
+def create_vcov_mat(model_all,
+                    eps=1e-16,
+                    re_diag_floor=10.0,
+                    re_diag_id=1,
+                    add_prior=True):
+
+    fe, re = model_all.unzip_x(model_all.result.x)
+    re_empirical_mat = np.linalg.inv(np.cov(re.T))
+    re_info_mat = create_re_info_mat(model_all,
+                                     eps=eps,
+                                     add_prior=add_prior)
+    fe_info_mat = create_fe_info_mat(model_all,
+                                     eps=eps,
+                                     add_prior=add_prior)
+    inv_fe_info_mat = np.linalg.inv(fe_info_mat)
+    vcov_mat = []
+    for i in range(model_all.num_groups):
+        re_info_mat[i][re_diag_id, re_diag_id] = \
+            np.maximum(re_diag_floor, re_info_mat[i][re_diag_id, re_diag_id])
+        sub_vcov_mat = np.linalg.inv(
+            re_empirical_mat + re_info_mat[i]
+        ) + inv_fe_info_mat
+        vcov_mat.append(sub_vcov_mat)
+
+    return vcov_mat
 
 
-def create_cov_mat(models,
-                   eps=1e-16,
-                   add_prior=True,
-                   transform_id=None,
-                   transform_fun=None):
-    # create fe result table
-    df_fe = create_fe_table(models)
+def create_params_samples(model_all, num_draws=1000):
+    vcov_mat = create_vcov_mat(model_all)
+    fe, re = model_all.unzip_x(model_all.result.x)
 
-    # compute the empirical variance matrix
-    fe_mat = df_fe[['fe0', 'fe1', 'fe2']].values
-    if transform_id is not None:
-        fe_mat[:, transform_id] = transform_fun[0](fe_mat[:, transform_id])
+    re_samples = np.hstack([
+        np.random.multivariate_normal(re[i], vcov_mat[i], size=num_draws)
+        for i in range(model_all.num_groups)
+    ])
+    x_samples = np.hstack([
+        np.repeat(fe[None, :], num_draws, axis=0),
+        re_samples
+    ])
+    params_samples = np.dstack([
+        model_all.compute_params(x_samples[i], expand=False)
+        for i in range(num_draws)
+    ])
 
-    fe_hess_mat_empirical = np.linalg.inv(np.cov(fe_mat.T))
-
-    fe_cov_mat = {}
-    for location, model in models.items():
-        fe_hess_mat_empirical_location = fe_hess_mat_empirical.copy()
-        # fe_hess_mat_empirical_location[:, 2] /= np.sqrt(50.0 +
-        #                                                 500.0/model.num_obs**2)
-        # fe_hess_mat_empirical_location[2, :] /= np.sqrt(50.0 +
-        #                                                 500.0/model.num_obs**2)
-        fe_hess_mat_location = create_fe_hess_mat(model,
-                                                  eps=eps,
-                                                  add_prior=add_prior,
-                                                  transform_id=transform_id,
-                                                  transform_fun=transform_fun)
-        fe_cov_mat_location = np.linalg.inv(
-            fe_hess_mat_location + fe_hess_mat_empirical_location
-        )
-        fe_cov_mat.update({
-            location: fe_cov_mat_location
-        })
-
-    return fe_cov_mat
+    return params_samples
 
 
-def create_draws(t, models,
-                 df_fe=None,
-                 cov_mat=None,
-                 transform_id=None,
-                 transform_fun=None,
-                 num_draws=1000):
-    if cov_mat is None:
-        cov_mat = create_cov_mat(models,
-                                 transform_id=transform_id,
-                                 transform_fun=transform_fun)
-    if df_fe is None:
-        df_fe = create_fe_table(models)
-
-    draws = {}
-    for location, model in models.items():
-        cov_mat_location = cov_mat[location]
-        fe_result = \
-        df_fe[df_fe['Location'] == location][['fe0', 'fe1', 'fe2']].values[0]
-        if transform_id is not None:
-            fe_result[transform_id] = transform_fun[0](fe_result[transform_id])
-        fe_samples = fe_result + np.random.multivariate_normal(
-            np.zeros(3), cov_mat[location], size=num_draws)
-        # !! Exponentiate back
-        if transform_id is not None:
-            fe_samples[:, transform_id] = transform_fun[1](fe_samples[:, 2])
-        x_samples = np.hstack([fe_samples, np.zeros((num_draws, 3))])
-        params_samples = [
-            model.compute_params(x_sample)[:, 0]
-            for x_sample in x_samples
-        ]
-        draws.update({
-            location: np.vstack([
-                model.fun(t, params)
-                for params in params_samples
-            ])
-        })
+def create_draws(t, model_all, num_draws=1000):
+    params_samples = create_params_samples(model_all,
+                                           num_draws=num_draws)
+    draws = {
+        name: np.vstack([
+            model_all.fun(t, params)
+            for params in params_samples[:, i, :].T
+        ])
+        for i, name in enumerate(model_all.group_names)
+    }
+    fe, re = model_all.unzip_x(model_all.result.x)
+    re_empirical_mat = np.linalg.inv(np.cov(re.T))
 
     return draws
 
