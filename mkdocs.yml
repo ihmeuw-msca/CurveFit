@@ -1,0 +1,15 @@
+site_name: Curve Fit
+nav:
+  - Home: 'index.md'
+  - Methods: 'methods.md'
+  - Code: 'code.md'
+  - Release Notes: 'updates.md'
+theme: material
+extra_javascript:
+  - 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML'
+markdown_extensions:
+  - mdx_math
+  - admonition
+  - codehilite
+  - footnotes
+  - mkautodoc

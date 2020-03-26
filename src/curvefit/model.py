@@ -5,6 +5,7 @@
 import numpy as np
 from copy import deepcopy
 from scipy.optimize import minimize
+from scipy.optimize import fmin_l_bfgs_b
 from . import utils
 
 
@@ -209,7 +210,7 @@ class CurveModel:
                    fe_gprior=None,
                    re_gprior=None,
                    fixed_params=None,
-                   options=None):
+                   **kwargs):
         """Fit the parameters.
 
         Args:
@@ -248,16 +249,16 @@ class CurveModel:
         re_bounds = np.repeat(re_bounds[None, :, :], self.num_groups, axis=0)
         bounds = np.vstack([fe_bounds,
                             re_bounds.reshape(self.num_re, 2)])
-
-        result = minimize(fun=self.objective,
-                  x0=x0,
-                  jac=self.gradient,
-                  method='L-BFGS-B',
-                  bounds=bounds,
-                  options=options)
+        result = fmin_l_bfgs_b(
+            func=self.objective,
+            x0=x0,
+            fprime=self.gradient,
+            bounds=bounds,
+            **kwargs
+        )
 
         self.result = result
-        self.params = self.compute_params(self.result.x, expand=False)
+        self.params = self.compute_params(self.result[0], expand=False)
 
     def predict(self, t, group_name='all'):
         if group_name == 'all':
