@@ -230,7 +230,11 @@ class CurveModel:
             fixed_params (list{str}, optional):
                 A list of parameter names that will be fixed at initial value.
             smart_initialize (bool, optional):
-                Whether or not to initialize a model based on
+                Whether or not to initialize a model's fixed effects based
+                on the average fixed effects across many individual models
+                fit with the same settings and the random effects
+                based on the fixed effects deviation from the average
+                in the individual models
             fixed_params_initialize (list{str}, optional):
                 A list of parameter names that will be fixed at initial value during the smart initialization.
                 Will be ignored if smart_initialize = False and raise warning.
