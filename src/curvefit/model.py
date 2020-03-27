@@ -209,27 +209,72 @@ class CurveModel:
                    fe_gprior=None,
                    re_gprior=None,
                    fixed_params=None,
+                   smart_initialize=False,
+                   fixed_params_initialize=None,
                    options=None):
         """Fit the parameters.
 
         Args:
             fe_init (numpy.ndarray):
                 Initial value for the fixed effects.
-            fe_bounds (numpy.ndarray, optional):
+            re_init (numpy.ndarray, optional):
+                Initial value for the random effects.
+            fe_bounds (list of lists, optional):
                 Bounds for fixed effects.
-            re_bounds (numpy.ndarray, optional):
+            re_bounds (list of lists, optional):
                 Bounds for random effects.
-            param_fixed (list{str}, optional):
+            fe_gprior (list of lists, optional):
+                Gaussian prior for fixed effects.
+            re_gprior (list of lists, optional):
+                Gaussian prior for random effects.
+            fixed_params (list{str}, optional):
                 A list of parameter names that will be fixed at initial value.
+            smart_initialize (bool, optional):
+                Whether or not to initialize a model's fixed effects based
+                on the average fixed effects across many individual models
+                fit with the same settings and the random effects
+                based on the fixed effects deviation from the average
+                in the individual models
+            fixed_params_initialize (list{str}, optional):
+                A list of parameter names that will be fixed at initial value during the smart initialization.
+                Will be ignored if smart_initialize = False and raise warning.
             options (dict, optional):
                 Options for the optimizer.
         """
+        assert len(fe_init) == self.num_fe
+        assert len(fe_bounds) == self.num_fe
+        assert len(re_bounds) == self.num_fe
+
         if fe_gprior is not None:
+            assert len(fe_gprior) == self.num_fe
             self.fe_gprior = np.array(fe_gprior)
         if re_gprior is not None:
+            assert len(re_gprior) == self.num_fe
             self.re_gprior = np.array(re_gprior)
         if re_init is None:
             re_init = np.zeros(self.num_re)
+
+        if fixed_params_initialize is not None:
+            if not smart_initialize:
+                raise Warning(f"You passed in an initialization parameter "
+                              f"fixed_params_initialize {fixed_params_initialize} "
+                              f"but set smart_initialize=False. Will ignore fixed_params_initialize.")
+
+        if smart_initialize:
+            if self.num_groups == 1:
+                raise RuntimeError("Don't do initialization for models with only one group.")
+            fe_init, re_init = self.get_smart_starting_params(
+                fe_init=fe_init,
+                fe_bounds=fe_bounds,
+                re_bounds=[[0.0, 0.0] for i in range(self.num_fe)],
+                fe_gprior=fe_gprior,
+                fixed_params=fixed_params_initialize,
+                options=options,
+                smart_initialize=False
+            )
+            print(f"Overriding fe_init with {fe_init}.")
+            print(f"Overriding re_init with {re_init}.")
+
         x0 = np.hstack([fe_init, re_init])
         if fe_bounds is None:
             fe_bounds = np.array([[-np.inf, np.inf]]*self.num_fe)
@@ -301,6 +346,69 @@ class CurveModel:
                                     np.std(sub_residual[lb_idx:ub_idx]))
             obs_se.append(sub_obs_se)
         return np.hstack(obs_se)
+
+    def get_smart_starting_params(self, **fit_kwargs):
+        """
+        Runs a separate model for each group fixing the random effects to 0
+        and calculates what the initial values should be for the optimization
+        of the whole model.
+
+        Args:
+            **fit_kwargs: keyword arguments that are passed to the fit_params function
+
+        Returns:
+            (np.array) fe_init: fixed effects initial value
+            (np.array) re_init: random effects initial value
+        """
+        fixed_effects = []
+
+        # Fit a model for each group with fit_kwargs carried over
+        # from the settings for the overall model with a couple of adjustments.
+        for g in self.group_names:
+            fixed_effects.append(
+                self.run_self_model(group=g, **fit_kwargs)
+            )
+        all_fixed_effects = np.vstack([fixed_effects])
+
+        # The new fixed effects initial value is the mean of the fixed effects
+        # across all single-group models.
+        fe_init = all_fixed_effects.mean(axis=0)
+
+        # The new random effects initial value is the single-group models' deviations
+        # from the mean, which is now the new fixed effects initial value.
+        re_init = (all_fixed_effects - fe_init).ravel()
+        return fe_init, re_init
+
+    def run_self_model(self, group, **fit_kwargs):
+        """
+        Run the exact model as self but instantiate it as a new model
+        so that we can run it on a subset of the data defined by the group (no random effects).
+        Used for smart initialization of fixed and random effects.
+
+        Args:
+            group: (str) the random effect group to include
+            in this model.
+
+        Returns:
+            np.array of fixed effects for this single group
+        """
+        df_sub = self.df.loc[self.df[self.col_group] == group].copy()
+        model = CurveModel(
+            df=df_sub,
+            col_t=self.col_t,
+            col_obs=self.col_obs,
+            col_covs=self.col_covs,
+            col_obs_se=self.col_obs_se,
+            col_group=self.col_group,
+            param_names=self.param_names,
+            link_fun=self.link_fun,
+            var_link_fun=self.var_link_fun,
+            fun=self.fun,
+        )
+        model.fit_params(
+            **fit_kwargs
+        )
+        return model.result.x[:self.num_fe]
 
     # @classmethod
     # def sample_soln(cls, model,
