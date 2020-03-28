@@ -43,6 +43,18 @@ class BasicModelGenerator:
         self.fit_kwargs = fit_kwargs
 
     def model_function(self, df, times):
+        """
+        Model function that can be used for predictive validity.
+
+        Args:
+            df:
+            times:
+
+        Returns:
+            predictions
+            mod
+
+        """
         mod = CurveModel(
             df=df,
             col_t=self.col_t,
@@ -55,7 +67,8 @@ class BasicModelGenerator:
             var_link_fun=self.var_link_fun
         )
         mod.fit_params(**self.fit_kwargs)
-        return mod.predict(
+        predictions = mod.predict(
             t=times, group_name=self.predict_group,
             prediction_functional_form=self.predict_fun
         )
+        return predictions, mod

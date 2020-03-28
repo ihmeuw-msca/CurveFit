@@ -351,7 +351,7 @@ class CurveModel:
         else:
             params = self.params[:, np.where(self.group_names == group_name)[0][0]]
 
-        if prediction_functional_form is not None:
+        if prediction_functional_form is None:
             fun = self.fun
         else:
             fun = prediction_functional_form
