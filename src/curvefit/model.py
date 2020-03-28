@@ -125,6 +125,14 @@ class CurveModel:
 
     def unzip_x(self, x):
         """Unzip raw input to fixed effects and random effects.
+
+        Args:
+            x (numpy.ndarray):
+                Array contains all the fixed and random effects.
+
+        Returns:
+            fe (numpy.ndarray): fixed effects.
+            re (numpy.ndarray): random effects.
         """
         fe = x[:self.num_fe]
         re = x[self.num_fe:].reshape(self.num_groups, self.num_fe)
@@ -132,6 +140,18 @@ class CurveModel:
 
     def compute_params(self, x, expand=True):
         """Compute parameters from raw vector.
+
+        Args:
+            x (numpy.ndarray):
+                Array contains all the fixed and random effects.
+            expand (bool, optional):
+                If `expand` is `True`, then create parameters for every
+                observation, else only create parameters for each group.
+
+        Returns:
+            params (numpy.ndarray):
+                Array of parameters for the curve functional form, with shape
+                (num_params, num_obs) or (num_params, num_groups).
         """
         fe, re = self.unzip_x(x)
         covs = self.covs
@@ -305,6 +325,19 @@ class CurveModel:
         self.params = self.compute_params(self.result.x, expand=False)
 
     def predict(self, t, group_name='all'):
+        """Predict the observation by given independent variable and group name.
+
+        Args:
+            t (numpy.ndarray):
+                Array of independent variable.
+            group_name (dtype(group_names) | str, optional):
+                If all will produce average curve and if specific group name
+                will produce curve for the group.
+
+        Returns:
+            numpy.ndarray:
+                Array record the curve.
+        """
         if group_name == 'all':
             params = self.params.mean(axis=1)
         else:
@@ -409,42 +442,3 @@ class CurveModel:
             **fit_kwargs
         )
         return model.result.x[:self.num_fe]
-
-    # @classmethod
-    # def sample_soln(cls, model,
-    #                 radius=3.0,
-    #                 se_floor=0.5,
-    #                 sample_size=1):
-    #     """Sample solution using fit-refit
-    #
-    #     Args:
-    #         model (CurveModel):
-    #             Model subject.
-    #         radius (float, optional):
-    #             Radius variable for the estimate_obs_se.
-    #         sample_size(int, optional):
-    #             Sample size of the solution.
-    #
-    #     Returns:
-    #         numpy.ndarray:
-    #             Solution samples
-    #     """
-    #     assert model.result is not None, 'Please fit the model'
-    #
-    #     obs_se = model.estimate_obs_se(radius=radius,
-    #                                    se_floor=se_floor)
-    #     params_samples = []
-    #     for i in range(sample_size):
-    #         model_copy = deepcopy(model)
-    #         model_copy.obs = model.predict(model.t) + \
-    #             np.random.randn(model.num_obs)*obs_se
-    #         model_copy.obs_se = obs_se
-    #         model_copy.fit_params(
-    #             param_init=model.param_init,
-    #             param_bounds=model.param_bounds,
-    #             param_fixed=model.param_fixed,
-    #             options=model.options
-    #         )
-    #         params_samples.append(model_copy.params)
-    #
-    #     return np.vstack(params_samples)
