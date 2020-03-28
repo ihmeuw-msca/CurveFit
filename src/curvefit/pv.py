@@ -92,12 +92,12 @@ def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, fit_model):
     models = {}
     for i in available_times:
         print(f"Fitting model for end time {i}", end='\r')
-        preds, model = fit_model(
+        preds, mod = fit_model(
             df=grp_df.loc[grp_df[col_t] <= i].copy(),
             times=prediction_times
         )
         predictions[i] = preds
-        models[i] = models
+        models[i] = mod
 
     full_like_pred = np.empty(prediction_times.shape)
     full_like_pred[:] = np.nan
