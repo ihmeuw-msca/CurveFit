@@ -42,7 +42,7 @@ def get_full_data(grp_df, col_t, col_obs, prediction_times):
             column
         col_t: (str) the time column
         col_obs: (str) the observation column
-        prediction_times: (str) the time vector for which predictions are needed
+        prediction_times: (np.array) the time vector for which predictions are needed
 
     Returns:
         (np.array) observations filled out to the max time point
@@ -59,7 +59,7 @@ def get_full_data(grp_df, col_t, col_obs, prediction_times):
     return full_data
 
 
-def pv_for_single_group(grp_df, col_t, col_obs, fit_model):
+def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, fit_model):
     """
     Gets forward out of sample predictive validity for a model based on the function
     fit_model that takes arguments df and times and returns predictions at times.
@@ -68,6 +68,9 @@ def pv_for_single_group(grp_df, col_t, col_obs, fit_model):
         grp_df: (pd.DataFrame)
         col_t: (str) column indicating the time
         col_obs: (str) column indicating the observation
+        col_obs_compare: (str) column indicating the observation that represents the space we will
+            be calculating predictive validity in (can be different from col_obs, but your fit_model
+            function for predict should match that)
         fit_model: function that takes arguments df and times and returns predictions
             at the vector passed in for times
 
@@ -101,21 +104,24 @@ def pv_for_single_group(grp_df, col_t, col_obs, fit_model):
         for i in prediction_times
     ])
     full_data = get_full_data(
-        grp_df=grp_df, col_t=col_t, col_obs=col_obs, prediction_times=prediction_times
+        grp_df=grp_df, col_t=col_t, col_obs=col_obs_compare, prediction_times=prediction_times
     )
     residuals = all_preds - np.array(full_data)
 
     return prediction_times, all_preds, residuals
 
 
-def pv_for_group_collection(df, col_group, col_t, col_obs, fit_model):
+def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, fit_model):
     """
     Gets a dictionary of predictive validity for all groups in the data frame.
     Args:
         df: (pd.DataFrame)
         col_group: (str) grouping column string
         col_t: (str) column indicating the time
-        col_obs: (str) column indicating the observation
+        col_obs: (str) column indicating the observation for fitting
+        col_obs_compare: (str) column indicating the observation that represents the space we will
+            be calculating predictive validity in (can be different from col_obs, but your fit_model
+            function for predict should match that)
         fit_model: function that takes arguments df and times and returns predictions
             at the vector passed in for times
 
@@ -135,7 +141,11 @@ def pv_for_group_collection(df, col_group, col_t, col_obs, fit_model):
         print(f"Getting PV for group {grp}")
         grp_df = df.loc[df[col_group] == grp].copy()
         times, preds, resid = pv_for_single_group(
-            grp_df=grp_df, col_t=col_t, col_obs=col_obs, fit_model=fit_model
+            grp_df=grp_df,
+            col_t=col_t,
+            col_obs=col_obs,
+            col_obs_compare=col_obs_compare,
+            fit_model=fit_model
         )
         prediction_times[grp] = times
         prediction_results[grp] = preds
