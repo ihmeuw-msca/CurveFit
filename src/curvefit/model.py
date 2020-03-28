@@ -325,7 +325,7 @@ class CurveModel:
         self.result = result
         self.params = self.compute_params(self.result.x, expand=False)
 
-    def predict(self, t, group_name='all'):
+    def predict(self, t, group_name='all', prediction_functional_form=None):
         """Predict the observation by given independent variable and group name.
 
         Args:
@@ -334,6 +334,9 @@ class CurveModel:
             group_name (dtype(group_names) | str, optional):
                 If all will produce average curve and if specific group name
                 will produce curve for the group.
+            prediction_functional_form (function):
+                One of the functions from curvefit.functions
+                Needs to have the same parameters as self.fun
 
         Returns:
             numpy.ndarray:
@@ -342,10 +345,14 @@ class CurveModel:
         if group_name == 'all':
             params = self.params.mean(axis=1)
         else:
-            params = self.params[:,
-                                 np.where(self.group_names==group_name)[0][0]]
+            params = self.params[:, np.where(self.group_names == group_name)[0][0]]
 
-        return self.fun(t, params)
+        if prediction_functional_form is not None:
+            fun = self.fun
+        else:
+            fun = prediction_functional_form
+
+        return fun(t, params)
 
     def estimate_obs_se(self, radius=3.0, se_floor=0.5):
         """Estimate the observation standard error.
