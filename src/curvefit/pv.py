@@ -105,7 +105,7 @@ def pv_for_single_group(grp_df, col_t, col_obs, fit_model):
     )
     residuals = all_preds - np.array(full_data)
 
-    return prediction_times, predictions, residuals
+    return prediction_times, all_preds, residuals
 
 
 def pv_for_group_collection(df, col_group, col_t, col_obs, fit_model):
