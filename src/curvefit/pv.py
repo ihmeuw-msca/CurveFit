@@ -144,7 +144,7 @@ def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, fit_
     for grp in groups:
         print(f"Getting PV for group {grp}")
         grp_df = df.loc[df[col_group] == grp].copy()
-        times, preds, resid, models = pv_for_single_group(
+        times, preds, resid, mods = pv_for_single_group(
             grp_df=grp_df,
             col_t=col_t,
             col_obs=col_obs,
@@ -154,6 +154,6 @@ def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, fit_
         prediction_times[grp] = times
         prediction_results[grp] = preds
         residual_results[grp] = resid
-        models[grp] = models
+        models[grp] = mods
 
     return prediction_times, prediction_results, residual_results, models
