@@ -1,3 +1,8 @@
+"""
+All classes of model generators should have a model_function that takes arguments
+df and times and returns predictions at those times.
+"""
+
 from curvefit.model import CurveModel
 
 
