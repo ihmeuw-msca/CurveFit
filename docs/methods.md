@@ -33,3 +33,5 @@ Each form has comparable fundamental parameters:
 
 We can fit these parameters to data, but this by itself does not account for covariates, and cannot
 connect different locations together. The next section therefore specifies statistical models that do this.
+
+## Statistical Model
