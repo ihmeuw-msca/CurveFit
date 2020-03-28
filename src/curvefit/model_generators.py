@@ -1,6 +1,9 @@
 """
 All classes of model generators should have a model_function that takes arguments
 df and times and returns predictions at those times.
+
+**NOTE**: This is useful for the predictive validity functions that need a fit_model
+function that takes those arguments. That callable will be generated with the model_function in these classes.
 """
 
 from curvefit.model import CurveModel
