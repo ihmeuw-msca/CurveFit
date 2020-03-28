@@ -162,10 +162,11 @@ class CurveModel:
                 self.covs[i][self.order_group_idx, :]
                 for i in range(len(self.covs))
             ]
+        var = fe + re
+        for i in range(self.num_fe):
+            var[:, i] = self.var_link_fun[i](var[:, i])
         params = np.vstack([
-            np.sum(cov*self.var_link_fun[i](
-                fe[self.fe_idx[i]] + re[:, self.fe_idx[i]]
-            ), axis=1)
+            np.sum(cov*var[:, self.fe_idx[i]], axis=1)
             for i, cov in enumerate(covs)
         ])
 
