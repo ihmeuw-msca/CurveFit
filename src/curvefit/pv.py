@@ -89,12 +89,15 @@ def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, fit_model):
     prediction_times = np.array(range(max(available_times) + 1))
 
     predictions = {}
+    models = {}
     for i in available_times:
         print(f"Fitting model for end time {i}", end='\r')
-        predictions[i] = fit_model(
+        preds, model = fit_model(
             df=grp_df.loc[grp_df[col_t] <= i].copy(),
             times=prediction_times
         )
+        predictions[i] = preds
+        models[i] = models
 
     full_like_pred = np.empty(prediction_times.shape)
     full_like_pred[:] = np.nan
@@ -108,7 +111,7 @@ def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, fit_model):
     )
     residuals = all_preds - np.array(full_data)
 
-    return prediction_times, all_preds, residuals
+    return prediction_times, all_preds, residuals, models
 
 
 def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, fit_model):
@@ -136,11 +139,12 @@ def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, fit_
     prediction_times = {}
     prediction_results = {}
     residual_results = {}
+    models = {}
 
     for grp in groups:
         print(f"Getting PV for group {grp}")
         grp_df = df.loc[df[col_group] == grp].copy()
-        times, preds, resid = pv_for_single_group(
+        times, preds, resid, models = pv_for_single_group(
             grp_df=grp_df,
             col_t=col_t,
             col_obs=col_obs,
@@ -150,5 +154,6 @@ def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, fit_
         prediction_times[grp] = times
         prediction_results[grp] = preds
         residual_results[grp] = resid
+        models[grp] = models
 
-    return prediction_times, prediction_results, residual_results
+    return prediction_times, prediction_results, residual_results, models
