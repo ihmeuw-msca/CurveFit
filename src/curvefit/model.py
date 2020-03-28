@@ -263,6 +263,10 @@ class CurveModel:
                 Options for the optimizer.
         """
         assert len(fe_init) == self.num_fe
+        if fe_bounds is None:
+            fe_bounds = [[-np.inf, np.inf]]*self.num_fe
+        if re_bounds is None:
+            re_bounds = [[-np.inf, np.inf]]*self.num_fe
         assert len(fe_bounds) == self.num_fe
         assert len(re_bounds) == self.num_fe
 
