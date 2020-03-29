@@ -59,7 +59,7 @@ def get_full_data(grp_df, col_t, col_obs, prediction_times):
     return full_data
 
 
-def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, fit_model):
+def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, model_generator, predict_space):
     """
     Gets forward out of sample predictive validity for a model based on the function
     fit_model that takes arguments df and times and returns predictions at times.
@@ -71,8 +71,9 @@ def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, fit_model):
         col_obs_compare: (str) column indicating the observation that represents the space we will
             be calculating predictive validity in (can be different from col_obs, but your fit_model
             function for predict should match that)
-        fit_model: function that takes arguments df and times and returns predictions
-            at the vector passed in for times
+        model_generator: object of class model_generator.ModelGenerator
+        predict_space: a function from curvefit.model that gives the prediction space to calculate PV in
+            (needs to be the same as col_obs_compare)
 
     Returns:
         times: (np.array) of prediction times
@@ -83,7 +84,8 @@ def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, fit_model):
     assert type(col_obs) == str
     assert col_t in grp_df.columns
     assert col_obs in grp_df.columns
-    assert callable(fit_model)
+    assert callable(model_generator.fit)
+    assert callable(model_generator.predict)
 
     available_times = np.unique(grp_df[col_t].values)
     prediction_times = np.array(range(max(available_times) + 1))
@@ -92,12 +94,13 @@ def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, fit_model):
     models = {}
     for i in available_times:
         print(f"Fitting model for end time {i}", end='\r')
-        preds, mod = fit_model(
-            df=grp_df.loc[grp_df[col_t] <= i].copy(),
-            times=prediction_times
-        )
-        predictions[i] = preds
-        models[i] = mod
+
+        model = model_generator.generate()
+        df_i = grp_df.loc[grp_df[col_t] <= i].copy()
+
+        model.fit(df=df_i)
+        predictions[i] = model.predict(times=prediction_times, predict_space=predict_space)
+        models[i] = model
 
     full_like_pred = np.empty(prediction_times.shape)
     full_like_pred[:] = np.nan
@@ -114,7 +117,7 @@ def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, fit_model):
     return prediction_times, all_preds, residuals, models
 
 
-def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, fit_model):
+def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space):
     """
     Gets a dictionary of predictive validity for all groups in the data frame.
     Args:
@@ -125,35 +128,38 @@ def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, fit_
         col_obs_compare: (str) column indicating the observation that represents the space we will
             be calculating predictive validity in (can be different from col_obs, but your fit_model
             function for predict should match that)
-        fit_model: function that takes arguments df and times and returns predictions
-            at the vector passed in for times
+        model_generator: object of class model_generator.ModelGenerator
+        predict_space: a function from curvefit.model that gives the prediction space to calculate PV in
+            (needs to be the same as col_obs_compare)
 
     Returns:
-        dictionaries for prediction times, predictions, and residuals
+        dictionaries for prediction times, predictions, residuals, and models
     """
     assert type(col_group) == str
     assert col_group in df.columns
+    data = df.copy()
 
-    groups = sorted(df[col_group].unique())
+    groups = sorted(data[col_group].unique())
 
     prediction_times = {}
     prediction_results = {}
     residual_results = {}
-    models = {}
+    model_results = {}
 
     for grp in groups:
         print(f"Getting PV for group {grp}")
-        grp_df = df.loc[df[col_group] == grp].copy()
+        grp_df = data.loc[data[col_group] == grp].copy()
         times, preds, resid, mods = pv_for_single_group(
             grp_df=grp_df,
             col_t=col_t,
             col_obs=col_obs,
             col_obs_compare=col_obs_compare,
-            fit_model=fit_model
+            model_generator=model_generator,
+            predict_space=predict_space
         )
         prediction_times[grp] = times
         prediction_results[grp] = preds
         residual_results[grp] = resid
-        models[grp] = mods
+        model_results[grp] = mods
 
-    return prediction_times, prediction_results, residual_results, models
+    return prediction_times, prediction_results, residual_results, model_results
