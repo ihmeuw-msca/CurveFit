@@ -174,5 +174,5 @@ and any data at the location as the measurement model, and re-fit the  location:
 Within each location, this is analogous to the fixed effects analysis. The location-specific uncertainty is then estimated from
 the same Fisher information analysis:
 \[
-V_i({\hat \theta}) =   ( (J_i)^T  \Sigma_i ^{-1}  (J_i) + V_0^{-1})^{-1}.
+V_i({\hat \theta}) =   ( J_i^T  \Sigma_i ^{-1}  J_i + V_0^{-1})^{-1}.
 \]
