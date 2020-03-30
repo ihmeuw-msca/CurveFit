@@ -79,9 +79,14 @@ def pv_for_single_group(data, col_t, col_obs, col_grp, col_obs_compare,
         predict_group: name of group to predict for
 
     Returns:
-        times: (np.array) of prediction times
-        predictions: matrix of predictions of dimension times x times
-        residuals: matrix of residuals of dimension times x times
+        dictionary of
+            times: (np.array) of available prediction times
+            predictions: matrix of predictions of dimension times x times
+            models: list of models at each prediction time
+            r_matrix: residual matrix transformed so that
+                r_matrix[:,0]: how far out predicting
+                r_matrix[:,1]: how many data points to do prediction
+                r_matrix[:,2]: the corresponding residual
     """
     assert type(col_t) == str
     assert type(col_obs) == str
@@ -98,13 +103,14 @@ def pv_for_single_group(data, col_t, col_obs, col_grp, col_obs_compare,
     # these need to all be integers. the cumulative differences
     # tells us how big of a step we took to the next data point
     difference = np.diff(available_times)
-    assert all((difference % 1) == 0)
-    cumulative_differences = np.cumsum(difference)
+    assert np.isclose(np.array([round(x) for x in difference]), difference, atol=1e-14).all()
+    difference = np.array([int(round(x)) for x in difference])
 
+    # which observations are we comparing the predictions to? and how much data do we have?
     compare_observations = grp_df[col_obs_compare].values
+    amount_data = np.array(range(len(compare_observations))) + 1
 
     preds = []
-    n_data_points = []
     models = {}
     for i in available_times:
         print(f"Fitting model for end time {i}", end='\r')
@@ -113,9 +119,6 @@ def pv_for_single_group(data, col_t, col_obs, col_grp, col_obs_compare,
         # remove the rows for this group that are greater than the available times
         remove_rows = (all_df[col_t] > i) & (all_df[col_grp] == predict_group)
         df = all_df[~remove_rows].copy()
-
-        # count and track the number of data points used to fit the model
-        n_data_points.append(len(all_df.loc[all_df[col_grp] == predict_group]))
 
         # fit the model on the rest of the data and predict for this particular group
         model.fit(df=df)
@@ -127,19 +130,38 @@ def pv_for_single_group(data, col_t, col_obs, col_grp, col_obs_compare,
         models[i] = model
 
     predictions = np.vstack([preds])
-    n_data_points = np.array(n_data_points)
     residuals = predictions - compare_observations
 
+    far_out = np.array([])
+    num_data = np.array([])
+    robs = np.array([])
+
+    diagonals = np.array(range(residuals.shape[0]))[1:]
+
+    # get the diagonal of the residual matrix and figure out
+    # how many data points out we were predicting (convolve)
+    # plus the amount of data that we had to do the prediction
+    for i in diagonals:
+        diagonal = np.diag(residuals, k=i)
+        obs = len(diagonal)
+        out = np.convolve(difference, np.ones(i, dtype=int), mode='valid')
+
+        far_out = np.append(far_out, out[-obs:])
+        num_data = np.append(num_data, amount_data[:obs])
+        robs = np.append(robs, diagonal)
+
+    # return the results for the residual matrix as a (len(available_times), 3) shaped matrix
+    r_matrix = np.vstack([far_out, num_data, robs]).T
+
     return {
+        'times': available_times,
         'predictions': predictions,
-        'residuals': residuals,
         'models': models,
-        'cumulative_differences': cumulative_differences,
-        'n_data_points': n_data_points
+        'r_matrix': r_matrix
     }
 
 
-def pv_for_whole_model(df, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space):
+def model_pv(df, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space):
     """
     Gets a dictionary of predictive validity for all groups in the data frame.
     Args:
@@ -165,12 +187,12 @@ def pv_for_whole_model(df, col_group, col_t, col_obs, col_obs_compare, model_gen
 
     prediction_times = {}
     prediction_results = {}
-    residual_results = {}
     model_results = {}
+    r_matrices = {}
 
     for grp in groups:
         print(f"Getting PV for group {grp}")
-        times, preds, resid, mods = pv_for_single_group(
+        results = pv_for_single_group(
             data=data,
             col_t=col_t,
             col_obs=col_obs,
@@ -180,9 +202,9 @@ def pv_for_whole_model(df, col_group, col_t, col_obs, col_obs_compare, model_gen
             predict_space=predict_space,
             predict_group=grp
         )
-        prediction_times[grp] = times
-        prediction_results[grp] = preds
-        residual_results[grp] = resid
-        model_results[grp] = mods
+        prediction_times[grp] = results['times']
+        prediction_results[grp] = results['predictions']
+        model_results[grp] = results['models']
+        r_matrices[grp] = results['r_matrix']
 
-    return prediction_times, prediction_results, residual_results, model_results
+    return prediction_times, prediction_results, model_results, r_matrices
