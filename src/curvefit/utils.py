@@ -22,6 +22,20 @@ def sizes_to_indices(sizes):
     return indices
 
 
+# TODO: WRONG -- replace with Peng's
+def convex_combination(t, prediction1, prediction2, predict_space):
+    return prediction1 + prediction2
+
+
+# TODO: WRONG -- replace with Peng's
+def model_average(prediction1, prediction2, weight1, weight2, predict_space):
+    """
+    Average two models together in linear space.
+    """
+    assert weight1 + weight2 == 1
+    return weight1 * prediction1 + weight2 * prediction2
+
+
 def get_obs_se(df, col_t, func=lambda x: 1 / (1 + x)):
     """
     Get observation standard deviation based on some function

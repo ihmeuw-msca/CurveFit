@@ -8,13 +8,29 @@ function that takes those arguments. That callable will be generated with the mo
 
 from copy import deepcopy
 from curvefit.model import CurveModel
+from curvefit.utils import convex_combination, model_average
 
 
-class ModelGenerator:
+class ModelPipeline:
     """
     Base class for a model generator.
+    If a model needs to have initial parameters started for the predictive validity,
+    put that in run_init_model
     """
     def __init__(self):
+        pass
+
+    def run_init_model(self):
+        """
+        Runs the model that doesn't need to be run multiple times.
+        """
+        self.refresh()
+        pass
+
+    def refresh(self):
+        """
+        Clear the current model results.
+        """
         pass
 
     def generate(self):
@@ -42,7 +58,7 @@ class ModelGenerator:
         pass
 
 
-class BasicModel(ModelGenerator):
+class BasicModel(ModelPipeline):
     def __init__(self, fit_dict, **basic_model_kwargs):
         """
         Generic class for a function to produce predictions from a model
@@ -58,6 +74,9 @@ class BasicModel(ModelGenerator):
         self.basic_model_kwargs = basic_model_kwargs
         self.mod = None
 
+    def refresh(self):
+        self.mod = None
+
     def fit(self, df):
         self.mod = CurveModel(df=df, **self.basic_model_kwargs)
         self.mod.fit_params(**self.fit_dict)
@@ -70,42 +89,92 @@ class BasicModel(ModelGenerator):
         return predictions
 
 
-class TightLooseModel(ModelGenerator):
-    def __init__(self, loose_fit_dict, tight_fit_dict,
+class TightLooseBetaPModel(ModelPipeline):
+    def __init__(self, loose_beta_fit_dict, tight_beta_fit_dict,
+                 loose_p_fit_dict, tight_p_fit_dict,
+                 beta_model_extras=None, p_model_extras=None,
                  **basic_model_kwargs):
         """
-        Produces a tight-loose model as a convex combination between the two of them.
+        Produces two tight-loose models as a convex combination between the two of them,
+        and then averages
 
         Args:
-            loose_fit_kwargs: dictionary of keyword arguments to CurveModel.fit_params() for the loose model
-            tight_fit_kwargs: dictionary of keyword arguments to CurveModel.fit_params() fro the tight model
+            loose_beta_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() for the loose beta model
+            tight_beta_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() fro the tight beta model
+            loose_p_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() for the loose p model
+            tight_p_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() fro the tight p model
+            beta_model_extras: (optional) dictionary of keyword arguments to
+                override the basic_model_kwargs for the beta model
+            p_model_extras: (optional) dictionary of keyword arguments to
+                override the basic_model_kwargs for the p model
 
             predict_group: (str) which group to make predictions for
             **basic_model_kwargs: keyword arguments to the basic model
         """
         super().__init__()
-        self.basic_model_kwargs = basic_model_kwargs
-        self.loose_fit_dict = loose_fit_dict
-        self.tight_fit_dict = tight_fit_dict
+        self.beta_model_kwargs = basic_model_kwargs
+        self.p_model_kwargs = basic_model_kwargs
 
-        self.tight_mod = None
-        self.loose_mod = None
+        if beta_model_extras is not None:
+            self.beta_model_kwargs = self.beta_model_kwargs.update(beta_model_extras)
+
+        if p_model_extras is not None:
+            self.p_model_kwargs = self.p_model_kwargs.update(p_model_extras)
+
+        self.loose_beta_fit_dict = loose_beta_fit_dict
+        self.tight_beta_fit_dict = tight_beta_fit_dict
+        self.loose_p_fit_dict = loose_p_fit_dict
+        self.tight_p_fit_dict = tight_p_fit_dict
+
+        self.loose_beta_model = None
+        self.tight_beta_model = None
+        self.loose_p_model = None
+        self.tight_p_model = None
+
+    def refresh(self):
+        self.loose_beta_model = None
+        self.tight_beta_model = None
+        self.loose_p_model = None
+        self.tight_p_model = None
 
     def fit(self, df):
-        self.tight_mod = CurveModel(df=df, **self.basic_model_kwargs)
-        self.loose_mod = CurveModel(df=df, **self.basic_model_kwargs)
+        self.loose_beta_model = CurveModel(df=df, **self.beta_model_kwargs)
+        self.tight_beta_model = CurveModel(df=df, **self.beta_model_kwargs)
+        self.loose_p_model = CurveModel(df=df, **self.p_model_kwargs)
+        self.tight_p_model = CurveModel(df=df, **self.p_model_kwargs)
 
-        self.tight_mod.fit_params(**self.tight_fit_dict)
-        self.loose_mod.fit_params(**self.loose_fit_dict)
+        self.loose_beta_model.fit_params(**self.loose_beta_fit_dict)
+        self.tight_beta_model.fit_params(**self.tight_beta_fit_dict)
+        self.loose_p_model.fit_params(**self.loose_p_fit_dict)
+        self.tight_p_model.fit_params(**self.tight_p_fit_dict)
 
     def predict(self, times, predict_space, predict_group='all'):
-        tight_predictions = self.tight_mod.predict(
+        loose_beta_predictions = self.loose_beta_model.predict(
             t=times, group_name=predict_group,
             prediction_functional_form=predict_space
         )
-        loose_predictions = self.loose_mod.predict(
+        tight_beta_predictions = self.tight_beta_model.predict(
             t=times, group_name=predict_group,
             prediction_functional_form=predict_space
         )
-        predictions = 0.5 * tight_predictions + 0.5 * loose_predictions
-        return predictions
+        loose_p_predictions = self.loose_p_model.predict(
+            t=times, group_name=predict_group,
+            prediction_functional_form=predict_space
+        )
+        tight_p_predictions = self.tight_p_model.predict(
+            t=times, group_name=predict_group,
+            prediction_functional_form=predict_space
+        )
+        beta_predictions = convex_combination(
+            t=times, prediction1=loose_beta_predictions, prediction2=tight_beta_predictions,
+            predict_space=predict_space
+        )
+        p_predictions = convex_combination(
+            t=times, prediction1=loose_p_predictions, prediction2=tight_p_predictions,
+            predict_space=predict_space
+        )
+        averaged_predictions = model_average(
+            prediction1=beta_predictions, prediction2=p_predictions,
+            weight1=0.5, weight2=0.5, predict_space=predict_space
+        )
+        return averaged_predictions
