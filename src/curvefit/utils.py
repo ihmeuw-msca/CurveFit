@@ -142,3 +142,55 @@ def neighbor_mean_std(df,
         df_list[i] = df_sub
 
     return pd.concat(df_list)
+
+
+def combine_prediction(t, pred1, pred2, pred_fun,
+                       start_day=2,
+                       end_day=20):
+    """Combine the prediction.
+
+    Args:
+        t (np.ndarray): Time axis for the prediction.
+        pred1 (np.ndarray): First set of the prediction.
+        pred2 (np.ndarray): Second set of the prediction.
+        pred_fun (function): Function that used to generate the prediction.
+        start_day (int, optional):
+            Which day start to blend, before follow `pred1`.
+        end_day (int, optional):
+            Which day end to blend, after follow `pred2`.
+    """
+
+    num_time_points = t.size
+    assert pred1.shape == pred2.shape
+    assert pred1.shape[1] == num_time_points
+    assert callable(pred_fun)
+    assert start_day < end_day
+
+    a = 1.0/(end_day - start_day)
+    b = -start_day*a
+    lam = np.maximum(0.0, np.minimum(1.0, a*t + b))
+
+    if pred_fun.__name__ == 'log_erf':
+        pred1 = np.exp(pred1)
+        pred2 = np.exp(pred2)
+        pred1_tmp = pred1 - np.insert(pred1[:, :-1], 0, 0.0, axis=1)
+        pred2_tmp = pred2 - np.insert(pred2[:, :-1], 0, 0.0, axis=1)
+        pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
+        pred = np.log(np.cumsum(pred_tmp, axis=1))
+    elif pred_fun.__name__ == 'erf':
+        pred1_tmp = pred1 - np.insert(pred1[:, :-1], 0, 0.0, axis=1)
+        pred2_tmp = pred2 - np.insert(pred2[:, :-1], 0, 0.0, axis=1)
+        pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
+        pred = np.cumsum(pred_tmp, axis=1)
+    elif pred_fun.__name__ == 'log_derf':
+        pred1_tmp = np.exp(pred1)
+        pred2_tmp = np.exp(pred2)
+        pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
+        pred = np.log(pred_tmp)
+    elif pred_fun.__name__ == 'derf':
+        pred = lam*pred1 + (1.0 - lam)*pred2
+    else:
+        pred = None
+        RuntimeError('Unknown prediction functional form')
+
+    return pred
