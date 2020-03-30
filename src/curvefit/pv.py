@@ -296,8 +296,8 @@ class PVModel:
 
         plot_residuals(residual_array=self.r_mean, group_name='Overall mean', absolute=absolute)
         if self.r_std is not None:
-            plot_residuals(residual_array=self.r_std, group_name='Overall std')
+            plot_residuals(residual_array=self.r_std, group_name='Overall std', absolute=True)
         if self.r_mad is not None:
-            plot_residuals(residual_array=self.r_mad, group_name='Overall mad')
+            plot_residuals(residual_array=self.r_mad, group_name='Overall mad', absolute=True)
         for k, v in self.pv_groups.items():
             plot_residuals(residual_array=v.residuals, group_name=k, absolute=absolute)
