@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from curvefit.diagnostics import plot_residuals
 
 
@@ -201,6 +202,14 @@ class PVGroup:
         )
         return self
 
+    def residual_df(self):
+        return pd.DataFrame({
+            'group': self.predict_group,
+            'far_out': self.residuals[:, 0],
+            'num_data': self.residuals[:, 1],
+            'residual': self.residuals[:, 2]
+        })
+
 
 class PVModel:
     def __init__(self, data, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space):
@@ -221,6 +230,11 @@ class PVModel:
 
         Attributes:
             self.groups: the groups in this model
+            self.pv_groups: a dictionary keyed by group with PVGroup for that group
+            self.all_residuals: 2d array of stacked residuals from each PVGroup
+            self.r_mean: averaged residuals over far out and data density
+            self.r_std: standard deviation of residuals over far out and data density
+            self.r_mad: MAD of residuals over far out and data density
         """
         self.df = data.copy()
         self.df.sort_values([col_group, col_t], inplace=True)
@@ -245,6 +259,11 @@ class PVModel:
             ) for grp in self.groups
         }
 
+        self.all_residuals = None
+        self.r_mean = None
+        self.r_std = None
+        self.r_mad = None
+
     def run_pv(self):
         """
         Run predictive validity for all of the groups.
@@ -252,7 +271,33 @@ class PVModel:
         for group in self.groups:
             self.pv_groups[group].run_pv()
 
+        self.all_residuals = pd.concat([
+            grp.residual_df() for grp in self.pv_groups.values()
+        ])
+
+        r_mean = self.all_residuals.groupby(['far_out', 'num_data']).mean().reset_index()
+        self.r_mean = np.asarray(r_mean)
+        r_std = self.all_residuals.groupby(['far_out', 'num_data']).std().reset_index()
+        r_std = r_std.loc[~r_std.residual.isnull()]
+        if r_std.empty:
+            self.r_std = None
+        else:
+            self.r_std = np.asarray(r_std)
+        r_mad = self.all_residuals.groupby(['far_out', 'num_data']).mad().reset_index()
+
+        delete = r_mad.residual == 0
+        if all(delete):
+            self.r_mad = None
+        else:
+            r_mad = r_mad.loc[r_mad.residual != 0]
+            self.r_mad = np.asarray(r_mad)
+
     def plot_diagnostics(self, absolute=False):
+
+        plot_residuals(residual_array=self.r_mean, group_name='Overall mean', absolute=absolute)
+        if self.r_std is not None:
+            plot_residuals(residual_array=self.r_std, group_name='Overall std')
+        if self.r_mad is not None:
+            plot_residuals(residual_array=self.r_mad, group_name='Overall mad')
         for k, v in self.pv_groups.items():
             plot_residuals(residual_array=v.residuals, group_name=k, absolute=absolute)
-
