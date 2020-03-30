@@ -59,20 +59,24 @@ def get_full_data(grp_df, col_t, col_obs, prediction_times):
     return full_data
 
 
-def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, fit_model):
+def pv_for_single_group(data, col_t, col_obs, col_grp, col_obs_compare,
+                        model_generator, predict_space, predict_group):
     """
     Gets forward out of sample predictive validity for a model based on the function
     fit_model that takes arguments df and times and returns predictions at times.
 
     Args:
-        grp_df: (pd.DataFrame)
+        data: (pd.DataFrame)
         col_t: (str) column indicating the time
         col_obs: (str) column indicating the observation
+        col_grp: (str) column indicating the group membership
         col_obs_compare: (str) column indicating the observation that represents the space we will
             be calculating predictive validity in (can be different from col_obs, but your fit_model
             function for predict should match that)
-        fit_model: function that takes arguments df and times and returns predictions
-            at the vector passed in for times
+        model_generator: object of class model_generator.ModelGenerator
+        predict_space: a function from curvefit.model that gives the prediction space to calculate PV in
+            (needs to be the same as col_obs_compare)
+        predict_group: name of group to predict for
 
     Returns:
         times: (np.array) of prediction times
@@ -81,40 +85,61 @@ def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, fit_model):
     """
     assert type(col_t) == str
     assert type(col_obs) == str
-    assert col_t in grp_df.columns
-    assert col_obs in grp_df.columns
-    assert callable(fit_model)
+    assert col_t in data.columns
+    assert col_obs in data.columns
+    assert callable(model_generator.fit)
+    assert callable(model_generator.predict)
 
+    all_df = data.copy()
+    grp_df = data.loc[data[col_grp] == predict_group].copy()
     available_times = np.unique(grp_df[col_t].values)
-    prediction_times = np.array(range(max(available_times) + 1))
 
-    predictions = {}
+    # get the differences between the available times
+    # these need to all be integers. the cumulative differences
+    # tells us how big of a step we took to the next data point
+    difference = np.diff(available_times)
+    assert all((difference % 1) == 0)
+    cumulative_differences = np.cumsum(difference)
+
+    compare_observations = grp_df[col_obs_compare].values
+
+    preds = []
+    n_data_points = []
     models = {}
     for i in available_times:
         print(f"Fitting model for end time {i}", end='\r')
-        preds, mod = fit_model(
-            df=grp_df.loc[grp_df[col_t] <= i].copy(),
-            times=prediction_times
-        )
-        predictions[i] = preds
-        models[i] = mod
 
-    full_like_pred = np.empty(prediction_times.shape)
-    full_like_pred[:] = np.nan
+        model = model_generator.generate()
+        # remove the rows for this group that are greater than the available times
+        remove_rows = (all_df[col_t] > i) & (all_df[col_grp] == predict_group)
+        df = all_df[~remove_rows].copy()
 
-    all_preds = np.vstack([
-        predictions[i] if i in predictions else full_like_pred
-        for i in prediction_times
-    ])
-    full_data = get_full_data(
-        grp_df=grp_df, col_t=col_t, col_obs=col_obs_compare, prediction_times=prediction_times
-    )
-    residuals = all_preds - np.array(full_data)
+        # count and track the number of data points used to fit the model
+        n_data_points.append(len(all_df.loc[all_df[col_grp] == predict_group]))
 
-    return prediction_times, all_preds, residuals, models
+        # fit the model on the rest of the data and predict for this particular group
+        model.fit(df=df)
+        preds.append(model.predict(
+            times=available_times,
+            predict_space=predict_space,
+            predict_group=predict_group
+        ))
+        models[i] = model
+
+    predictions = np.vstack([preds])
+    n_data_points = np.array(n_data_points)
+    residuals = predictions - compare_observations
+
+    return {
+        'predictions': predictions,
+        'residuals': residuals,
+        'models': models,
+        'cumulative_differences': cumulative_differences,
+        'n_data_points': n_data_points
+    }
 
 
-def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, fit_model):
+def pv_for_whole_model(df, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space):
     """
     Gets a dictionary of predictive validity for all groups in the data frame.
     Args:
@@ -125,35 +150,39 @@ def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, fit_
         col_obs_compare: (str) column indicating the observation that represents the space we will
             be calculating predictive validity in (can be different from col_obs, but your fit_model
             function for predict should match that)
-        fit_model: function that takes arguments df and times and returns predictions
-            at the vector passed in for times
+        model_generator: object of class model_generator.ModelGenerator
+        predict_space: a function from curvefit.model that gives the prediction space to calculate PV in
+            (needs to be the same as col_obs_compare)
 
     Returns:
-        dictionaries for prediction times, predictions, and residuals
+        dictionaries for prediction times, predictions, residuals, and models
     """
     assert type(col_group) == str
     assert col_group in df.columns
+    data = df.copy()
 
-    groups = sorted(df[col_group].unique())
+    groups = sorted(data[col_group].unique())
 
     prediction_times = {}
     prediction_results = {}
     residual_results = {}
-    models = {}
+    model_results = {}
 
     for grp in groups:
         print(f"Getting PV for group {grp}")
-        grp_df = df.loc[df[col_group] == grp].copy()
         times, preds, resid, mods = pv_for_single_group(
-            grp_df=grp_df,
+            data=data,
             col_t=col_t,
             col_obs=col_obs,
+            col_grp=col_group,
             col_obs_compare=col_obs_compare,
-            fit_model=fit_model
+            model_generator=model_generator,
+            predict_space=predict_space,
+            predict_group=grp
         )
         prediction_times[grp] = times
         prediction_results[grp] = preds
         residual_results[grp] = resid
-        models[grp] = mods
+        model_results[grp] = mods
 
-    return prediction_times, prediction_results, residual_results, models
+    return prediction_times, prediction_results, residual_results, model_results

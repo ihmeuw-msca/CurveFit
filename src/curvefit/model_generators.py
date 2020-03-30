@@ -6,71 +6,106 @@ df and times and returns predictions at those times.
 function that takes those arguments. That callable will be generated with the model_function in these classes.
 """
 
+from copy import deepcopy
 from curvefit.model import CurveModel
 
 
-class BasicModelGenerator:
-    def __init__(self, col_t, col_obs, col_covs, col_group,
-                 param_names, link_fun, fit_fun, predict_fun, var_link_fun, col_obs_se=None, predict_group='all',
-                 **fit_kwargs):
+class ModelGenerator:
+    """
+    Base class for a model generator.
+    """
+    def __init__(self):
+        pass
+
+    def generate(self):
+        """
+        Generate a copy of this class.
+        """
+        return deepcopy(self)
+
+    def fit(self, df):
+        """
+        Function to fit the model with a given data frame.
+        Args:
+            df: (pd.DataFrame)
+        """
+        pass
+
+    def predict(self, times, predict_space, predict_group='all'):
+        """
+        Function to create predictions based on the model fit.
+        Args:
+            times: (np.array) of times to predict at
+            predict_space: (callable) curvefit.functions function to predict in that space
+            predict_group: which group to make predictions for
+        """
+        pass
+
+
+class BasicModel(ModelGenerator):
+    def __init__(self, fit_dict, **basic_model_kwargs):
         """
         Generic class for a function to produce predictions from a model
         with the following attributes.
 
         Args:
-            col_t:
-            col_obs:
-            col_covs:
-            col_group:
-            param_names:
-            link_fun:
-            fit_fun:
-            predict_fun:
-            var_link_fun:
-            predict_group:
-            **fit_kwargs: keyword arguments to CurveModel.fit_params()
+            predict_group: (str) which group to make predictions for
+            fit_dict: keyword arguments to CurveModel.fit_params()
+            **basic_model_kwargs: keyword arguments to CurveModel.__init__()
         """
-        self.col_t = col_t
-        self.col_obs = col_obs
-        self.col_covs = col_covs
-        self.col_group = col_group
-        self.col_obs_se = col_obs_se
-        self.param_names = param_names
-        self.link_fun = link_fun
-        self.fit_fun = fit_fun
-        self.predict_fun = predict_fun
-        self.var_link_fun = var_link_fun
-        self.predict_group = predict_group
-        self.fit_kwargs = fit_kwargs
+        super().__init__()
+        self.fit_dict = fit_dict
+        self.basic_model_kwargs = basic_model_kwargs
+        self.mod = None
 
-    def model_function(self, df, times):
+    def fit(self, df):
+        self.mod = CurveModel(df=df, **self.basic_model_kwargs)
+        self.mod.fit_params(**self.fit_dict)
+
+    def predict(self, times, predict_space, predict_group='all'):
+        predictions = self.mod.predict(
+            t=times, group_name=predict_group,
+            prediction_functional_form=predict_space
+        )
+        return predictions
+
+
+class TightLooseModel(ModelGenerator):
+    def __init__(self, loose_fit_dict, tight_fit_dict,
+                 **basic_model_kwargs):
         """
-        Model function that can be used for predictive validity.
+        Produces a tight-loose model as a convex combination between the two of them.
 
         Args:
-            df:
-            times:
+            loose_fit_kwargs: dictionary of keyword arguments to CurveModel.fit_params() for the loose model
+            tight_fit_kwargs: dictionary of keyword arguments to CurveModel.fit_params() fro the tight model
 
-        Returns:
-            predictions
-            mod
-
+            predict_group: (str) which group to make predictions for
+            **basic_model_kwargs: keyword arguments to the basic model
         """
-        mod = CurveModel(
-            df=df,
-            col_t=self.col_t,
-            col_obs=self.col_obs,
-            col_covs=self.col_covs,
-            col_group=self.col_group,
-            col_obs_se=self.col_obs_se,
-            param_names=self.param_names,
-            link_fun=self.link_fun,
-            fun=self.fit_fun,
-            var_link_fun=self.var_link_fun
+        super().__init__()
+        self.basic_model_kwargs = basic_model_kwargs
+        self.loose_fit_dict = loose_fit_dict
+        self.tight_fit_dict = tight_fit_dict
+
+        self.tight_mod = None
+        self.loose_mod = None
+
+    def fit(self, df):
+        self.tight_mod = CurveModel(df=df, **self.basic_model_kwargs)
+        self.loose_mod = CurveModel(df=df, **self.basic_model_kwargs)
+
+        self.tight_mod.fit_params(**self.tight_fit_dict)
+        self.loose_mod.fit_params(**self.loose_fit_dict)
+
+    def predict(self, times, predict_space, predict_group='all'):
+        tight_predictions = self.tight_mod.predict(
+            t=times, group_name=predict_group,
+            prediction_functional_form=predict_space
         )
-        mod.fit_params(**self.fit_kwargs)
-        predictions = mod.predict(
-            t=times, group_name=self.predict_group,
-            prediction_functional_form=self.predict_fun
+        loose_predictions = self.loose_mod.predict(
+            t=times, group_name=predict_group,
+            prediction_functional_form=predict_space
         )
-        return predictions, mod
+        predictions = 0.5 * tight_predictions + 0.5 * loose_predictions
+        return predictions
