@@ -22,20 +22,6 @@ def sizes_to_indices(sizes):
     return indices
 
 
-# TODO: WRONG -- replace with Peng's
-def convex_combination(t, prediction1, prediction2, predict_space):
-    return prediction1 + prediction2
-
-
-# TODO: WRONG -- replace with Peng's
-def model_average(prediction1, prediction2, weight1, weight2, predict_space):
-    """
-    Average two models together in linear space.
-    """
-    assert weight1 + weight2 == 1
-    return weight1 * prediction1 + weight2 * prediction2
-
-
 def get_obs_se(df, col_t, func=lambda x: 1 / (1 + x)):
     """
     Get observation standard deviation based on some function
@@ -158,9 +144,13 @@ def neighbor_mean_std(df,
     return pd.concat(df_list)
 
 
-def combine_prediction(t, pred1, pred2, pred_fun,
-                       start_day=2,
-                       end_day=20):
+def cumulative_derivative(array):
+    arr = array.copy()
+    return arr - np.insert(arr[:, :-1], 0, 0.0, axis=1)
+
+
+def convex_combination(t, pred1, pred2, pred_fun,
+                       start_day=2, end_day=20):
     """Combine the prediction.
 
     Args:
@@ -187,13 +177,13 @@ def combine_prediction(t, pred1, pred2, pred_fun,
     if pred_fun.__name__ == 'log_erf':
         pred1 = np.exp(pred1)
         pred2 = np.exp(pred2)
-        pred1_tmp = pred1 - np.insert(pred1[:, :-1], 0, 0.0, axis=1)
-        pred2_tmp = pred2 - np.insert(pred2[:, :-1], 0, 0.0, axis=1)
+        pred1_tmp = cumulative_derivative(pred1)
+        pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
         pred = np.log(np.cumsum(pred_tmp, axis=1))
     elif pred_fun.__name__ == 'erf':
-        pred1_tmp = pred1 - np.insert(pred1[:, :-1], 0, 0.0, axis=1)
-        pred2_tmp = pred2 - np.insert(pred2[:, :-1], 0, 0.0, axis=1)
+        pred1_tmp = cumulative_derivative(pred1)
+        pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
         pred = np.cumsum(pred_tmp, axis=1)
     elif pred_fun.__name__ == 'log_derf':
@@ -203,6 +193,46 @@ def combine_prediction(t, pred1, pred2, pred_fun,
         pred = np.log(pred_tmp)
     elif pred_fun.__name__ == 'derf':
         pred = lam*pred1 + (1.0 - lam)*pred2
+    else:
+        pred = None
+        RuntimeError('Unknown prediction functional form')
+
+    return pred
+
+
+def model_average(pred1, pred2, w1, w2, pred_fun):
+    """
+    Average two models together in linear space.
+
+    Args:
+        pred1: (np.array) first set of predictions
+        pred2: (np.array) second set of predictions
+        w1: (int) weight for first predictions
+        w2: (int) weight for second predictions
+        pred_fun:
+    """
+    assert callable(pred_fun)
+    assert w1 + w2 == 1
+
+    if pred_fun.__name__ == 'log_erf':
+        pred1 = np.exp(pred1)
+        pred2 = np.exp(pred2)
+        pred1_tmp = cumulative_derivative(pred1)
+        pred2_tmp = cumulative_derivative(pred2)
+        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
+        pred = np.log(np.cumsum(pred_tmp, axis=1))
+    elif pred_fun.__name__ == 'erf':
+        pred1_tmp = cumulative_derivative(pred1)
+        pred2_tmp = cumulative_derivative(pred2)
+        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
+        pred = np.cumsum(pred_tmp, axis=1)
+    elif pred_fun.__name__ == 'log_derf':
+        pred1_tmp = np.exp(pred1)
+        pred2_tmp = np.exp(pred2)
+        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
+        pred = np.log(pred_tmp)
+    elif pred_fun.__name__ == 'derf':
+        pred = w1 * pred1 + w2 * pred2
     else:
         pred = None
         RuntimeError('Unknown prediction functional form')

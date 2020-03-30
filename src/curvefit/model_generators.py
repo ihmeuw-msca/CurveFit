@@ -93,6 +93,7 @@ class TightLooseBetaPModel(ModelPipeline):
     def __init__(self, loose_beta_fit_dict, tight_beta_fit_dict,
                  loose_p_fit_dict, tight_p_fit_dict,
                  beta_model_extras=None, p_model_extras=None,
+                 blend_start_t=2, blend_end_t=30,
                  **basic_model_kwargs):
         """
         Produces two tight-loose models as a convex combination between the two of them,
@@ -107,6 +108,8 @@ class TightLooseBetaPModel(ModelPipeline):
                 override the basic_model_kwargs for the beta model
             p_model_extras: (optional) dictionary of keyword arguments to
                 override the basic_model_kwargs for the p model
+            blend_start_t: (int) the time to start blending tight and loose
+            blend_end_t: (int) the time to stop blending tight and loose
 
             predict_group: (str) which group to make predictions for
             **basic_model_kwargs: keyword arguments to the basic model
@@ -125,6 +128,9 @@ class TightLooseBetaPModel(ModelPipeline):
         self.tight_beta_fit_dict = tight_beta_fit_dict
         self.loose_p_fit_dict = loose_p_fit_dict
         self.tight_p_fit_dict = tight_p_fit_dict
+
+        self.blend_start_t = blend_start_t
+        self.blend_end_t = blend_end_t
 
         self.loose_beta_model = None
         self.tight_beta_model = None
@@ -166,15 +172,15 @@ class TightLooseBetaPModel(ModelPipeline):
             prediction_functional_form=predict_space
         )
         beta_predictions = convex_combination(
-            t=times, prediction1=loose_beta_predictions, prediction2=tight_beta_predictions,
-            predict_space=predict_space
+            t=times, pred1=tight_beta_predictions, pred2=loose_beta_predictions,
+            pred_fun=predict_space, start_day=self.blend_start_t, end_day=self.blend_end_t
         )
         p_predictions = convex_combination(
-            t=times, prediction1=loose_p_predictions, prediction2=tight_p_predictions,
-            predict_space=predict_space
+            t=times, pred1=tight_p_predictions, pred2=loose_p_predictions,
+            pred_fun=predict_space, start_day=self.blend_start_t, end_day=self.blend_end_t
         )
         averaged_predictions = model_average(
-            prediction1=beta_predictions, prediction2=p_predictions,
-            weight1=0.5, weight2=0.5, predict_space=predict_space
+            pred1=beta_predictions, pred2=p_predictions,
+            w1=0.5, w2=0.5, pred_fun=predict_space
         )
         return averaged_predictions
