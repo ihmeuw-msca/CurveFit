@@ -88,9 +88,13 @@ def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, model_generator
     assert callable(model_generator.predict)
 
     available_times = np.unique(grp_df[col_t].values)
-    prediction_times = np.array(range(max(available_times) + 1))
+    difference = np.diff(available_times)
+    assert all(difference == 1)
+    cumulative_differences = np.cumsum(difference)
 
-    predictions = {}
+    compare_observations = grp_df[col_obs_compare].values
+
+    predictions = []
     models = {}
     for i in available_times:
         print(f"Fitting model for end time {i}", end='\r')
@@ -99,22 +103,15 @@ def pv_for_single_group(grp_df, col_t, col_obs, col_obs_compare, model_generator
         df_i = grp_df.loc[grp_df[col_t] <= i].copy()
 
         model.fit(df=df_i)
-        predictions[i] = model.predict(times=prediction_times, predict_space=predict_space)
+        predictions.append(model.predict(times=available_times, predict_space=predict_space))
         models[i] = model
 
-    full_like_pred = np.empty(prediction_times.shape)
-    full_like_pred[:] = np.nan
+    import pdb; pdb.set_trace()
 
-    all_preds = np.vstack([
-        predictions[i] if i in predictions else full_like_pred
-        for i in prediction_times
-    ])
-    full_data = get_full_data(
-        grp_df=grp_df, col_t=col_t, col_obs=col_obs_compare, prediction_times=prediction_times
-    )
-    residuals = all_preds - np.array(full_data)
+    all_preds = np.vstack([predictions])
+    residuals = all_preds - compare_observations
 
-    return prediction_times, all_preds, residuals, models
+    return all_preds, residuals, models
 
 
 def pv_for_group_collection(df, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space):
