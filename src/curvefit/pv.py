@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from curvefit.diagnostics import plot_residuals
+from curvefit.utils import neighbor_mean_std
 
 
 def get_residual_std(matrix, n, window):
@@ -204,7 +205,7 @@ class PVGroup:
 
     def residual_df(self):
         return pd.DataFrame({
-            'group': self.predict_group,
+            self.col_grp: self.predict_group,
             'far_out': self.residuals[:, 0],
             'num_data': self.residuals[:, 1],
             'residual': self.residuals[:, 2]
@@ -260,9 +261,7 @@ class PVModel:
         }
 
         self.all_residuals = None
-        self.r_mean = None
-        self.r_std = None
-        self.r_mad = None
+        self.all_smoothed_residuals = None
 
     def run_pv(self):
         """
@@ -275,29 +274,15 @@ class PVModel:
             grp.residual_df() for grp in self.pv_groups.values()
         ])
 
-        r_mean = self.all_residuals.groupby(['far_out', 'num_data']).mean().reset_index()
-        self.r_mean = np.asarray(r_mean)
-        r_std = self.all_residuals.groupby(['far_out', 'num_data']).std().reset_index()
-        r_std = r_std.loc[~r_std.residual.isnull()]
-        if r_std.empty:
-            self.r_std = None
-        else:
-            self.r_std = np.asarray(r_std)
-        r_mad = self.all_residuals.groupby(['far_out', 'num_data']).mad().reset_index()
-
-        delete = r_mad.residual == 0
-        if all(delete):
-            self.r_mad = None
-        else:
-            r_mad = r_mad.loc[r_mad.residual != 0]
-            self.r_mad = np.asarray(r_mad)
+    def get_smoothed_residuals(self, radius):
+        smoothed_residuals = neighbor_mean_std(
+            df=self.all_residuals,
+            col_val='residual',
+            col_group=self.col_group,
+            col_axis=['far_out', 'num_data'],
+            radius=radius
+        )
 
     def plot_diagnostics(self, absolute=False):
-
-        plot_residuals(residual_array=self.r_mean, group_name='Overall mean', absolute=absolute)
-        if self.r_std is not None:
-            plot_residuals(residual_array=self.r_std, group_name='Overall std', absolute=True)
-        if self.r_mad is not None:
-            plot_residuals(residual_array=self.r_mad, group_name='Overall mad', absolute=True)
         for k, v in self.pv_groups.items():
             plot_residuals(residual_array=v.residuals, group_name=k, absolute=absolute)
