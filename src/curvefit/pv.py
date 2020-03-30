@@ -1,4 +1,6 @@
 import numpy as np
+import pandas as pd
+from curvefit.diagnostics import plot_residuals
 
 
 def get_residual_std(matrix, n, window):
@@ -59,130 +61,243 @@ def get_full_data(grp_df, col_t, col_obs, prediction_times):
     return full_data
 
 
-def pv_for_single_group(data, col_t, col_obs, col_grp, col_obs_compare,
-                        model_generator, predict_space, predict_group):
-    """
-    Gets forward out of sample predictive validity for a model based on the function
-    fit_model that takes arguments df and times and returns predictions at times.
+class PVGroup:
+    def __init__(self, data, col_t, col_obs, col_grp, col_obs_compare,
+                 model_generator, predict_space, predict_group):
+        """
+        Gets forward out of sample predictive validity for a model based on the function
+        fit_model that takes arguments df and times and returns predictions at times.
 
-    Args:
-        data: (pd.DataFrame)
-        col_t: (str) column indicating the time
-        col_obs: (str) column indicating the observation
-        col_grp: (str) column indicating the group membership
-        col_obs_compare: (str) column indicating the observation that represents the space we will
-            be calculating predictive validity in (can be different from col_obs, but your fit_model
-            function for predict should match that)
-        model_generator: object of class model_generator.ModelGenerator
-        predict_space: a function from curvefit.model that gives the prediction space to calculate PV in
-            (needs to be the same as col_obs_compare)
-        predict_group: name of group to predict for
+        Args:
+            data: (pd.DataFrame)
+            col_t: (str) column indicating the time
+            col_obs: (str) column indicating the observation
+            col_grp: (str) column indicating the group membership
+            col_obs_compare: (str) column indicating the observation that represents the space we will
+                be calculating predictive validity in (can be different from col_obs, but your fit_model
+                function for predict should match that)
+            model_generator: object of class model_generator.ModelGenerator
+            predict_space: a function from curvefit.model that gives the prediction space to calculate PV in
+                (needs to be the same as col_obs_compare)
+            predict_group: name of group to predict for
 
-    Returns:
-        times: (np.array) of prediction times
-        predictions: matrix of predictions of dimension times x times
-        residuals: matrix of residuals of dimension times x times
-    """
-    assert type(col_t) == str
-    assert type(col_obs) == str
-    assert col_t in data.columns
-    assert col_obs in data.columns
-    assert callable(model_generator.fit)
-    assert callable(model_generator.predict)
+        Attributes:
+            self.grp_df: (pd.DataFrame) the data frame for this group only
+            self.times: (np.array) the available observation times
+            self.difference: (np.array) the differences in time between consecutive observations
+            self.compare_observations: (np.array) the observations that we want our predictions to be compared to
+            self.amount_data: (np.array) the amount of data that each sequential model
+            self.num_times: (int) the number of available times -- the number of models we can run
+            self.models: (list) list of models created by the model generator
 
-    all_df = data.copy()
-    grp_df = data.loc[data[col_grp] == predict_group].copy()
-    available_times = np.unique(grp_df[col_t].values)
+            self.prediction_matrix: (np.ndarray) array of shape self.times x self.times with predictions
+                where the rows are each model and columns are each observation
+            self.residual_matrix: (np.ndarray) difference between prediction matrix and observed data
+            self.residuals: (np.ndarray) 2d array of shape self.times x 3 where the columns are:
+                0: how far out predicting
+                1: how many data points to do prediction
+                2: the corresponding residual
 
-    # get the differences between the available times
-    # these need to all be integers. the cumulative differences
-    # tells us how big of a step we took to the next data point
-    difference = np.diff(available_times)
-    assert all((difference % 1) == 0)
-    cumulative_differences = np.cumsum(difference)
+        """
+        self.df = data.copy()
+        self.predict_group = predict_group
+        self.col_t = col_t
+        self.col_obs = col_obs
+        self.col_grp = col_grp
+        self.col_obs_compare = col_obs_compare
+        self.predict_space = predict_space
+        self.model_generator = model_generator
 
-    compare_observations = grp_df[col_obs_compare].values
+        assert type(self.col_t) == str
+        assert type(self.col_obs) == str
+        assert self.col_t in self.df.columns
+        assert self.col_obs in self.df.columns
+        assert callable(self.model_generator.fit)
+        assert callable(self.model_generator.predict)
 
-    preds = []
-    n_data_points = []
-    models = {}
-    for i in available_times:
-        print(f"Fitting model for end time {i}", end='\r')
+        self.grp_df = self.df.loc[self.df[self.col_grp] == self.predict_group].copy()
+        self.times = np.unique(self.grp_df[self.col_t].values)
+        self.num_times = len(self.times)
 
-        model = model_generator.generate()
-        # remove the rows for this group that are greater than the available times
-        remove_rows = (all_df[col_t] > i) & (all_df[col_grp] == predict_group)
-        df = all_df[~remove_rows].copy()
+        # get the differences between the available times
+        # these need to all be integers. the cumulative differences
+        # tells us how big of a step we took to the next data point
+        difference = np.diff(self.times)
+        assert np.isclose(np.array([round(x) for x in difference]), difference, atol=1e-14).all()
+        self.difference = np.array([int(round(x)) for x in difference])
 
-        # count and track the number of data points used to fit the model
-        n_data_points.append(len(all_df.loc[all_df[col_grp] == predict_group]))
+        # which observations are we comparing the predictions to? and how much data do we have?
+        self.compare_observations = self.grp_df[self.col_obs_compare].values
+        self.amount_data = np.array(range(len(self.compare_observations))) + 1
 
-        # fit the model on the rest of the data and predict for this particular group
-        model.fit(df=df)
-        preds.append(model.predict(
-            times=available_times,
-            predict_space=predict_space,
-            predict_group=predict_group
-        ))
-        models[i] = model
+        self.models = [model_generator.generate() for i in range(self.num_times)]
+        self.prediction_matrix = None
+        self.residual_matrix = None
+        self.residuals = None
 
-    predictions = np.vstack([preds])
-    n_data_points = np.array(n_data_points)
-    residuals = predictions - compare_observations
+    @staticmethod
+    def condense_residual_matrix(matrix, sequential_diffs, data_density):
+        """
+        Condense the residuals from a residual matrix to three columns
+        that represent how far out the prediction was, the number of data points,
+        and the observed residual.
 
-    return {
-        'predictions': predictions,
-        'residuals': residuals,
-        'models': models,
-        'cumulative_differences': cumulative_differences,
-        'n_data_points': n_data_points
-    }
+        Args:
+            matrix: (np.ndarray)
+            sequential_diffs:
+            data_density:
 
+        Returns:
 
-def pv_for_whole_model(df, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space):
-    """
-    Gets a dictionary of predictive validity for all groups in the data frame.
-    Args:
-        df: (pd.DataFrame)
-        col_group: (str) grouping column string
-        col_t: (str) column indicating the time
-        col_obs: (str) column indicating the observation for fitting
-        col_obs_compare: (str) column indicating the observation that represents the space we will
-            be calculating predictive validity in (can be different from col_obs, but your fit_model
-            function for predict should match that)
-        model_generator: object of class model_generator.ModelGenerator
-        predict_space: a function from curvefit.model that gives the prediction space to calculate PV in
-            (needs to be the same as col_obs_compare)
+        """
+        far_out = np.array([])
+        num_data = np.array([])
+        robs = np.array([])
 
-    Returns:
-        dictionaries for prediction times, predictions, residuals, and models
-    """
-    assert type(col_group) == str
-    assert col_group in df.columns
-    data = df.copy()
+        diagonals = np.array(range(matrix.shape[0]))[1:]
 
-    groups = sorted(data[col_group].unique())
+        # get the diagonal of the residual matrix and figure out
+        # how many data points out we were predicting (convolve)
+        # plus the amount of data that we had to do the prediction
+        for i in diagonals:
+            diagonal = np.diag(matrix, k=i)
+            obs = len(diagonal)
+            out = np.convolve(sequential_diffs, np.ones(i, dtype=int), mode='valid')
 
-    prediction_times = {}
-    prediction_results = {}
-    residual_results = {}
-    model_results = {}
+            far_out = np.append(far_out, out[-obs:])
+            num_data = np.append(num_data, data_density[:obs])
+            robs = np.append(robs, diagonal)
 
-    for grp in groups:
-        print(f"Getting PV for group {grp}")
-        times, preds, resid, mods = pv_for_single_group(
-            data=data,
-            col_t=col_t,
-            col_obs=col_obs,
-            col_grp=col_group,
-            col_obs_compare=col_obs_compare,
-            model_generator=model_generator,
-            predict_space=predict_space,
-            predict_group=grp
+        # return the results for the residual matrix as a (len(available_times), 3) shaped matrix
+        r_matrix = np.vstack([far_out, num_data, robs]).T
+        return r_matrix
+
+    def run_pv(self):
+        """
+        Run predictive validity for all observation sequences in the available data for this group.
+        """
+        print(f"Running PV for {self.predict_group}")
+        predictions = []
+
+        for i, time in enumerate(self.times):
+            print(f"Fitting model for end time {time}", end='\r')
+            # remove the rows for this group that are greater than the available times
+            remove_rows = (self.df[self.col_t] > time) & (self.df[self.col_grp] == self.predict_group)
+            df = self.df[~remove_rows].copy()
+            self.models[i].fit(df=df)
+            predictions.append(
+                self.models[i].predict(
+                    times=self.times,
+                    predict_space=self.predict_space,
+                    predict_group=self.predict_group
+                )
+            )
+            self.prediction_matrix = np.vstack([predictions])
+            self.residual_matrix = self.prediction_matrix - self.compare_observations
+
+        self.residuals = self.condense_residual_matrix(
+            matrix=self.residual_matrix,
+            sequential_diffs=self.difference,
+            data_density=self.amount_data
         )
-        prediction_times[grp] = times
-        prediction_results[grp] = preds
-        residual_results[grp] = resid
-        model_results[grp] = mods
+        return self
 
-    return prediction_times, prediction_results, residual_results, model_results
+    def residual_df(self):
+        return pd.DataFrame({
+            'group': self.predict_group,
+            'far_out': self.residuals[:, 0],
+            'num_data': self.residuals[:, 1],
+            'residual': self.residuals[:, 2]
+        })
+
+
+class PVModel:
+    def __init__(self, data, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space):
+        """
+        Runs and stores predictive validity for a whole model and all groups in the model.
+
+        Args:
+            data: (pd.DataFrame)
+            col_group: (str) grouping column string
+            col_t: (str) column indicating the time
+            col_obs: (str) column indicating the observation for fitting
+            col_obs_compare: (str) column indicating the observation that represents the space we will
+                be calculating predictive validity in (can be different from col_obs, but your fit_model
+                function for predict should match that)
+            model_generator: object of class model_generator.ModelGenerator
+            predict_space: a function from curvefit.model that gives the prediction space to calculate PV in
+                (needs to be the same as col_obs_compare)
+
+        Attributes:
+            self.groups: the groups in this model
+            self.pv_groups: a dictionary keyed by group with PVGroup for that group
+            self.all_residuals: 2d array of stacked residuals from each PVGroup
+            self.r_mean: averaged residuals over far out and data density
+            self.r_std: standard deviation of residuals over far out and data density
+            self.r_mad: MAD of residuals over far out and data density
+        """
+        self.df = data.copy()
+        self.df.sort_values([col_group, col_t], inplace=True)
+
+        self.col_group = col_group
+        self.col_t = col_t
+        self.col_obs = col_obs
+        self.col_obs_compare = col_obs_compare
+        self.model_generator = model_generator
+        self.predict_space = predict_space
+
+        assert type(self.col_group) == str
+        assert self.col_group in self.df.columns
+
+        self.groups = sorted(self.df[self.col_group].unique())
+
+        self.pv_groups = {
+            grp: PVGroup(
+                data=self.df, col_t=self.col_t, col_obs=self.col_obs, col_grp=self.col_group,
+                col_obs_compare=self.col_obs_compare, model_generator=self.model_generator,
+                predict_space=self.predict_space, predict_group=grp
+            ) for grp in self.groups
+        }
+
+        self.all_residuals = None
+        self.r_mean = None
+        self.r_std = None
+        self.r_mad = None
+
+    def run_pv(self):
+        """
+        Run predictive validity for all of the groups.
+        """
+        for group in self.groups:
+            self.pv_groups[group].run_pv()
+
+        self.all_residuals = pd.concat([
+            grp.residual_df() for grp in self.pv_groups.values()
+        ])
+
+        r_mean = self.all_residuals.groupby(['far_out', 'num_data']).mean().reset_index()
+        self.r_mean = np.asarray(r_mean)
+        r_std = self.all_residuals.groupby(['far_out', 'num_data']).std().reset_index()
+        r_std = r_std.loc[~r_std.residual.isnull()]
+        if r_std.empty:
+            self.r_std = None
+        else:
+            self.r_std = np.asarray(r_std)
+        r_mad = self.all_residuals.groupby(['far_out', 'num_data']).mad().reset_index()
+
+        delete = r_mad.residual == 0
+        if all(delete):
+            self.r_mad = None
+        else:
+            r_mad = r_mad.loc[r_mad.residual != 0]
+            self.r_mad = np.asarray(r_mad)
+
+    def plot_diagnostics(self, absolute=False):
+
+        plot_residuals(residual_array=self.r_mean, group_name='Overall mean', absolute=absolute)
+        if self.r_std is not None:
+            plot_residuals(residual_array=self.r_std, group_name='Overall std', absolute=True)
+        if self.r_mad is not None:
+            plot_residuals(residual_array=self.r_mad, group_name='Overall mad', absolute=True)
+        for k, v in self.pv_groups.items():
+            plot_residuals(residual_array=v.residuals, group_name=k, absolute=absolute)
