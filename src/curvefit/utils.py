@@ -159,9 +159,9 @@ def convex_combination(t, pred1, pred2, pred_fun,
         pred2 (np.ndarray): Second set of the prediction.
         pred_fun (function): Function that used to generate the prediction.
         start_day (int, optional):
-            Which day start to blend, before follow `pred1`.
+            Which day start to blend, before follow `pred2`.
         end_day (int, optional):
-            Which day end to blend, after follow `pred2`.
+            Which day end to blend, after follow `pred1`.
     """
 
     num_time_points = t.size
@@ -207,9 +207,9 @@ def model_average(pred1, pred2, w1, w2, pred_fun):
     Args:
         pred1: (np.array) first set of predictions
         pred2: (np.array) second set of predictions
-        w1: (int) weight for first predictions
-        w2: (int) weight for second predictions
-        pred_fun:
+        w1: (float) weight for first predictions
+        w2: (float) weight for second predictions
+        pred_fun (function): Function that used to generate the prediction.
     """
     assert callable(pred_fun)
     assert w1 + w2 == 1
