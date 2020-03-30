@@ -10,5 +10,6 @@ setup(name='curvefit',
       install_requires=['numpy',
                         'scipy',
                         'pandas',
-                        'pytest'],
+                        'pytest',
+                        'matplotlib'],
       zip_safe=False)
