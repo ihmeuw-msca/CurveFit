@@ -7,6 +7,7 @@ forward with respect to how much data is currently in the model and how far out 
 import numpy as np
 import pandas as pd
 import itertools
+from curvefit.utils import data_translator
 
 
 class ResidualModel:
@@ -203,7 +204,9 @@ class Forecaster:
         )
 
         # translate into new space with translator
-        fit_space_new_observations = TRANSLATE()
+        fit_space_new_observations = data_translator(
+            data=
+        )
 
         dfs = []
         for i in range(num_simulations):
