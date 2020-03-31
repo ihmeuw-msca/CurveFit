@@ -3,7 +3,7 @@
 
 ### Maintainers
 Aleksandr Aravkin (saravkin@uw.edu)
-Peng Zheng (zhengp0@uw.edu)
+Peng Zheng (zhengp@uw.edu) @zhengp0
 Marlena Bannick (mnorwood@uw.edu)
 
 ## Install
