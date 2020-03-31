@@ -19,7 +19,7 @@ class ModelPipeline:
     If a model needs to have initial parameters started for the predictive validity,
     put that in run_init_model
     """
-    def __init__(self, all_data, col_t, col_obs, col_group, col_obs_compare, fit_space, predict_space):
+    def __init__(self, all_data, col_t, col_obs, col_group, col_obs_compare, all_cov_names, fit_space, predict_space):
         """
         Base class for a model pipeline. At minimum needs the following arguments for a
         model pipeline.
@@ -30,6 +30,8 @@ class ModelPipeline:
             col_group: (str) name of the column with the group in it
             col_obs: (str) the name of the column with observations for fitting the model
             col_obs_compare: (str) the name of the column that will be used for predictive validity comparison
+            all_cov_names: List[str] list of name(s) of covariate(s). Not the same as the covariate specifications
+                that are required by CurveModel in order of parameters. You should exclude intercept from this list.
             fit_space: (callable) the space to fit in, one of curvefit.functions
             predict_space: (callable) the space to do predictive validity in, one of curvefit.functions
         """
@@ -38,12 +40,14 @@ class ModelPipeline:
         self.col_group = col_group
         self.col_obs = col_obs
         self.col_obs_compare = col_obs_compare
+        self.all_cov_names = all_cov_names
         self.fit_space = fit_space
         self.predict_space = predict_space
 
         self.pv = None
         self.forecaster = None
         self.draws = None
+        self.simulated_data = None
 
     def setup_pipeline(self):
         """
@@ -64,7 +68,8 @@ class ModelPipeline:
             data=self.all_data,
             col_t=self.col_t,
             col_group=self.col_group,
-            col_obs=self.col_obs_compare
+            col_obs=self.col_obs_compare,
+            all_cov_names=self.all_cov_names
         )
 
     def run_init_model(self):
@@ -112,6 +117,10 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
+    # TODO: Fix this so that it's accurately translating based on self.fit_space and self.predict_space
+    def translate_predict_space_to_fit_space(self, predictions):
+        return predictions
+
     def create_draws(self, smoothed_radius, num_draws, num_forecast_out, prediction_times):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
@@ -133,13 +142,19 @@ class ModelPipeline:
             covariates=['far_out', 'num_data'],
             residual_model_type='linear'
         )
+
+        mean_prediction = self.predict(times=prediction_times, predict_space=self.predict_space)
+        self.simulated_data = self.forecaster.simulate(
+            out=num_forecast_out, fit_space=self.fit_space,
+            predictions=mean_prediction
+        )
+
         self.draws = []
         for i in range(num_draws):
             print(f"Creating {i}th draw.")
-            simulation = self.forecaster.simulate(out=num_forecast_out)
             generator = self.generate()
             generator.refresh()
-            generator.fit(df=simulation)
+            generator.fit(df=self.simulated_data[i])
             predictions = generator.predict(times=prediction_times, predict_space=self.predict_space)
             self.draws.append(predictions)
 
