@@ -59,39 +59,16 @@ class LinearResidualModel(ResidualModel):
 
 
 class Forecaster:
-    def __init__(self, data, col_t, col_obs, col_group, all_cov_names):
+    def __init__(self):
         """
         A Forecaster will generate forecasts of residuals to create
         new, potential future datasets that can then be fit by the ModelPipeline
-
-        Args:
-            data: (pd.DataFrame) the model data
-            col_t: (str) column of data that indicates time
-            col_obs: (str) column of data that's in the same space
-                as the forecast (linear space)
-            col_group: (str) column of data that indicates group membership
-            all_cov_names: List[str] list of all the covariate names that need
-                to be copied forward
-            model_pipeline
         """
-        self.data = data
-        self.col_t = col_t
-        self.col_obs = col_obs
-        self.col_group = col_group
-        self.all_cov_names = all_cov_names
-
-        assert type(self.all_cov_names) == list
-        for l in self.all_cov_names:
-            assert type(l) == str
-
-        self.num_obs_per_group = self.get_num_obs_per_group()
-        self.max_t_per_group = self.get_max_t_per_group()
-        self.covariates_by_group = self.get_covariates_by_group()
 
         self.mean_residual_model = None
         self.std_residual_model = None
 
-    def get_num_obs_per_group(self):
+    def get_num_obs_per_group(self, df):
         """
         Get the number of observations per group that will inform
         the amount of data going forwards.
@@ -143,6 +120,7 @@ class Forecaster:
             residual_covariates: (str) the covariates to include in the regression
             residual_model_type: (str) what type of residual model to it
                 types include 'linear'
+
         """
         if residual_model_type == 'linear':
             self.mean_residual_model = LinearResidualModel(
@@ -178,26 +156,64 @@ class Forecaster:
 
         return new_data
 
-    def simulate(self, far_out, num_simulations, predictions, group,
-                 model_pipeline):
+    def simulate(self, mp, far_out, num_simulations, group, epsilon=1e-3):
         """
         Simulate the residuals based on the mean and standard deviation of predicting
         into the future.
 
         Args:
-            far_out: (int)
-            num_simulations: number of simulations to take
-            predictions:
+            mp: (curvefit.model_generator.ModelPipeline) model pipeline
+            far_out: (int) how far out into the future to predict
+            num_simulations: number of simulations
+            group: (str) the group to make the simulations for
+            epsilon: (epsilon) the floor for standard deviation moving out into the future
 
         Returns:
             List[pd.DataFrame] list of data frames for each simulation
         """
-        # TODO: MAIN TO-DO!!! FINISH THIS!!! below is old
-        # TODO: NEEDS TO FORECAST AND THEN TRANSLATE BETWEEN FIT SPACE AND FORECASTING SPACE
-        # data = self.data.copy()
-        # data['max_obs'] = data[self.col_group].map(self.num_obs_per_group)
-        # data['max_t'] = data[self.col_group].map(self.max_t_per_group)
-        # for cov in self.all_cov_names:
-        #     data[cov] = data[self.col_group].map(self.covariates_by_group[cov])
+        data = mp.all_data.loc[mp.all_data[mp.col_group] == group].copy()
+        max_t = data[mp.col_t].max()
+        num_obs = data.loc[~data[mp.col_obs_compare].isnull()].count()
 
+        num_out = np.array(range(far_out)) + 1
+        forecast_times = max_t + num_out
 
+        observations = np.asarray(data[mp.col_obs_compare])
+        obs_times = np.asarray(data[mp.col_t])
+        all_times = np.append(obs_times, forecast_times)
+
+        mean_pred = mp.predict(
+            times=forecast_times, predict_space=mp.predict_space, predict_group=group
+        )
+        residuals = self.predict(
+            far_out=num_out,
+            num_data=np.array([num_obs])
+        )
+        mean_residual = residuals['residual_mean'].values
+        std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
+
+        error = np.random.normal(
+            loc=mean_residual, scale=std_residual, size=(num_simulations, far_out)
+        )
+        forecast_data = mean_pred + mean_pred * error
+        new_observations = np.append(observations, forecast_data)
+        simulated_flag = np.append(
+            np.repeat(0, len(observations)),
+            np.repeat(1, len(forecast_data))
+        )
+
+        # translate into new space with translator
+        fit_space_new_observations = TRANSLATE()
+
+        dfs = []
+        for i in range(num_simulations):
+            df = pd.concat({
+                mp.col_t: all_times,
+                mp.col_obs: fit_space_new_observations,
+                mp.col_obs_compare: new_observations,
+                mp.col_group: group,
+                'simulated': simulated_flag
+            })
+            dfs.append(df)
+
+        return mean_pred, dfs

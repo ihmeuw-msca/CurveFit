@@ -36,6 +36,13 @@ class ModelPipeline:
                 that are required by CurveModel in order of parameters. You should exclude intercept from this list.
             fun: (callable) the space to fit in, one of curvefit.functions
             predict_space: (callable) the space to do predictive validity in, one of curvefit.functions
+
+        Attributes:
+            self.pv: (curvefit.pv.PVModel) predictive validity model
+            self.forecaster: (curvefit.forecaster.Forecaster) residual forecasting tool
+            self.mean_predictions: (dict) dictionary of mean predictions keyed by group
+            self.simulated_data: (dict) dictionary of simulated datasets keyed by group
+            self.draws: (dict) dictionary of resulting keyed by group
         """
         self.all_data = all_data
         self.col_t = col_t
@@ -46,6 +53,8 @@ class ModelPipeline:
         self.fun = fun
         self.predict_space = predict_space
 
+        # these are the attributes that can't be used to initialize a
+        # CurveModel but are needed to initialize the ModelPipeline
         self.pop_cols = [
             'all_data', 'all_cov_names', 'col_obs_compare', 'predict_space'
         ]
@@ -55,8 +64,10 @@ class ModelPipeline:
 
         self.pv = None
         self.forecaster = None
-        self.draws = None
+
+        self.mean_predictions = None
         self.simulated_data = None
+        self.draws = None
 
     def setup_pipeline(self):
         """
@@ -73,13 +84,7 @@ class ModelPipeline:
             predict_space=self.predict_space,
             model_generator=self.generate()
         )
-        self.forecaster = Forecaster(
-            data=self.all_data,
-            col_t=self.col_t,
-            col_group=self.col_group,
-            col_obs=self.col_obs_compare,
-            all_cov_names=self.all_cov_names
-        )
+        self.forecaster = Forecaster()
 
     def run_init_model(self):
         """
@@ -126,7 +131,7 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
-    def create_draws(self, smoothed_radius, num_draws, num_forecast_out, prediction_times):
+    def create_draws(self, smoothed_radius, num_draws, num_forecast_out, prediction_times, exclude_below):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
         for far out and num data points.
@@ -136,51 +141,57 @@ class ModelPipeline:
             num_draws: (int) the number of draws to take
             num_forecast_out: (int) how far out into the future should residual simulations be taken
             prediction_times: (int) which times to produce final predictions at
+            exclude_below: (int) observations with less than exclude_below
+                will be excluded from the analysis
         """
         if self.pv.all_residuals is None:
             raise RuntimeError("Need to first run predictive validity with self.run_predictive_validity.")
 
+        residual_data = self.pv.get_smoothed_residuals(radius=smoothed_radius)
+        residual_data = residual_data.loc[residual_data['num_data'] > exclude_below].copy()
+
         self.forecaster.fit_residuals(
-            residual_data=self.pv.get_smoothed_residuals(radius=smoothed_radius),
+            residual_data=residual_data,
             mean_outcome='residual_mean',
             std_outcome='residual_std',
             covariates=['far_out', 'num_data'],
             residual_model_type='linear'
         )
 
-        mean_predictions = {}
-        simulated_data = {}
-        for group in self.groups:
-            max_time = self.forecaster.max_t_per_group[group]
-            num_out = np.array(range(num_forecast_out)) + 1
-            forecast_prediction_times = num_out + max_time
-            mean_predictions[group] = self.predict(
-                times=forecast_prediction_times, predict_space=self.predict_space, predict_group=group
-            )
-            simulated_data[group] = self.forecaster.simulate(
-                predictions=mean_predictions,
-                group=group,
-                far_out=num_out, fit_space=self.fun,
-                times=forecast_prediction_times
-            )
-
+        self.mean_predictions = {}
+        self.simulated_data = {}
         self.draws = {}
+
+        for group in self.groups:
+            mean, sims = self.forecaster.simulate(
+                mp=self,
+                far_out=num_forecast_out,
+                num_simulations=num_draws
+            )
+            self.mean_predictions[group] = mean
+            self.simulated_data[group] = sims
+
         for group in self.groups:
             self.draws[group] = []
 
         for i in range(num_draws):
             new_data = []
+
             for group in self.groups:
-                new_data.append(simulated_data[group][i])
+                new_data.append(self.simulated_data[group][i])
             new_data = pd.concat(new_data)
 
             print(f"Creating {i}th draw.")
             generator = self.generate()
             generator.refresh()
             generator.fit(df=new_data)
+
             for group in self.groups:
-                predictions = generator.predict(times=prediction_times, predict_space=self.predict_space,
-                                                predict_group=group)
+                predictions = generator.predict(
+                    times=prediction_times,
+                    predict_space=self.predict_space,
+                    predict_group=group
+                )
                 self.draws[group].append(predictions)
 
         return self
