@@ -123,7 +123,7 @@ class Forecaster:
 
         return new_data
 
-    def simulate(self, mp, far_out, num_simulations, group, epsilon=1, theta=1e-2):
+    def simulate(self, mp, far_out, num_simulations, group, epsilon=1e-2, theta=1):
         """
         Simulate the residuals based on the mean and standard deviation of predicting
         into the future.
@@ -134,6 +134,7 @@ class Forecaster:
             num_simulations: number of simulations
             group: (str) the group to make the simulations for
             epsilon: (epsilon) the floor for standard deviation moving out into the future
+            theta: (theta) scaling of residuals to do relative to prediction magnitude
 
         Returns:
             List[pd.DataFrame] list of data frames for each simulation

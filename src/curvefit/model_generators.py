@@ -139,8 +139,7 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
-    def create_draws(self, smoothed_radius, num_draws, num_forecast_out, prediction_times, exclude_below,
-                     theta=1):
+    def create_draws(self, smoothed_radius, num_draws, num_forecast_out, prediction_times, exclude_below, theta=1):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
         for far out and num data points.
@@ -152,6 +151,7 @@ class ModelPipeline:
             prediction_times: (int) which times to produce final predictions at
             exclude_below: (int) observations with less than exclude_below
                 will be excluded from the analysis
+            theta: (float) between 0 and 1, how much scaling of the residuals to do relative to the prediction mean
         """
         if self.pv.all_residuals is None:
             raise RuntimeError("Need to first run predictive validity with self.run_predictive_validity.")
