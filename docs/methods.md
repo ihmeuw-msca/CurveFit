@@ -18,7 +18,7 @@ Parametrized curves have several key features that make them useful for forecati
 
 We considered two functional forms so far when modeling the COVID-19 epidemic.
 
-- **Generalized Logistic:** \[f(t; \alpha, \beta, p)  = \frac{p}{1 + \exp(-\alpha(t-\beta))}\]
+- **Generalized Logistic:** <img src="https://render.githubusercontent.com/render/math?math=f(t: \alpha, \beta, p) = \frac{p}{1 %2B \exp(-\alpha(t-\beta))}">
 
 
  - **Generalized Gaussian Error Function** \[
