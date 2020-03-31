@@ -1,4 +1,5 @@
 # Curve Fitting for the COVID-19 Project
+## Institute for Health Metrics and Evaluation
 
 ## Install
 
