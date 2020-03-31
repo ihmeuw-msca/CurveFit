@@ -72,3 +72,11 @@ def log_derf(t, params):
     return np.log(params[0]) + np.log(params[2]) - \
         (params[0]*(t - params[1]))**2 - 0.5*np.log(np.pi)
 
+
+# second order dervivative of erf function
+def dderf(t, params):
+    a = params[0]
+    b = params[1]
+    p = params[2]
+    tmp = a*(t - b)
+    return -2.0*a**2*p*tmp*np.exp(-tmp**2)/np.sqrt(np.pi)
