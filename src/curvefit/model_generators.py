@@ -60,7 +60,7 @@ class BasicModel(ModelGenerator):
 
     def fit(self, df):
         self.mod = CurveModel(df=df, **self.basic_model_kwargs)
-        self.mod.fit_params(**self.fit_dict)
+        self.mod.fit_params(**self.fit_dict, smart_initialize=True)
 
     def predict(self, times, predict_space, predict_group='all'):
         predictions = self.mod.predict(

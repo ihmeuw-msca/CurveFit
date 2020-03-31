@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from curvefit.diagnostics import plot_residuals
+from curvefit.diagnostics import plot_residuals, plot_predictions
 from curvefit.utils import neighbor_mean_std
 
 
@@ -173,7 +173,7 @@ class PVGroup:
         r_matrix = np.vstack([far_out, num_data, robs]).T
         return r_matrix
 
-    def run_pv(self):
+    def run_pv(self, theta):
         """
         Run predictive validity for all observation sequences in the available data for this group.
         """
@@ -194,14 +194,23 @@ class PVGroup:
                 )
             )
             self.prediction_matrix = np.vstack([predictions])
-            self.residual_matrix = self.prediction_matrix - self.compare_observations
+            self.compute_residuals(theta=theta)
 
+        return self
+
+    def compute_residuals(self, theta):
+        """
+        Compute the residual matrix and condense the residual matrix.
+        Args:
+            theta: power scaling for the predictions matrix, a theta of 0 means no scaling
+                larger theta --> more scaling relative to prediction magnitude
+        """
+        self.residual_matrix = (self.prediction_matrix - self.compare_observations) / (self.prediction_matrix ** theta)
         self.residuals = self.condense_residual_matrix(
             matrix=self.residual_matrix,
             sequential_diffs=self.difference,
             data_density=self.amount_data
         )
-        return self
 
     def residual_df(self):
         return pd.DataFrame({
@@ -263,13 +272,20 @@ class PVModel:
         self.all_residuals = None
         self.all_smoothed_residuals = None
 
-    def run_pv(self):
+    def run_pv(self, theta):
         """
         Run predictive validity for all of the groups.
         """
         for group in self.groups:
-            self.pv_groups[group].run_pv()
+            self.pv_groups[group].run_pv(theta=theta)
+        self.get_all_residuals()
 
+    def recompute_residuals(self, theta):
+        for group in self.groups:
+            self.pv_groups[group].compute_residuals(theta=theta)
+        self.get_all_residuals()
+
+    def get_all_residuals(self):
         self.all_residuals = pd.concat([
             grp.residual_df() for grp in self.pv_groups.values()
         ])
@@ -282,7 +298,32 @@ class PVModel:
             col_axis=['far_out', 'num_data'],
             radius=radius
         )
+        return smoothed_residuals
 
-    def plot_diagnostics(self, absolute=False):
+    def get_condensed_predictions(self):
+        result = []
+        for k, v in self.pv_groups.items():
+            preds = v.condense_residual_matrix(
+                matrix=v.residual_matrix,
+                sequential_diffs=v.difference,
+                data_density=v.amount_data
+            )
+            result.append(preds)
+        return result
+
+    def plot_residuals(self, radius, absolute=False, exclude=5):
+        smoothed_residuals = self.get_smoothed_residuals(radius=radius)
+        smoothed_residuals = smoothed_residuals.loc[smoothed_residuals['num_data'] > exclude].copy()
         for k, v in self.pv_groups.items():
             plot_residuals(residual_array=v.residuals, group_name=k, absolute=absolute)
+            smooth = smoothed_residuals.loc[smoothed_residuals[self.col_group] == k]
+            smooth_mean = np.asarray(smooth[['far_out', 'num_data', 'residual_mean']])
+            smooth_std = np.asarray(smooth[['far_out', 'num_data', 'residual_std']])
+            plot_residuals(residual_array=smooth_mean, group_name=f'{k} smooth mean radius {radius}', absolute=absolute)
+            plot_residuals(residual_array=smooth_std, group_name=f'{k} smooth std radius {radius}', absolute=True)
+
+    def plot_predictions(self, group_name):
+        times = self.pv_groups[group_name].times
+        observations = self.pv_groups[group_name].compare_observations
+        predictions = self.pv_groups[group_name].prediction_matrix
+        plot_predictions(prediction_array=predictions, group_name=group_name, times=times, observations=observations)
