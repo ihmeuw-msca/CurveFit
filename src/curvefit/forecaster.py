@@ -1,6 +1,12 @@
-import numpy as np
+"""
+The Forecaster class is meant to fit regression models to the residuals
+coming from evaluating predictive validity. We want to predict the residuals
+forward with respect to how much data is currently in the model and how far out into the future.
+"""
 
-# Model generator will need to instantiate a forecaster
+import numpy as np
+import pandas as pd
+import itertools
 
 
 class ResidualModel:
@@ -25,7 +31,7 @@ class ResidualModel:
     def fit(self):
         pass
 
-    def predict(self, times, predict_magnitude):
+    def predict(self, df):
         pass
 
 
@@ -46,8 +52,10 @@ class LinearResidualModel(ResidualModel):
         out = np.asarray(df[[self.outcome]])
         self.coef = np.linalg.inv(pred.T.dot(pred)).dot(pred.T).dot(out)
 
-    def predict(self, df, predict_magnitude):
-        pass
+    def predict(self, df):
+        df['intercept'] = 1
+        pred = np.asarray(df[['intercept'] + self.covariates])
+        return pred.dot(self.coef)
 
 
 class Forecaster:
@@ -68,8 +76,21 @@ class Forecaster:
         self.col_obs = col_obs
         self.col_group = col_group
 
+        self.max_obs_per_group = self.get_num_obs_per_group()
+
         self.mean_residual_model = None
         self.std_residual_model = None
+
+    def get_num_obs_per_group(self):
+        """
+        Get the number of observations per group that will inform
+        the amount of data going forwards.
+
+        Returns:
+            (dict) dictionary keyed by group with value num obs
+        """
+        non_nulls = self.data.loc[~self.data[self.col_obs].isnull()].copy()
+        return non_nulls.groupby(self.col_group)[self.col_group].count().to_dict()
 
     def fit_residuals(self, residual_data, mean_outcome, std_outcome,
                       covariates, residual_model_type):
@@ -89,18 +110,51 @@ class Forecaster:
                 types include 'linear'
         """
         if residual_model_type == 'linear':
-            self.mean_residual_model = LinearResidualModel(data=residual_data, outcome=mean_outcome, covariates=covariates)
-            self.std_residual_model = LinearResidualModel(data=residual_data, outcome=std_outcome, covariates=covariates)
+            self.mean_residual_model = LinearResidualModel(
+                data=residual_data, outcome=mean_outcome, covariates=covariates
+            )
+            self.std_residual_model = LinearResidualModel(
+                data=residual_data, outcome=std_outcome, covariates=covariates
+            )
         else:
             raise ValueError(f"Unknown residual model type {residual_model_type}.")
 
         self.mean_residual_model.fit()
         self.std_residual_model.fit()
 
-    def predict(self, covariates):
-        # TODO: Add mean prediction out
-        pass
+    def predict(self, far_out, num_data):
+        """
+        Predict out the residuals for all combinations of far_out and num_data
+        for both the mean residual and the standard deviation of the residuals.
 
-    def simulate(self, covariates):
-        # TODO: Add the simulator which adds noise
-        pass
+        Args:
+            far_out: (np.array) of how far out to predict
+            num_data: (np.array) of numbers of data points
+
+        Returns:
+
+        """
+        data_dict = {'far_out': far_out, 'num_data': num_data}
+        rows = itertools.product(*data_dict.values())
+        new_data = pd.DataFrame.from_records(rows, columns=data_dict.keys())
+
+        new_data['residual_mean'] = self.mean_residual_model.predict(df=new_data)
+        new_data['residual_std'] = self.std_residual_model.predict(df=new_data)
+
+        return new_data
+
+    def simulate(self, far_out, num_data, covariates):
+        """
+        Simulate the residuals based on the mean and standard deviation of predicting
+        into the future.
+
+        Args:
+            far_out:
+            num_data:
+            covariates:
+
+        Returns:
+            pd.DataFrame
+        """
+        data = self.data.copy()
+        data['max_obs'] = data[self.col_group].map(self.max_obs_per_group)
