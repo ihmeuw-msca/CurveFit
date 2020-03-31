@@ -75,6 +75,10 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
+      <a href="#overview" tabindex="0" class="md-skip">
+        Skip to content
+      </a>
+    
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
@@ -183,10 +187,102 @@
     
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Methods
+      </label>
     
     <a href="./" title="Methods" class="md-nav__link md-nav__link--active">
       Methods
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#covid-19-functional-forms" class="md-nav__link">
+    COVID-19 functional forms
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#statistical-model" class="md-nav__link">
+    Statistical Model
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constraints" class="md-nav__link">
+    Constraints
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optimization-procedure" class="md-nav__link">
+    Optimization Procedure
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solver" class="md-nav__link">
+    Solver
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#derivatives" class="md-nav__link">
+    Derivatives
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uncertainty" class="md-nav__link">
+    Uncertainty
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#model-based-uncertainty" class="md-nav__link">
+    Model-Based Uncertainty
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -222,15 +318,288 @@
               </div>
             
             
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#covid-19-functional-forms" class="md-nav__link">
+    COVID-19 functional forms
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#statistical-model" class="md-nav__link">
+    Statistical Model
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constraints" class="md-nav__link">
+    Constraints
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#optimization-procedure" class="md-nav__link">
+    Optimization Procedure
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#solver" class="md-nav__link">
+    Solver
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#derivatives" class="md-nav__link">
+    Derivatives
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uncertainty" class="md-nav__link">
+    Uncertainty
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#model-based-uncertainty" class="md-nav__link">
+    Model-Based Uncertainty
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
               
                 
                 
-                  <h1>Methods</h1>
-                
-                
+                <h1 id="overview">Overview</h1>
+<p>CurveFit is an extendable nonlinear mixed effects model or fitting curves.
+The main application in this development is COVID-19 forecasting, so that
+the curves we consider are variants of logistic models. However the interface
+allows any user-specified parametrized family.</p>
+<p>Parametrized curves have several key features that make them useful for forecating:  </p>
+<ul>
+<li>We can capture key signals from noisy data.</li>
+<li>Parameters are interpretable, and can be modeled using covariates in a transparent way.</li>
+<li>Parametric forms allow for more stable inversion approaches, for current and future work.</li>
+<li>Parametric functions impose rigid assumptions that make forecasting more stable.</li>
+</ul>
+<h2 id="covid-19-functional-forms">COVID-19 functional forms</h2>
+<p>We considered two functional forms so far when modeling the COVID-19 epidemic.</p>
+<ul>
+<li>
+<p><strong>Generalized Logistic:</strong> <script type="math/tex; mode=display">f(t; \alpha, \beta, p)  = \frac{p}{1 + \exp(-\alpha(t-\beta))}</script>
+</p>
+</li>
+<li>
+<p><strong>Generalized Gaussian Error Function</strong> <script type="math/tex; mode=display">
+ f(t;  \alpha, \beta, p) = \frac{p}{2}\left(\Psi(\alpha(t-\beta)\right) = \frac{p}{2}\left(1+ \frac{2}{\sqrt{\pi}}\int_{0}^{\alpha(t-\beta)} \exp\left(-\tau^2\right)d\tau\right)
+</script>
+</p>
+</li>
+</ul>
+<p>Each form has comparable fundamental parameters:</p>
+<ul>
+<li><strong>Level <script type="math/tex">p</script>:</strong>  Controls the ultimate level.</li>
+<li><strong>Slope <script type="math/tex">\alpha</script></strong>:  Controls speed of infection.</li>
+<li><strong>Inflection <script type="math/tex">\beta</script></strong>: Time at which the  rate of change is maximal.   </li>
+</ul>
+<p>We can fit these parameters to data, but this by itself does not account for covariates, and cannot
+connect different locations together. The next section therefore specifies statistical models that do this.</p>
+<h2 id="statistical-model">Statistical Model</h2>
+<p>Statistical assumptions link covariates across locations. Key aspects are the following:  </p>
+<ul>
+<li>
+<p>Parameters may be influenced by covariates, e.g. those that reflect social distancing</p>
+</li>
+<li>
+<p>Parameters may be modeled in a different space, e.g. <script type="math/tex">p, \alpha</script> are non-negative</p>
+</li>
+<li>
+<p>Parameters and covariate multipliers may be location-specific, with assumptions
+placed on their variation.</p>
+</li>
+</ul>
+<p>CurveFit specification is tailored to these three requirements. Every parameter in any functional form
+can be specified through a link function, covariates, fixed, and random effects. The final estimation
+problem is a nonlinear mixed effects model, with user-specified priors on fixed and random effects.</p>
+<p>For example, consider the ERF functional form with covariates <script type="math/tex">\alpha, \beta, p</script>.
+Assume we are fitting data in log-cumulative-death-rate space. Input data are:</p>
+<ul>
+<li>
+<script type="math/tex">S_j</script>: social distancing covariate value at location <script type="math/tex">j</script>
+</li>
+<li>
+<script type="math/tex">y_j^t</script>: cumulative death rate in location <script type="math/tex">j</script> at time <script type="math/tex">t</script>
+</li>
+</ul>
+<p>We specify the statistical model as follows:</p>
+<ul>
+<li>
+<p>Measurement model:
+<script type="math/tex; mode=display">
+\begin{aligned}
+\log(y_j^t) &= \frac{p_j}{2}\left(1+ \frac{2}{\sqrt{\pi}}\int_{0}^{\alpha_j(t-\beta_j)} \exp\left(-\tau^2\right)d\tau\right) + \epsilon_{t,j} \\
+\epsilon_{t,j} & \sim N(0, V_t)
+\end{aligned}
+</script>
+</p>
+</li>
+<li>
+<p>
+<script type="math/tex">\beta</script>-model specification:
+<script type="math/tex; mode=display">
+\begin{aligned}
+\beta_j &= \beta + \gamma_j S_j + \epsilon_j^\beta \\
+\gamma_j &\sim N(\overline \gamma, V_\gamma) \\
+\epsilon_j^\beta &\sim N(0, V_\beta)
+\end{aligned}
+</script>
+</p>
+</li>
+<li>
+<script type="math/tex">\alpha</script>-model specification:
+<script type="math/tex; mode=display">
+\begin{aligned}
+\alpha_j &= \exp(\alpha + u_j^\alpha) \\
+u_{\alpha, j} & \sim N(0, V_\alpha)
+\end{aligned}
+</script>
+</li>
+<li>
+<script type="math/tex">p</script>-model specification:
+<script type="math/tex; mode=display">
+\begin{aligned}
+p_j & = \exp(p + u_j^p) \\
+u_{p,j} & \sim N(0, V_p)
+\end{aligned}
+</script>
+</li>
+</ul>
+<p>In this example, the user specifies</p>
+<ul>
+<li>prior mean <script type="math/tex">\overline \gamma</script>
+</li>
+<li>variance parameters <script type="math/tex">V_t, V_\gamma, V_\beta, V_\alpha, V_p</script>.</li>
+</ul>
+<p>CurveFit estimates:</p>
+<ul>
+<li>fixed effects <script type="math/tex">\alpha, \beta, p</script>
+</li>
+<li>random effects <script type="math/tex">\{\gamma_j, u_j^\alpha, u_j^\beta, u_j^p\}</script>
+</li>
+</ul>
+<p>Exponential link functions are used to model non-negative parameters <script type="math/tex">\alpha, p</script>.</p>
+<h2 id="constraints">Constraints</h2>
+<p>Simple bound constraints on parameters can be used to make the model more robust.
+For any fixed or random effect, the user can enter simple bound constraints of the form
+<script type="math/tex; mode=display">
+L \leq \theta \leq U.
+</script>
+The parameters returned by CurveFit are guaranteed to satisfy these simple bounds.</p>
+<h2 id="optimization-procedure">Optimization Procedure</h2>
+<p>The optimization problem we obtain from specifying functional forms, priors, and constraints on all parameters
+is a bound-constrained nonlinear least squares problem. We explain the solver, derivative computation, and initialization
+procedure below.</p>
+<h3 id="solver">Solver</h3>
+<p>We solve the problem using <a href="https://docs.scipy.org/doc/scipy/reference/optimize.minimize-lbfgsb.html">L-BFGS-B</a>.
+The L-BFGS-B algorithm uses gradients to build a Hessian approximation, and efficiently uses that approximation
+and projected gradient method onto the bound constraints to identify parameter spaces over which solutions can be efficiently found,
+see the <a href="http://www.ece.northwestern.edu/~nocedal/PSfiles/limited.ps.gz">paper</a>. It is a standard and robust algorithm that's well
+suited to the task.</p>
+<h3 id="derivatives">Derivatives</h3>
+<p>We do not explicitly compute derivatives of the nonlinear least squares objective induced from the problem specification.
+Instead, we use the <a href="https://dl.acm.org/doi/abs/10.1145/838250.838251?casa_token=TYWyEC47VgkAAAAA:Qo1BmjP8jlvs5SOBqH2jw1VPMX4IV6SnjKfltmCgJP8jRM1nUThentKVdr2R0c3rBSfWry-_dZY">complex step method</a> to do this.
+The complex step method is a simple example of <a href="https://en.wikipedia.org/wiki/Automatic_differentiation">Automatic Differentiation</a>,
+that is, it can provide machine precision derivatives at the cost of a function evaluation.
+This is very useful given the flexibility on functional forms.</p>
+<h2 id="uncertainty">Uncertainty</h2>
+<p>Currently CurveFit uses model-based uncertainty, with out-of-sample approaches under development.</p>
+<h3 id="model-based-uncertainty">Model-Based Uncertainty</h3>
+<p>We partition model-based uncertainty into estimates coming  from fixed and random components. Fixed effects capture the variation
+of the mean effects, and random effects uncertainty captures the variation across locations.  </p>
+<ul>
+<li>Fixed Effects</li>
+</ul>
+<p>For any estimator obtained by solving a nonlinear least squares problem, we can use the Fisher information matrix
+to get an asymptotic approximation to the uncertainty. Let
+<script type="math/tex; mode=display">
+\hat{ \theta} = \arg\min_{ \theta} := \frac{1}{2}\theta^T W^{-1} \theta  + \frac{1}{2 \sigma^2} \|\Sigma^{-1/2} (y - f( \theta;  X))\|^2
+</script>
+where <script type="math/tex">W</script> is any prior variance and <script type="math/tex">\Sigma</script> is the variance of  observations.
+Then our approximation for the variance matrix of the estimate is given by
+<script type="math/tex; mode=display">
+V(\hat \theta) = \mathcal{I}(\theta)^{-1} = \left(J_{\hat \theta}^T \Sigma^{-1} J_{\hat \theta} + W^{-1} \right)^{-1}
+</script>
+where
+<script type="math/tex; mode=display">
+J_{\hat{ \theta}} := \nabla_{ \theta} f( \theta;  X)  
+</script>
+is the Jacobian matrix evaluated at <script type="math/tex">\theta = \hat \theta</script>. The Jacobian is also computed using the complex step method.</p>
+<ul>
+<li>Random effects</li>
+</ul>
+<p>To obtain the variance of the random effects, we derive an  empirical variance matrix across locations.
+Given a set of zero mean random effect estimates <script type="math/tex">\{v_j\}</script>, with each <script type="math/tex">v_j</script> a vector
+of <script type="math/tex">k</script> of random effect types, we get an empirical matrix <script type="math/tex">V_0 \in \mathbb{R}^{k\times k}</script> by
+<script type="math/tex; mode=display">
+V_0 = \frac{1}{n}\sum_{j=1}^N v_j v_j^T
+</script>
+To obtain posterior uncertainty for each specific location, we use the empirical <script type="math/tex">V_0</script> as a prior,
+and any data at the location as the measurement model, and re-fit the  location:
+<script type="math/tex; mode=display">
+\hat{ \theta}_i = \arg\min_{ \theta} := \frac{1}{2}\theta_i^T V_0^{-1}\theta_i +  \frac{1}{2 \sigma^2} \| \Sigma_i^{-1/2}(y_i - f_i( \theta_i;  X_i))\|^2
+</script>
+Within each location, this is analogous to the fixed effects analysis. The location-specific uncertainty is then estimated from
+the same Fisher information analysis:
+<script type="math/tex; mode=display">
+V_i({\hat \theta}) =   ( J_i^T  \Sigma_i ^{-1}  J_i + V_0^{-1})^{-1}.
+</script>
+</p>
                 
                   
                 
