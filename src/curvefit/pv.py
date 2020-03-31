@@ -4,64 +4,6 @@ from curvefit.diagnostics import plot_residuals, plot_predictions
 from curvefit.utils import neighbor_mean_std
 
 
-def get_residual_std(matrix, n, window):
-    """
-    Gets the residual standard deviation from a model
-    residual matrix predicting n time points out from its last data point
-    and using a maximum time window to average.
-
-    NOTE: masks nans in case there was a missing observation.
-
-    Args:
-        matrix: (np.ndarray) square 2 dimensional array with
-            each time points observation across the columns and
-            each model fit with the last time point across rows
-        n: (int) number of time points predicting out (n=0) would be
-            the entry for the model where n^{th} observation was the
-            last observation in the model
-        window: (int) number of time + n points to use from the most
-            recent one
-
-    Returns:
-        (float)
-    """
-    assert len(matrix.shape) == 2
-    assert matrix.shape[0] == matrix.shape[1]
-    assert type(window) == int
-    assert type(n) == int
-
-    return np.nanstd(
-        np.diag(matrix, k=n)[-window:]
-    )
-
-
-def get_full_data(grp_df, col_t, col_obs, prediction_times):
-    """
-    Fill out an observation vector for all one increment time
-    points, filling in missing values with nan.
-
-    Args:
-        grp_df: (pd.DataFrame) data frame with time and observation
-            column
-        col_t: (str) the time column
-        col_obs: (str) the observation column
-        prediction_times: (np.array) the time vector for which predictions are needed
-
-    Returns:
-        (np.array) observations filled out to the max time point
-        in the loc_df
-    """
-    assert type(col_t) == str
-    assert type(col_obs) == str
-    assert col_t in grp_df.columns
-    assert col_obs in grp_df.columns
-
-    data_dict = grp_df[[col_t, col_obs]].set_index(col_t).to_dict(orient='index')
-    data_dict = {k: v[col_obs] for k, v in data_dict.items()}
-    full_data = np.array([data_dict[x] if x in data_dict else np.nan for x in prediction_times])
-    return full_data
-
-
 class PVGroup:
     def __init__(self, data, col_t, col_obs, col_grp, col_obs_compare,
                  model_generator, predict_space, predict_group):
@@ -205,6 +147,7 @@ class PVGroup:
             theta: power scaling for the predictions matrix, a theta of 0 means no scaling
                 larger theta --> more scaling relative to prediction magnitude
         """
+        assert 0 <= theta <= 1
         self.residual_matrix = (self.prediction_matrix - self.compare_observations) / (self.prediction_matrix ** theta)
         self.residuals = self.condense_residual_matrix(
             matrix=self.residual_matrix,
@@ -272,25 +215,48 @@ class PVModel:
         self.all_residuals = None
         self.all_smoothed_residuals = None
 
+    def get_all_residuals(self):
+        """
+        Grab all of the residuals from the group-specific models into
+        a data frame.
+        """
+        self.all_residuals = pd.concat([
+            grp.residual_df() for grp in self.pv_groups.values()
+        ])
+
     def run_pv(self, theta):
         """
         Run predictive validity for all of the groups.
+
+        Args:
+            theta: (float) from 0 to 1 indicating how much scaling to
+                do of the residuals relative to the prediction magnitude
+                theta of 0 means no scaling, theta of 1 means max scaling
         """
         for group in self.groups:
             self.pv_groups[group].run_pv(theta=theta)
         self.get_all_residuals()
 
     def recompute_residuals(self, theta):
+        """
+        Recompute what the residuals would be with a new theta for scaling.
+        Args:
+            theta: (float)
+        """
         for group in self.groups:
             self.pv_groups[group].compute_residuals(theta=theta)
         self.get_all_residuals()
 
-    def get_all_residuals(self):
-        self.all_residuals = pd.concat([
-            grp.residual_df() for grp in self.pv_groups.values()
-        ])
-
     def get_smoothed_residuals(self, radius):
+        """
+        Smooth residuals for all of the data across some radius
+        Args:
+            radius: List[int] with two elements indicating the width and height
+                of the square that we want to smooth over.
+
+        Returns:
+            smoothed_residuals: (pd.DataFrame)
+        """
         smoothed_residuals = neighbor_mean_std(
             df=self.all_residuals,
             col_val='residual',
@@ -300,30 +266,38 @@ class PVModel:
         )
         return smoothed_residuals
 
-    def get_condensed_predictions(self):
-        result = []
-        for k, v in self.pv_groups.items():
-            preds = v.condense_residual_matrix(
-                matrix=v.residual_matrix,
-                sequential_diffs=v.difference,
-                data_density=v.amount_data
-            )
-            result.append(preds)
-        return result
-
     def plot_residuals(self, radius, absolute=False, exclude=5):
+        """
+        Plot all of the residuals based on some exclusion criteria for
+        number of data points that were used in the fitting and some radius
+        for smoothing over a window of neighboring data density / number predicting out.
+
+        Args:
+            radius: List[int]
+            absolute: (bool) plot mean residuals by value or absolute value
+            exclude: (int) exclude model fits with under this many data points
+        """
         smoothed_residuals = self.get_smoothed_residuals(radius=radius)
         smoothed_residuals = smoothed_residuals.loc[smoothed_residuals['num_data'] > exclude].copy()
+
         for k, v in self.pv_groups.items():
             plot_residuals(residual_array=v.residuals, group_name=k, absolute=absolute)
             smooth = smoothed_residuals.loc[smoothed_residuals[self.col_group] == k]
             smooth_mean = np.asarray(smooth[['far_out', 'num_data', 'residual_mean']])
             smooth_std = np.asarray(smooth[['far_out', 'num_data', 'residual_std']])
-            plot_residuals(residual_array=smooth_mean, group_name=f'{k} smooth mean radius {radius}', absolute=absolute)
-            plot_residuals(residual_array=smooth_std, group_name=f'{k} smooth std radius {radius}', absolute=True)
+            plot_residuals(residual_array=smooth_mean,
+                           group_name=f'{k} smooth mean radius {radius}', absolute=absolute)
+            plot_residuals(residual_array=smooth_std,
+                           group_name=f'{k} smooth std radius {radius}', absolute=True)
 
     def plot_predictions(self, group_name):
+        """
+        Plot the predictions for one location for each model that was fit deleting the ith data point.
+        Args:
+            group_name: (str) location to plot
+        """
         times = self.pv_groups[group_name].times
         observations = self.pv_groups[group_name].compare_observations
         predictions = self.pv_groups[group_name].prediction_matrix
-        plot_predictions(prediction_array=predictions, group_name=group_name, times=times, observations=observations)
+        plot_predictions(prediction_array=predictions, group_name=group_name,
+                         times=times, observations=observations)
