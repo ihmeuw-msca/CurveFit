@@ -7,7 +7,6 @@ function that takes those arguments. That callable will be generated with the mo
 """
 
 from copy import deepcopy
-import numpy as np
 import pandas as pd
 from curvefit.model import CurveModel
 from curvefit.forecaster import Forecaster
@@ -21,7 +20,8 @@ class ModelPipeline:
     If a model needs to have initial parameters started for the predictive validity,
     put that in run_init_model
     """
-    def __init__(self, all_data, col_t, col_obs, col_group, col_obs_compare, all_cov_names, fun, predict_space):
+    def __init__(self, all_data, col_t, col_obs, col_group,
+                 col_obs_compare, all_cov_names, fun, predict_space, obs_se_func=None):
         """
         Base class for a model pipeline. At minimum needs the following arguments for a
         model pipeline.
@@ -36,6 +36,7 @@ class ModelPipeline:
                 that are required by CurveModel in order of parameters. You should exclude intercept from this list.
             fun: (callable) the space to fit in, one of curvefit.functions
             predict_space: (callable) the space to do predictive validity in, one of curvefit.functions
+            obs_se_func: (optional) function to get observation standard error from col_t
 
         Attributes:
             self.pv: (curvefit.pv.PVModel) predictive validity model
@@ -52,11 +53,18 @@ class ModelPipeline:
         self.all_cov_names = all_cov_names
         self.fun = fun
         self.predict_space = predict_space
+        self.obs_se_func = obs_se_func
+
+        if self.obs_se_func is not None:
+            self.col_obs_se = 'obs_se'
+            self.all_data[self.col_obs_se] = self.all_data[self.col_t].apply(self.obs_se_func)
+        else:
+            self.col_obs_se = None
 
         # these are the attributes that can't be used to initialize a
         # CurveModel but are needed to initialize the ModelPipeline
         self.pop_cols = [
-            'all_data', 'all_cov_names', 'col_obs_compare', 'predict_space'
+            'all_data', 'all_cov_names', 'col_obs_compare', 'predict_space', 'obs_se_func'
         ]
 
         self.all_data.sort_values([col_group, col_t], inplace=True)
@@ -112,7 +120,7 @@ class ModelPipeline:
         """
         pass
 
-    def predict(self, times, predict_space, predict_group='all'):
+    def predict(self, times, predict_space, predict_group):
         """
         Function to create predictions based on the model fit.
         Args:
@@ -131,7 +139,8 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
-    def create_draws(self, smoothed_radius, num_draws, num_forecast_out, prediction_times, exclude_below):
+    def create_draws(self, smoothed_radius, num_draws, num_forecast_out, prediction_times, exclude_below,
+                     theta=1):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
         for far out and num data points.
@@ -152,9 +161,9 @@ class ModelPipeline:
 
         self.forecaster.fit_residuals(
             residual_data=residual_data,
-            mean_outcome='residual_mean',
-            std_outcome='residual_std',
-            covariates=['far_out', 'num_data'],
+            mean_col='residual_mean',
+            std_col='residual_std',
+            residual_covariates=['far_out', 'num_data'],
             residual_model_type='linear'
         )
 
@@ -162,14 +171,20 @@ class ModelPipeline:
         self.simulated_data = {}
         self.draws = {}
 
+        self.fit(df=self.all_data)
+
         for group in self.groups:
-            mean, sims = self.forecaster.simulate(
+            sims = self.forecaster.simulate(
                 mp=self,
                 far_out=num_forecast_out,
-                num_simulations=num_draws
+                num_simulations=num_draws,
+                group=group,
+                theta=theta
             )
-            self.mean_predictions[group] = mean
             self.simulated_data[group] = sims
+            self.mean_predictions[group] = self.predict(
+                times=prediction_times, predict_space=self.predict_space, predict_group=group
+            )
 
         for group in self.groups:
             self.draws[group] = []
@@ -181,7 +196,7 @@ class ModelPipeline:
                 new_data.append(self.simulated_data[group][i])
             new_data = pd.concat(new_data)
 
-            print(f"Creating {i}th draw.")
+            print(f"Creating {i}th draw.", end='\r')
             generator = self.generate()
             generator.refresh()
             generator.fit(df=new_data)
@@ -220,13 +235,14 @@ class BasicModel(ModelPipeline):
         """
         super().__init__(**pipeline_kwargs)
         self.fit_dict = fit_dict
-        self.basic_model_kwargs = basic_model_dict
+        self.basic_model_dict = basic_model_dict
+        self.basic_model_dict.update({'col_obs_se': self.col_obs_se})
 
         generator_kwargs = pipeline_kwargs
         for arg in self.pop_cols:
             generator_kwargs.pop(arg)
 
-        self.basic_model_kwargs.update(**generator_kwargs)
+        self.basic_model_dict.update(**generator_kwargs)
         self.mod = None
 
         self.setup_pipeline()
@@ -235,10 +251,10 @@ class BasicModel(ModelPipeline):
         self.mod = None
 
     def fit(self, df):
-        self.mod = CurveModel(df=df, **self.basic_model_kwargs)
-        self.mod.fit_params(**self.fit_dict, smart_initialize=True)
+        self.mod = CurveModel(df=df, **self.basic_model_dict)
+        self.mod.fit_params(**self.fit_dict)
 
-    def predict(self, times, predict_space, predict_group='all'):
+    def predict(self, times, predict_space, predict_group):
         predictions = self.mod.predict(
             t=times, group_name=predict_group,
             prediction_functional_form=predict_space
@@ -288,6 +304,8 @@ class TightLooseBetaPModel(ModelPipeline):
 
         self.basic_model_dict = basic_model_dict
         self.basic_model_dict.update(**generator_kwargs)
+        self.basic_model_dict.update({'col_obs_se': self.col_obs_se})
+
         self.beta_model_kwargs = self.basic_model_dict
         self.p_model_kwargs = self.basic_model_dict
 
@@ -329,7 +347,7 @@ class TightLooseBetaPModel(ModelPipeline):
         self.loose_p_model.fit_params(**self.loose_p_fit_dict)
         self.tight_p_model.fit_params(**self.tight_p_fit_dict)
 
-    def predict(self, times, predict_space, predict_group='all'):
+    def predict(self, times, predict_space, predict_group):
         loose_beta_predictions = self.loose_beta_model.predict(
             t=times, group_name=predict_group,
             prediction_functional_form=predict_space
