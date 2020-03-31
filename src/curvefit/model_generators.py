@@ -7,6 +7,8 @@ function that takes those arguments. That callable will be generated with the mo
 """
 
 from copy import deepcopy
+import numpy as np
+import pandas as pd
 from curvefit.model import CurveModel
 from curvefit.forecaster import Forecaster
 from curvefit.pv import PVModel
@@ -19,7 +21,7 @@ class ModelPipeline:
     If a model needs to have initial parameters started for the predictive validity,
     put that in run_init_model
     """
-    def __init__(self, all_data, col_t, col_obs, col_group, col_obs_compare, all_cov_names, fit_space, predict_space):
+    def __init__(self, all_data, col_t, col_obs, col_group, col_obs_compare, all_cov_names, fun, predict_space):
         """
         Base class for a model pipeline. At minimum needs the following arguments for a
         model pipeline.
@@ -32,7 +34,7 @@ class ModelPipeline:
             col_obs_compare: (str) the name of the column that will be used for predictive validity comparison
             all_cov_names: List[str] list of name(s) of covariate(s). Not the same as the covariate specifications
                 that are required by CurveModel in order of parameters. You should exclude intercept from this list.
-            fit_space: (callable) the space to fit in, one of curvefit.functions
+            fun: (callable) the space to fit in, one of curvefit.functions
             predict_space: (callable) the space to do predictive validity in, one of curvefit.functions
         """
         self.all_data = all_data
@@ -41,8 +43,15 @@ class ModelPipeline:
         self.col_obs = col_obs
         self.col_obs_compare = col_obs_compare
         self.all_cov_names = all_cov_names
-        self.fit_space = fit_space
+        self.fun = fun
         self.predict_space = predict_space
+
+        self.pop_cols = [
+            'all_data', 'all_cov_names', 'col_obs_compare', 'predict_space'
+        ]
+
+        self.all_data.sort_values([col_group, col_t], inplace=True)
+        self.groups = sorted(self.all_data[self.col_group].unique())
 
         self.pv = None
         self.forecaster = None
@@ -117,10 +126,6 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
-    # TODO: Fix this so that it's accurately translating based on self.fit_space and self.predict_space
-    def translate_predict_space_to_fit_space(self, predictions):
-        return predictions
-
     def create_draws(self, smoothed_radius, num_draws, num_forecast_out, prediction_times):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
@@ -143,20 +148,40 @@ class ModelPipeline:
             residual_model_type='linear'
         )
 
-        mean_prediction = self.predict(times=prediction_times, predict_space=self.predict_space)
-        self.simulated_data = self.forecaster.simulate(
-            out=num_forecast_out, fit_space=self.fit_space,
-            predictions=mean_prediction
-        )
+        mean_predictions = {}
+        simulated_data = {}
+        for group in self.groups:
+            max_time = self.forecaster.max_t_per_group[group]
+            num_out = np.array(range(num_forecast_out)) + 1
+            forecast_prediction_times = num_out + max_time
+            mean_predictions[group] = self.predict(
+                times=forecast_prediction_times, predict_space=self.predict_space, predict_group=group
+            )
+            simulated_data[group] = self.forecaster.simulate(
+                predictions=mean_predictions,
+                group=group,
+                far_out=num_out, fit_space=self.fun,
+                times=forecast_prediction_times
+            )
 
-        self.draws = []
+        self.draws = {}
+        for group in self.groups:
+            self.draws[group] = []
+
         for i in range(num_draws):
+            new_data = []
+            for group in self.groups:
+                new_data.append(simulated_data[group][i])
+            new_data = pd.concat(new_data)
+
             print(f"Creating {i}th draw.")
             generator = self.generate()
             generator.refresh()
-            generator.fit(df=self.simulated_data[i])
-            predictions = generator.predict(times=prediction_times, predict_space=self.predict_space)
-            self.draws.append(predictions)
+            generator.fit(df=new_data)
+            for group in self.groups:
+                predictions = generator.predict(times=prediction_times, predict_space=self.predict_space,
+                                                predict_group=group)
+                self.draws[group].append(predictions)
 
         return self
 
@@ -185,7 +210,12 @@ class BasicModel(ModelPipeline):
         super().__init__(**pipeline_kwargs)
         self.fit_dict = fit_dict
         self.basic_model_kwargs = basic_model_dict
-        self.basic_model_kwargs.update(**pipeline_kwargs)
+
+        generator_kwargs = pipeline_kwargs
+        for arg in self.pop_cols:
+            generator_kwargs.pop(arg)
+
+        self.basic_model_kwargs.update(**generator_kwargs)
         self.mod = None
 
         self.setup_pipeline()
@@ -241,9 +271,12 @@ class TightLooseBetaPModel(ModelPipeline):
             blend_end_t: (int) the time to stop blending tight and loose
         """
         super().__init__(**pipeline_kwargs)
+        generator_kwargs = pipeline_kwargs
+        for arg in self.pop_cols:
+            generator_kwargs.pop(arg)
 
         self.basic_model_dict = basic_model_dict
-        self.basic_model_dict.update(**pipeline_kwargs)
+        self.basic_model_dict.update(**generator_kwargs)
         self.beta_model_kwargs = self.basic_model_dict
         self.p_model_kwargs = self.basic_model_dict
 

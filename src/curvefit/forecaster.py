@@ -72,6 +72,7 @@ class Forecaster:
             col_group: (str) column of data that indicates group membership
             all_cov_names: List[str] list of all the covariate names that need
                 to be copied forward
+            model_pipeline
         """
         self.data = data
         self.col_t = col_t
@@ -177,13 +178,8 @@ class Forecaster:
 
         return new_data
 
-    def copy_covariates(self, df):
-        """
-        Covariates are not time varying so we can copy them over
-        for each location in the data frame.
-        """
-
-    def simulate(self, far_out, num_simulations, predictions):
+    def simulate(self, far_out, num_simulations, predictions, group,
+                 model_pipeline):
         """
         Simulate the residuals based on the mean and standard deviation of predicting
         into the future.
@@ -196,10 +192,12 @@ class Forecaster:
         Returns:
             List[pd.DataFrame] list of data frames for each simulation
         """
-        data = self.data.copy()
-        data['max_obs'] = data[self.col_group].map(self.num_obs_per_group)
-        data['max_t'] = data[self.col_group].map(self.max_t_per_group)
-        for cov in self.all_cov_names:
-            data[cov] = data[self.col_group].map(self.covariates_by_group[cov])
+        # TODO: MAIN TO-DO!!! FINISH THIS!!! below is old
+        # TODO: NEEDS TO FORECAST AND THEN TRANSLATE BETWEEN FIT SPACE AND FORECASTING SPACE
+        # data = self.data.copy()
+        # data['max_obs'] = data[self.col_group].map(self.num_obs_per_group)
+        # data['max_t'] = data[self.col_group].map(self.max_t_per_group)
+        # for cov in self.all_cov_names:
+        #     data[cov] = data[self.col_group].map(self.covariates_by_group[cov])
 
 
