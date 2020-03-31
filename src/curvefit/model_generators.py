@@ -41,6 +41,9 @@ class ModelGenerator:
         """
         pass
 
+    def draws(self):
+        pass
+
 
 class BasicModel(ModelGenerator):
     def __init__(self, fit_dict, **basic_model_kwargs):
@@ -109,3 +112,7 @@ class TightLooseModel(ModelGenerator):
         )
         predictions = 0.5 * tight_predictions + 0.5 * loose_predictions
         return predictions
+
+    def draws(self):
+        generator = self.generate()
+        generator.clear()
