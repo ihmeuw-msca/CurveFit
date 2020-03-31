@@ -144,9 +144,13 @@ def neighbor_mean_std(df,
     return pd.concat(df_list)
 
 
-def combine_prediction(t, pred1, pred2, pred_fun,
-                       start_day=2,
-                       end_day=20):
+def cumulative_derivative(array):
+    arr = array.copy()
+    return arr - np.insert(arr[:, :-1], 0, 0.0, axis=1)
+
+
+def convex_combination(t, pred1, pred2, pred_fun,
+                       start_day=2, end_day=20):
     """Combine the prediction.
 
     Args:
@@ -155,9 +159,9 @@ def combine_prediction(t, pred1, pred2, pred_fun,
         pred2 (np.ndarray): Second set of the prediction.
         pred_fun (function): Function that used to generate the prediction.
         start_day (int, optional):
-            Which day start to blend, before follow `pred1`.
+            Which day start to blend, before follow `pred2`.
         end_day (int, optional):
-            Which day end to blend, after follow `pred2`.
+            Which day end to blend, after follow `pred1`.
     """
 
     num_time_points = t.size
@@ -173,13 +177,13 @@ def combine_prediction(t, pred1, pred2, pred_fun,
     if pred_fun.__name__ == 'log_erf':
         pred1 = np.exp(pred1)
         pred2 = np.exp(pred2)
-        pred1_tmp = pred1 - np.insert(pred1[:, :-1], 0, 0.0, axis=1)
-        pred2_tmp = pred2 - np.insert(pred2[:, :-1], 0, 0.0, axis=1)
+        pred1_tmp = cumulative_derivative(pred1)
+        pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
         pred = np.log(np.cumsum(pred_tmp, axis=1))
     elif pred_fun.__name__ == 'erf':
-        pred1_tmp = pred1 - np.insert(pred1[:, :-1], 0, 0.0, axis=1)
-        pred2_tmp = pred2 - np.insert(pred2[:, :-1], 0, 0.0, axis=1)
+        pred1_tmp = cumulative_derivative(pred1)
+        pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
         pred = np.cumsum(pred_tmp, axis=1)
     elif pred_fun.__name__ == 'log_derf':
@@ -194,3 +198,71 @@ def combine_prediction(t, pred1, pred2, pred_fun,
         RuntimeError('Unknown prediction functional form')
 
     return pred
+
+
+def model_average(pred1, pred2, w1, w2, pred_fun):
+    """
+    Average two models together in linear space.
+
+    Args:
+        pred1: (np.array) first set of predictions
+        pred2: (np.array) second set of predictions
+        w1: (float) weight for first predictions
+        w2: (float) weight for second predictions
+        pred_fun (function): Function that used to generate the prediction.
+    """
+    assert callable(pred_fun)
+    assert w1 + w2 == 1
+
+    if pred_fun.__name__ == 'log_erf':
+        pred1 = np.exp(pred1)
+        pred2 = np.exp(pred2)
+        pred1_tmp = cumulative_derivative(pred1)
+        pred2_tmp = cumulative_derivative(pred2)
+        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
+        pred = np.log(np.cumsum(pred_tmp, axis=1))
+    elif pred_fun.__name__ == 'erf':
+        pred1_tmp = cumulative_derivative(pred1)
+        pred2_tmp = cumulative_derivative(pred2)
+        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
+        pred = np.cumsum(pred_tmp, axis=1)
+    elif pred_fun.__name__ == 'log_derf':
+        pred1_tmp = np.exp(pred1)
+        pred2_tmp = np.exp(pred2)
+        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
+        pred = np.log(pred_tmp)
+    elif pred_fun.__name__ == 'derf':
+        pred = w1 * pred1 + w2 * pred2
+    else:
+        pred = None
+        RuntimeError('Unknown prediction functional form')
+
+    return pred
+
+
+def condense_residual_matrix(matrix, sequential_diffs, data_density):
+    """
+    Condense the residuals from a residual matrix to three columns
+    that represent how far out the prediction was, the number of data points,
+    and the observed residual.
+
+    Args:
+        matrix: (np.ndarray)
+        sequential_diffs:
+        data_density:
+
+    Returns:
+        numpy.ndarray:
+            Combined matrix.
+    """
+    row_idx, col_idx = np.triu_indices(matrix.shape[0], 1)
+    map1 = np.cumsum(np.insert(sequential_diffs, 0, 0))
+    map2 = data_density
+
+    far_out = map1[col_idx] - map1[row_idx]
+    num_data = map2[row_idx]
+    robs = matrix[row_idx, col_idx]
+
+    # return the results for the residual matrix as a (len(available_times), 3) shaped matrix
+    r_matrix = np.vstack([far_out, num_data, robs]).T
+    return r_matrix

@@ -204,6 +204,8 @@ class PVModel:
 
         self.groups = sorted(self.df[self.col_group].unique())
 
+        self.model_generator.run_init_model()
+
         self.pv_groups = {
             grp: PVGroup(
                 data=self.df, col_t=self.col_t, col_obs=self.col_obs, col_grp=self.col_group,

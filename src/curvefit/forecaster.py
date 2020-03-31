@@ -51,7 +51,7 @@ class LinearResidualModel(ResidualModel):
 
 
 class Forecaster:
-    def __init__(self, data, col_t, col_obs, col_grp):
+    def __init__(self, data, col_t, col_obs, col_group):
         """
         A Forecaster will generate forecasts of residuals to create
         new, potential future datasets that can then be fit by the ModelPipeline
@@ -61,12 +61,12 @@ class Forecaster:
             col_t: (str) column of data that indicates time
             col_obs: (str) column of data that's in the same space
                 as the forecast (linear space)
-            col_grp: (str) column of data that indicates group membership
+            col_group: (str) column of data that indicates group membership
         """
         self.data = data
         self.col_t = col_t
         self.col_obs = col_obs
-        self.col_grp = col_grp
+        self.col_group = col_group
 
         self.mean_residual_model = None
         self.std_residual_model = None
@@ -98,5 +98,9 @@ class Forecaster:
         self.std_residual_model.fit()
 
     def predict(self, covariates):
+        # TODO: Add mean prediction out
         pass
 
+    def simulate(self, covariates):
+        # TODO: Add the simulator which adds noise
+        pass
