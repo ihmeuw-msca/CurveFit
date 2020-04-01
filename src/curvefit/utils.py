@@ -320,7 +320,7 @@ def data_translator(data, input_space, output_space,
     else:
         if 'log' in input_space:
             data = np.exp(data)
-        output_data = data - np.insert(data[:, :-1], 0, 0.0)
+        output_data = data - np.insert(data[:, :-1], 0, 0.0, axis=1)
         if 'log' in output_space:
             output_data = np.log(output_data)
 
