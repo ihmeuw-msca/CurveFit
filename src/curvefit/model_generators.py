@@ -317,10 +317,10 @@ class TightLooseBetaPModel(ModelPipeline):
         self.p_model_kwargs = self.basic_model_dict
 
         if beta_model_extras is not None:
-            self.beta_model_kwargs = self.beta_model_kwargs.update(beta_model_extras)
+            self.beta_model_kwargs.update(beta_model_extras)
 
         if p_model_extras is not None:
-            self.p_model_kwargs = self.p_model_kwargs.update(p_model_extras)
+            self.p_model_kwargs.update(p_model_extras)
 
         self.loose_beta_fit_dict = loose_beta_fit_dict
         self.tight_beta_fit_dict = tight_beta_fit_dict
@@ -336,6 +336,13 @@ class TightLooseBetaPModel(ModelPipeline):
         self.tight_p_model = None
 
         self.setup_pipeline()
+
+    def run_init_model(self):
+        """
+        Run the init model for each location
+        Returns:
+
+        """
 
     def refresh(self):
         self.loose_beta_model = None
@@ -371,6 +378,7 @@ class TightLooseBetaPModel(ModelPipeline):
             t=times, group_name=predict_group,
             prediction_functional_form=predict_space
         )
+        import pdb; pdb.set_trace()
         beta_predictions = convex_combination(
             t=times, pred1=tight_beta_predictions, pred2=loose_beta_predictions,
             pred_fun=predict_space, start_day=self.blend_start_t, end_day=self.blend_end_t
