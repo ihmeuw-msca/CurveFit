@@ -39,6 +39,7 @@ def create_fe_info_mat(model,
 
     return fe_info_mat
 
+
 def create_re_info_mat(model,
                        eps=1e-16,
                        add_prior=True):
@@ -57,6 +58,7 @@ def create_re_info_mat(model,
         re_info_mat.append(sub_re_info_mat)
 
     return re_info_mat
+
 
 def create_vcov_mat(model_all,
                     eps=1e-16,
