@@ -7,6 +7,7 @@ forward with respect to how much data is currently in the model and how far out 
 import numpy as np
 import pandas as pd
 import itertools
+from curvefit.utils import data_translator
 
 
 class ResidualModel:
@@ -59,72 +60,14 @@ class LinearResidualModel(ResidualModel):
 
 
 class Forecaster:
-    def __init__(self, data, col_t, col_obs, col_group, all_cov_names):
+    def __init__(self):
         """
         A Forecaster will generate forecasts of residuals to create
         new, potential future datasets that can then be fit by the ModelPipeline
-
-        Args:
-            data: (pd.DataFrame) the model data
-            col_t: (str) column of data that indicates time
-            col_obs: (str) column of data that's in the same space
-                as the forecast (linear space)
-            col_group: (str) column of data that indicates group membership
-            all_cov_names: List[str] list of all the covariate names that need
-                to be copied forward
         """
-        self.data = data
-        self.col_t = col_t
-        self.col_obs = col_obs
-        self.col_group = col_group
-        self.all_cov_names = all_cov_names
-
-        assert type(self.all_cov_names) == list
-        for l in self.all_cov_names:
-            assert type(l) == str
-
-        self.num_obs_per_group = self.get_num_obs_per_group()
-        self.max_t_per_group = self.get_max_t_per_group()
-        self.covariates_by_group = self.get_covariates_by_group()
 
         self.mean_residual_model = None
         self.std_residual_model = None
-
-    def get_num_obs_per_group(self):
-        """
-        Get the number of observations per group that will inform
-        the amount of data going forwards.
-
-        Returns:
-            (dict) dictionary keyed by group with value num obs
-        """
-        non_nulls = self.data.loc[~self.data[self.col_obs].isnull()].copy()
-        return non_nulls.groupby(self.col_group)[self.col_group].count().to_dict()
-
-    def get_max_t_per_group(self):
-        """
-        Get the maximum t per group.
-
-        Returns:
-            (dict) dictionary keyed by group with value max t
-        """
-        non_nulls = self.data.loc[~self.data[self.col_obs].isnull()].copy()
-        return non_nulls.groupby(self.col_group)[self.col_t].max().to_dict()
-
-    def get_covariates_by_group(self):
-        """
-        Get the covariate entries for each group to fill in the data frame.
-
-        Returns:
-            (dict[dict]) dictionary keyed by covariate then keyed by group with value as covariate value
-        """
-        cov_dict = {}
-        for cov in self.all_cov_names:
-            cov_dict[cov] = self.data.groupby(self.col_group)[cov].unique().to_dict()
-            for k, v in cov_dict[cov].items():
-                assert len(v) == 1, f"There is not a unique covariate value for group {k}"
-                cov_dict[cov][k] = v[0]
-        return cov_dict
 
     def fit_residuals(self, residual_data, mean_col, std_col,
                       residual_covariates, residual_model_type):
@@ -142,13 +85,15 @@ class Forecaster:
             residual_covariates: (str) the covariates to include in the regression
             residual_model_type: (str) what type of residual model to it
                 types include 'linear'
+
         """
+        residual_data[f'log_{std_col}'] = np.log(residual_data[std_col])
         if residual_model_type == 'linear':
             self.mean_residual_model = LinearResidualModel(
                 data=residual_data, outcome=mean_col, covariates=residual_covariates
             )
             self.std_residual_model = LinearResidualModel(
-                data=residual_data, outcome=std_col, covariates=residual_covariates
+                data=residual_data, outcome=f'log_{std_col}', covariates=residual_covariates
             )
         else:
             raise ValueError(f"Unknown residual model type {residual_model_type}.")
@@ -173,33 +118,81 @@ class Forecaster:
         new_data = pd.DataFrame.from_records(rows, columns=data_dict.keys())
 
         new_data['residual_mean'] = self.mean_residual_model.predict(df=new_data)
-        new_data['residual_std'] = self.std_residual_model.predict(df=new_data)
+        new_data['log_residual_std'] = self.std_residual_model.predict(df=new_data)
+        new_data['residual_std'] = np.exp(new_data['log_residual_std'])
 
         return new_data
 
-    def copy_covariates(self, df):
-        """
-        Covariates are not time varying so we can copy them over
-        for each location in the data frame.
-        """
-
-    def simulate(self, far_out, num_simulations, predictions):
+    def simulate(self, mp, far_out, num_simulations, group, epsilon=1e-2, theta=1):
         """
         Simulate the residuals based on the mean and standard deviation of predicting
         into the future.
 
         Args:
-            far_out: (int)
-            num_simulations: number of simulations to take
-            predictions:
+            mp: (curvefit.model_generator.ModelPipeline) model pipeline
+            far_out: (int) how far out into the future to predict
+            num_simulations: number of simulations
+            group: (str) the group to make the simulations for
+            epsilon: (epsilon) the floor for standard deviation moving out into the future
+            theta: (theta) scaling of residuals to do relative to prediction magnitude
 
         Returns:
             List[pd.DataFrame] list of data frames for each simulation
         """
-        data = self.data.copy()
-        data['max_obs'] = data[self.col_group].map(self.num_obs_per_group)
-        data['max_t'] = data[self.col_group].map(self.max_t_per_group)
-        for cov in self.all_cov_names:
-            data[cov] = data[self.col_group].map(self.covariates_by_group[cov])
+        data = mp.all_data.loc[mp.all_data[mp.col_group] == group].copy()
+        max_t = data[mp.col_t].max()
+        num_obs = data.loc[~data[mp.col_obs_compare].isnull()][mp.col_group].count()
 
+        num_out = np.array(range(far_out)) + 1
+        forecast_times = max_t + num_out
 
+        observations = np.asarray(data[mp.col_obs_compare])
+        obs_times = np.asarray(data[mp.col_t])
+        all_times = np.append(obs_times, forecast_times)
+
+        mean_pred = mp.predict(
+            times=forecast_times, predict_space=mp.predict_space, predict_group=group
+        )
+        residuals = self.predict(
+            far_out=num_out,
+            num_data=np.array([num_obs])
+        )
+        mean_residual = residuals['residual_mean'].values
+        std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
+
+        error = np.random.normal(
+            loc=mean_residual, scale=std_residual, size=(num_simulations, far_out)
+        )
+        forecast_data = mean_pred + (mean_pred ** theta) * error
+        simulated_flag = np.append(
+            np.repeat(0, len(observations)),
+            np.repeat(1, far_out)
+        )
+        cov_dict = {}
+        for cov in mp.all_cov_names:
+            covariate = data[cov].unique()
+            assert len(covariate) == 1, f"There is not a unique covariate value for {cov} group {group}"
+            cov_dict[cov] = covariate[0]
+
+        dfs = []
+        for i in range(num_simulations):
+            new_observations = np.append(observations, forecast_data[i, :])
+            # translate into new space with data translator
+            fit_space_new_observations = data_translator(
+                data=new_observations, input_space=mp.predict_space, output_space=mp.fun
+            )
+            df = pd.DataFrame({
+                mp.col_t: all_times,
+                mp.col_obs: fit_space_new_observations,
+                mp.col_obs_compare: new_observations,
+                mp.col_group: group,
+                'simulated': simulated_flag,
+                'intercept': 1
+            })
+            for k, v in cov_dict.items():
+                df[k] = v
+            if mp.obs_se_func is not None:
+                df[mp.col_obs_se] = df[mp.col_t].apply(mp.obs_se_func)
+            dfs.append(df)
+
+        return dfs

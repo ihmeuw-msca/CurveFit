@@ -3,7 +3,6 @@
     Logistic Curve Fitting
 """
 import numpy as np
-from copy import deepcopy
 from scipy.optimize import minimize
 from . import utils
 

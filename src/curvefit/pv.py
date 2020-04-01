@@ -209,7 +209,7 @@ class PVModel:
         self.pv_groups = {
             grp: PVGroup(
                 data=self.df, col_t=self.col_t, col_obs=self.col_obs, col_grp=self.col_group,
-                col_obs_compare=self.col_obs_compare, model_generator=self.model_generator,
+                col_obs_compare=self.col_obs_compare, model_generator=self.model_generator.generate(),
                 predict_space=self.predict_space, predict_group=grp
             ) for grp in self.groups
         }
