@@ -287,7 +287,7 @@ def data_translator(data, input_space, output_space,
     Args:
         data (np.ndarray): data matrix or vector
         input_space (str | callable): input data space.
-        output_sapce (str | callable): output data space.
+        output_space (str | callable): output data space.
         threshold (float, optional):
             Thresholding for the number below 0 in the linear space.
 
@@ -341,7 +341,6 @@ def data_translator(data, input_space, output_space,
     return output_data
 
 
-<<<<<<< HEAD
 def get_initial_params(model, groups, fit_arg_dict):
     """
     Runs a separate model for each group fixing the random effects to 0
