@@ -76,6 +76,7 @@ class ModelPipeline:
         self.mean_predictions = None
         self.simulated_data = None
         self.draws = None
+        self.draw_models = None
 
     def setup_pipeline(self):
         """
@@ -139,7 +140,8 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
-    def create_draws(self, smoothed_radius, num_draws, num_forecast_out, prediction_times, exclude_below, theta=1):
+    def create_draws(self, smoothed_radius, num_draws, num_forecast_out, prediction_times,
+                     exclude_groups, exclude_below, theta=1, std_threshold=1e-2):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
         for far out and num data points.
@@ -149,6 +151,7 @@ class ModelPipeline:
             num_draws: (int) the number of draws to take
             num_forecast_out: (int) how far out into the future should residual simulations be taken
             prediction_times: (int) which times to produce final predictions at
+            exclude_groups: List[str] which groups to exclude from the residual analysis
             exclude_below: (int) observations with less than exclude_below
                 will be excluded from the analysis
             theta: (float) between 0 and 1, how much scaling of the residuals to do relative to the prediction mean
@@ -158,6 +161,7 @@ class ModelPipeline:
 
         residual_data = self.pv.get_smoothed_residuals(radius=smoothed_radius)
         residual_data = residual_data.loc[residual_data['num_data'] > exclude_below].copy()
+        residual_data = residual_data.loc[~residual_data[self.col_group].isin(exclude_groups)].copy()
 
         self.forecaster.fit_residuals(
             residual_data=residual_data,
@@ -170,6 +174,7 @@ class ModelPipeline:
         self.mean_predictions = {}
         self.simulated_data = {}
         self.draws = {}
+        self.draw_models = {}
 
         self.fit(df=self.all_data)
 
@@ -179,7 +184,8 @@ class ModelPipeline:
                 far_out=num_forecast_out,
                 num_simulations=num_draws,
                 group=group,
-                theta=theta
+                theta=theta,
+                epsilon=std_threshold
             )
             self.simulated_data[group] = sims
             self.mean_predictions[group] = self.predict(
@@ -200,6 +206,7 @@ class ModelPipeline:
             generator = self.generate()
             generator.refresh()
             generator.fit(df=new_data)
+            self.draw_models[i] = generator
 
             for group in self.groups:
                 predictions = generator.predict(
