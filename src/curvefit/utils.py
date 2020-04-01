@@ -350,3 +350,56 @@ def data_translator(data, input_space, output_space,
         output_data = output_data.ravel()
 
     return output_data
+
+
+def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
+    """Truncating draws to the given last day and last obs.
+
+    Args:
+        t (np.ndarray):
+            Time variables for the draws.
+        draws (np.ndarray):
+            Draws matrix.
+        draw_space (str | callable):
+            Which space is the draw in.
+        last_day (int | float):
+            From which day, should the draws start.
+        last_obs (int | float):
+            From which observation value, should the draws start.
+        last_obs_space (str | callable):
+            Which space is the last observation in.
+
+    Returns:
+        np.ndarray:
+            Truncated draws.
+    """
+    draw_ndim = draws.ndim
+    if draw_ndim == 1:
+        draws = draws[None, :]
+
+    assert draws.shape[1] == t.size
+
+    if callable(draw_space):
+        draw_space = draw_space.__name__
+    if callable(last_obs_space):
+        last_obs_space = last_obs_space.__name__
+
+    assert draw_space in ['erf', 'derf', 'log_erf', 'log_derf']
+    assert last_obs_space in ['erf', 'log_erf']
+
+    if last_obs_space == 'erf':
+        assert last_obs >= 0.0
+
+    last_day = int(np.round(last_day))
+    assert last_day >= t.min() and last_day < t.max()
+
+    derf_draws = data_translator(draws, draw_space, 'derf')
+
+    erf_draws = data_translator(derf_draws[:, last_day + 1:],
+                                'derf', 'erf') + last_obs
+
+    truncated_draws = data_translator(erf_draws, 'erf', draw_space)
+    if draw_ndim == 1:
+        truncated_draws = truncated_draws.ravel()
+
+    return truncated_draws
