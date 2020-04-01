@@ -127,7 +127,7 @@ class PVGroup:
             # remove the rows for this group that are greater than the available times
             remove_rows = (self.df[self.col_t] > time) & (self.df[self.col_grp] == self.predict_group)
             df = self.df[~remove_rows].copy()
-            self.models[i].fit(df=df)
+            self.models[i].fit(df=df, group=self.predict_group)
             predictions.append(
                 self.models[i].predict(
                     times=self.times,
@@ -268,7 +268,7 @@ class PVModel:
         )
         return smoothed_residuals
 
-    def plot_residuals(self, radius, absolute=False, exclude=5):
+    def plot_residuals(self, radius,  exclude=None, absolute=False):
         """
         Plot all of the residuals based on some exclusion criteria for
         number of data points that were used in the fitting and some radius

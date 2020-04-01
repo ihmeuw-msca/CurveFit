@@ -7,6 +7,9 @@ import numpy as np
 from scipy.optimize import minimize
 from . import utils
 
+from curvefit.utils import get_initial_params
+from curvefit.utils import compute_starting_params
+
 
 class CurveModel:
     """Curve Fitting Class
@@ -298,15 +301,19 @@ class CurveModel:
                 smart_initialize_options.update(smart_init_options)
             if self.num_groups == 1:
                 raise RuntimeError("Don't do initialization for models with only one group.")
-            fe_init, re_init = self.get_smart_starting_params(
-                fe_init=fe_init,
-                fe_bounds=fe_bounds,
-                re_bounds=[[0.0, 0.0] for i in range(self.num_fe)],
-                fe_gprior=fe_gprior,
-                fixed_params=fixed_params_initialize,
-                options=smart_initialize_options,
-                smart_initialize=False
+
+            fe_dict = get_initial_params(
+                groups=self.group_names,
+                model=self,
+                fit_arg_dict=dict(
+                    fe_init=fe_init,
+                    fe_bounds=fe_bounds,
+                    fe_gprior=fe_gprior,
+                    fixed_params=fixed_params_initialize,
+                    options=smart_initialize_options,
+                )
             )
+            fe_init, re_init = compute_starting_params(fe_dict)
             print(f"Overriding fe_init with {fe_init}.")
             print(f"Overriding re_init with {re_init}.")
 
@@ -329,12 +336,14 @@ class CurveModel:
         bounds = np.vstack([fe_bounds,
                             re_bounds.reshape(self.num_re, 2)])
 
-        result = minimize(fun=self.objective,
-                  x0=x0,
-                  jac=self.gradient,
-                  method='L-BFGS-B',
-                  bounds=bounds,
-                  options=options)
+        result = minimize(
+            fun=self.objective,
+            x0=x0,
+            jac=self.gradient,
+            method='L-BFGS-B',
+            bounds=bounds,
+            options=options
+        )
 
         self.result = result
         self.params = self.compute_params(self.result.x, expand=False)
@@ -402,39 +411,27 @@ class CurveModel:
             obs_se.append(sub_obs_se)
         return np.hstack(obs_se)
 
-    def get_smart_starting_params(self, **fit_kwargs):
+    def get_self_model_kwargs(self):
         """
-        Runs a separate model for each group fixing the random effects to 0
-        and calculates what the initial values should be for the optimization
-        of the whole model.
-
-        Args:
-            **fit_kwargs: keyword arguments that are passed to the fit_params function
+        Gets keyword arguments for a CurveModel
+        based on this instance of the CurveModel
 
         Returns:
-            (np.array) fe_init: fixed effects initial value
-            (np.array) re_init: random effects initial value
+            (dict) kwargs for model from self
         """
-        fixed_effects = []
+        return dict(
+            col_t=self.col_t,
+            col_obs=self.col_obs,
+            col_covs=self.col_covs,
+            col_obs_se=self.col_obs_se,
+            col_group=self.col_group,
+            param_names=self.param_names,
+            link_fun=self.link_fun,
+            var_link_fun=self.var_link_fun,
+            fun=self.fun
+        )
 
-        # Fit a model for each group with fit_kwargs carried over
-        # from the settings for the overall model with a couple of adjustments.
-        for g in self.group_names:
-            fixed_effects.append(
-                self.run_self_model(group=g, **fit_kwargs)
-            )
-        all_fixed_effects = np.vstack([fixed_effects])
-
-        # The new fixed effects initial value is the mean of the fixed effects
-        # across all single-group models.
-        fe_init = all_fixed_effects.mean(axis=0)
-
-        # The new random effects initial value is the single-group models' deviations
-        # from the mean, which is now the new fixed effects initial value.
-        re_init = (all_fixed_effects - fe_init).ravel()
-        return fe_init, re_init
-
-    def run_self_model(self, group, **fit_kwargs):
+    def run_one_group_model(self, group, **fit_kwargs):
         """
         Run the exact model as self but instantiate it as a new model
         so that we can run it on a subset of the data defined by the group (no random effects).
@@ -448,19 +445,12 @@ class CurveModel:
             np.array of fixed effects for this single group
         """
         df_sub = self.df.loc[self.df[self.col_group] == group].copy()
-        model = CurveModel(
-            df=df_sub,
-            col_t=self.col_t,
-            col_obs=self.col_obs,
-            col_covs=self.col_covs,
-            col_obs_se=self.col_obs_se,
-            col_group=self.col_group,
-            param_names=self.param_names,
-            link_fun=self.link_fun,
-            var_link_fun=self.var_link_fun,
-            fun=self.fun,
-        )
-        model.fit_params(
-            **fit_kwargs
-        )
+        model_kwargs = self.get_self_model_kwargs()
+        model = CurveModel(df=df_sub, **model_kwargs)
+        fit_dict = deepcopy(fit_kwargs)
+        fit_dict.update(dict(
+            re_bounds=[[0.0, 0.0] for i in range(model.num_fe)],
+            smart_initialize=False
+        ))
+        model.fit_params(**fit_dict)
         return model.result.x[:self.num_fe]
