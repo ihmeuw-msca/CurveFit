@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+from scipy.optimize import bisect
+from .functions import *
 
 
 def sizes_to_indices(sizes):
@@ -327,3 +329,43 @@ def data_translator(data, input_space, output_space,
         output_data = output_data.ravel()
 
     return output_data
+
+
+def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
+    """Compute p from alpha, beta and slopes of derf at given point.
+
+    Args:
+        alpha (np.ndarray | float):
+            Array of alpha values.
+        beta (np.ndarray | float):
+            Array of beta values.
+        slopes (np.ndarray | float):
+            Array of slopes
+        slope_at (float | int, optional):
+            Point where slope is calculated.
+
+    Returns:
+        np.ndarray | float:
+            The corresponding p value.
+    """
+    is_scalar = np.isscalar(alpha)
+
+    alpha = np.array([alpha]) if np.isscalar(alpha) else alpha
+    beta = np.array([beta]) if np.isscalar(beta) else beta
+
+    assert alpha.size == beta.size
+    assert (alpha > 0.0).all()
+
+    if np.isscalar(slopes):
+        slopes = np.repeat(slopes, alpha.size)
+
+    assert alpha.size == slopes.size
+
+    p = np.zeros(alpha.size)
+
+    for i in range(alpha.size):
+        x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
+                   slopes[i], -15.0, 0.0)
+        p[i] = np.exp(x)
+
+    return p
