@@ -2,6 +2,7 @@
 """
     Logistic Curve Fitting
 """
+from copy import deepcopy
 import numpy as np
 from scipy.optimize import minimize
 from . import utils
@@ -231,7 +232,8 @@ class CurveModel:
                    fixed_params=None,
                    smart_initialize=False,
                    fixed_params_initialize=None,
-                   options=None):
+                   options=None,
+                   smart_init_options=None):
         """Fit the parameters.
 
         Args:
@@ -260,6 +262,8 @@ class CurveModel:
                 Will be ignored if smart_initialize = False and raise warning.
             options (dict, optional):
                 Options for the optimizer.
+            smart_init_options (dict, optional):
+                Options for the inner model
         """
         assert len(fe_init) == self.num_fe
         if fe_bounds is None:
@@ -284,7 +288,14 @@ class CurveModel:
                               f"fixed_params_initialize {fixed_params_initialize} "
                               f"but set smart_initialize=False. Will ignore fixed_params_initialize.")
 
+        if smart_init_options is not None:
+            if options is None:
+                raise RuntimeError("Need to pass in options if you pass in smart init options.")
+
         if smart_initialize:
+            smart_initialize_options = deepcopy(options)
+            if smart_init_options is not None:
+                smart_initialize_options.update(smart_init_options)
             if self.num_groups == 1:
                 raise RuntimeError("Don't do initialization for models with only one group.")
             fe_init, re_init = self.get_smart_starting_params(
@@ -293,7 +304,7 @@ class CurveModel:
                 re_bounds=[[0.0, 0.0] for i in range(self.num_fe)],
                 fe_gprior=fe_gprior,
                 fixed_params=fixed_params_initialize,
-                options=options,
+                options=smart_initialize_options,
                 smart_initialize=False
             )
             print(f"Overriding fe_init with {fe_init}.")
