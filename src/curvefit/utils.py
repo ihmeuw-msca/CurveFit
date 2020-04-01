@@ -163,6 +163,11 @@ def convex_combination(t, pred1, pred2, pred_fun,
         end_day (int, optional):
             Which day end to blend, after follow `pred1`.
     """
+    pred_ndim = pred1.ndim
+    if pred1.ndim == 1:
+        pred1 = pred1[None, :]
+    if pred2.ndim == 1:
+        pred2 = pred2[None, :]
 
     num_time_points = t.size
     assert pred1.shape == pred2.shape
@@ -196,6 +201,9 @@ def convex_combination(t, pred1, pred2, pred_fun,
     else:
         pred = None
         RuntimeError('Unknown prediction functional form')
+
+    if pred_ndim == 1:
+        pred = pred.ravel()
 
     return pred
 
