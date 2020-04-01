@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from scipy.stats import median_absolute_deviation
 
 
 def sizes_to_indices(sizes):
@@ -82,7 +83,8 @@ def neighbor_mean_std(df,
                       col_group,
                       col_axis,
                       axis_offset=None,
-                      radius=None):
+                      radius=None,
+                      compute_mad=False):
     """Compute the neighbor mean and std of the residual matrix.
 
     Args:
@@ -94,6 +96,8 @@ def neighbor_mean_std(df,
             List of offset for each axis to make it suitable as numpy array.
         radius (list{int} | None, optional):
             List of the neighbor radius for each dimension.
+        compute_mad (bool, optional):
+            If compute_mad, also compute median absolute deviation.
 
     Returns:
         pd.DataFrame:
@@ -138,6 +142,17 @@ def neighbor_mean_std(df,
 
         df_sub['residual_mean'] = mat_mean[index[:, 0], index[:, 1]]
         df_sub['residual_std'] = mat_std[index[:, 0], index[:, 1]]
+
+        if compute_mad:
+            mat_mad = np.array([
+                [
+                    median_absolute_deviation(sub_mat[i, j, :],
+                                              nan_policy='omit')
+                    for j in range(sub_mat.shape[1])
+                ]
+                for i in range(sub_mat.shape[0])
+            ])
+            df_sub['residual_mat'] = mat_mad[index[:, 0], index[:, 1]]
 
         df_list[i] = df_sub
 
