@@ -142,6 +142,7 @@ class ModelRunner:
 
 
     def create_draws(self, t, models, covs, predict_fun,
+                     alpha_times_beta=None,
                      sample_size=100,
                      slope_at=14):
         """Create draws from given models.
@@ -155,9 +156,13 @@ class ModelRunner:
                 Covariates for the group want have the draws.
             predict_fun (callable):
                 Prediction function.
-            sample_size (int):
+            alpha_times_beta (float | None, optional):
+                If alpha_times_beta is `None` use the empirical distribution
+                for alpha samples, otherwise use the relation from beta to get
+                alpha samples.
+            sample_size (int, optional):
                 Number of samples
-            slope_at (int | float):
+            slope_at (int | float, optional):
                 If return slopes samples, this is where to evaluation the slope.
 
         Returns:
@@ -165,25 +170,30 @@ class ModelRunner:
                 Draws, with shape (sample_size, t.size).
         """
         # gathering samples
-
         samples = self.create_param_samples(models,
                                             ['alpha', 'beta', 'slope'],
                                             sample_size=sample_size,
                                             slope_at=slope_at)
+        if alpha_times_beta is None:
+            fe_samples = np.vstack([
+                samples['alpha_fe'],
+                samples['beta_fe']
+            ])
 
-        fe_samples = np.vstack([
-            samples['alpha_fe'],
-            samples['beta_fe']
-        ])
+            for i in range(2):
+                fe_samples[i] = self.var_link_fun[i](fe_samples[i])
 
-        for i in range(2):
-            fe_samples[i] = self.var_link_fun[i](fe_samples[i])
+            param_samples = np.zeros(fe_samples.shape)
+            for i in range(2):
+                param_samples[i] = self.link_fun[i](
+                    fe_samples[i]*covs[i]
+                )
+        else:
+            beta_samples = self.link_fun[1](
+                self.var_link_fun[1](samples['beta_fe'])*covs[1])
+            alpha_samples = alpha_times_beta/beta_samples
+            param_samples = np.vstack([alpha_samples, beta_samples])
 
-        param_samples = np.zeros(fe_samples.shape)
-        for i in range(2):
-            param_samples[i] = self.link_fun[i](
-                fe_samples[i]*covs[i]
-            )
 
         p_samples = solve_p_from_dderf(param_samples[0],
                                        param_samples[1],
