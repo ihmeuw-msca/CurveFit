@@ -163,7 +163,7 @@ class Forecaster:
         error = np.random.normal(
             loc=mean_residual, scale=std_residual, size=(num_simulations, far_out)
         )
-        forecast_data = mean_pred + (mean_pred ** theta) * error
+        forecast_data = mean_pred - (mean_pred ** theta) * error
         simulated_flag = np.append(
             np.repeat(0, len(observations)),
             np.repeat(1, far_out)

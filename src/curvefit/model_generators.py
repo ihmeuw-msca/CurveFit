@@ -154,6 +154,7 @@ class ModelPipeline:
             exclude_groups: List[str] which groups to exclude from the residual analysis
             exclude_below: (int) observations with less than exclude_below
                 will be excluded from the analysis
+            std_threshold: (float) floor for standard deviation
             theta: (float) between 0 and 1, how much scaling of the residuals to do relative to the prediction mean
         """
         if self.pv.all_residuals is None:
@@ -171,10 +172,11 @@ class ModelPipeline:
             residual_model_type='linear'
         )
 
+        generator = self.generate()
+
         self.mean_predictions = {}
         self.simulated_data = {}
         self.draws = {}
-        self.draw_models = {}
 
         self.fit(df=self.all_data)
 
@@ -203,10 +205,7 @@ class ModelPipeline:
             new_data = pd.concat(new_data)
 
             print(f"Creating {i}th draw.", end='\r')
-            generator = self.generate()
-            generator.refresh()
             generator.fit(df=new_data)
-            self.draw_models[i] = generator
 
             for group in self.groups:
                 predictions = generator.predict(
@@ -272,8 +271,8 @@ class BasicModel(ModelPipeline):
 class TightLooseBetaPModel(ModelPipeline):
     def __init__(self, loose_beta_fit_dict, tight_beta_fit_dict,
                  loose_p_fit_dict, tight_p_fit_dict, basic_model_dict,
+                 model_specific_dict,
                  beta_model_extras=None, p_model_extras=None,
-                 blend_start_t=2, blend_end_t=30,
                  **pipeline_kwargs):
         """
         Produces two tight-loose models as a convex combination between the two of them,
@@ -301,6 +300,8 @@ class TightLooseBetaPModel(ModelPipeline):
                 override the basic_model_kwargs for the beta model
             p_model_extras: (optional) dictionary of keyword arguments to
                 override the basic_model_kwargs for the p model
+            beta_weight: (float)
+            p_weight: (float)
             blend_start_t: (int) the time to start blending tight and loose
             blend_end_t: (int) the time to stop blending tight and loose
         """
@@ -308,6 +309,16 @@ class TightLooseBetaPModel(ModelPipeline):
         generator_kwargs = pipeline_kwargs
         for arg in self.pop_cols:
             generator_kwargs.pop(arg)
+
+        self.beta_weight = None
+        self.p_weight = None
+        self.blend_start_t = None
+        self.blend_end_t = None
+
+        for k, v in model_specific_dict.items():
+            setattr(self, k, v)
+
+        assert self.beta_weight + self.p_weight == 1
 
         self.basic_model_dict = basic_model_dict
         self.basic_model_dict.update(**generator_kwargs)
@@ -326,9 +337,6 @@ class TightLooseBetaPModel(ModelPipeline):
         self.tight_beta_fit_dict = tight_beta_fit_dict
         self.loose_p_fit_dict = loose_p_fit_dict
         self.tight_p_fit_dict = tight_p_fit_dict
-
-        self.blend_start_t = blend_start_t
-        self.blend_end_t = blend_end_t
 
         self.loose_beta_model = None
         self.tight_beta_model = None
@@ -362,33 +370,45 @@ class TightLooseBetaPModel(ModelPipeline):
         self.tight_p_model.fit_params(**self.tight_p_fit_dict)
 
     def predict(self, times, predict_space, predict_group):
-        loose_beta_predictions = self.loose_beta_model.predict(
-            t=times, group_name=predict_group,
-            prediction_functional_form=predict_space
-        )
-        tight_beta_predictions = self.tight_beta_model.predict(
-            t=times, group_name=predict_group,
-            prediction_functional_form=predict_space
-        )
-        loose_p_predictions = self.loose_p_model.predict(
-            t=times, group_name=predict_group,
-            prediction_functional_form=predict_space
-        )
-        tight_p_predictions = self.tight_p_model.predict(
-            t=times, group_name=predict_group,
-            prediction_functional_form=predict_space
-        )
-        import pdb; pdb.set_trace()
-        beta_predictions = convex_combination(
-            t=times, pred1=tight_beta_predictions, pred2=loose_beta_predictions,
-            pred_fun=predict_space, start_day=self.blend_start_t, end_day=self.blend_end_t
-        )
-        p_predictions = convex_combination(
-            t=times, pred1=tight_p_predictions, pred2=loose_p_predictions,
-            pred_fun=predict_space, start_day=self.blend_start_t, end_day=self.blend_end_t
-        )
-        averaged_predictions = model_average(
-            pred1=beta_predictions, pred2=p_predictions,
-            w1=0.5, w2=0.5, pred_fun=predict_space
-        )
+        beta_predictions = None
+        p_predictions = None
+
+        if self.beta_weight > 0:
+            loose_beta_predictions = self.loose_beta_model.predict(
+                t=times, group_name=predict_group,
+                prediction_functional_form=predict_space
+            )
+            tight_beta_predictions = self.tight_beta_model.predict(
+                t=times, group_name=predict_group,
+                prediction_functional_form=predict_space
+            )
+            beta_predictions = convex_combination(
+                t=times, pred1=tight_beta_predictions, pred2=loose_beta_predictions,
+                pred_fun=predict_space, start_day=self.blend_start_t, end_day=self.blend_end_t
+            )
+        if self.p_weight > 0:
+            loose_p_predictions = self.loose_p_model.predict(
+                t=times, group_name=predict_group,
+                prediction_functional_form=predict_space
+            )
+            tight_p_predictions = self.tight_p_model.predict(
+                t=times, group_name=predict_group,
+                prediction_functional_form=predict_space
+            )
+            p_predictions = convex_combination(
+                t=times, pred1=tight_p_predictions, pred2=loose_p_predictions,
+                pred_fun=predict_space, start_day=self.blend_start_t, end_day=self.blend_end_t
+            )
+
+        if (self.beta_weight > 0) & (self.p_weight > 0):
+            averaged_predictions = model_average(
+                pred1=beta_predictions, pred2=p_predictions,
+                w1=self.beta_weight, w2=self.p_weight, pred_fun=predict_space
+            )
+        elif (self.beta_weight > 0) & (self.p_weight == 0):
+            averaged_predictions = beta_predictions
+        elif (self.beta_weight == 0) & (self.p_weight > 0):
+            averaged_predictions = p_predictions
+        else:
+            raise RuntimeError
         return averaged_predictions
