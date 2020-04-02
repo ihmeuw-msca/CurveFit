@@ -1,6 +1,6 @@
 # Overview
 
-CurveFit is an extendable nonlinear mixed effects model or fitting curves.
+CurveFit is an extendable nonlinear mixed effects model for fitting curves.
 The main application in this development is COVID-19 forecasting, so that
 the curves we consider are variants of logistic models. However the interface
 allows any user-specified parametrized family.
