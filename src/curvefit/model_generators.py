@@ -288,9 +288,94 @@ class BasicModel(ModelPipeline):
         return predictions
 
 
-class BasicModelInit(BasicModel):
-    def __init__(self, **kwargs):
+class BasicModelWithInit(BasicModel):
+    def __init__(self, smart_init_options=None, **kwargs):
+        if smart_init_options is None:
+            smart_init_options = {}
+        self.smart_init_options = smart_init_options
+
         super().__init__(**kwargs)
+
+        if self.fit_dict['options']:
+            self.smart_init_options = {**self.fit_dict['options'],
+                                       **self.smart_init_options}
+
+        self.init_dict = None
+        self.mod = None
+
+    def run_init_model(self):
+        self.init_dict = self.get_init_dict(df=self.all_data,
+                                            groups=self.groups)
+
+    def update_init_model(self, df, group):
+        """
+        Update the initial model with a re-fit model
+        from the specified group. Returns a new copy of the init dict
+
+        Args:
+            df: (pd.DataFrame) data used to update the init model
+            group: (str) the group to update
+
+        Returns:
+
+        """
+        new_init_dict = deepcopy(self.init_dict)
+        new_init_dict.update(self.get_init_dict(df=df, groups=[group]))
+        return new_init_dict
+
+    def get_init_dict(self, df, groups):
+        """
+        Run the init model for each location.
+
+        Args:
+            df: (pd.DataFrame) data frame to fit the model that will
+                be subset by group
+            groups: (str) groups to get in the dict
+
+        Returns:
+            (dict) dictionary of fixed effects keyed by group
+        """
+        model = CurveModel(df=df,
+                           **self.basic_model_dict)
+
+        init_fit_dict = deepcopy(self.fit_dict)
+        init_fit_dict.update(options=self.smart_init_options)
+
+        init_dict = get_initial_params(
+            groups=groups,
+            model=model,
+            fit_arg_dict=init_fit_dict
+        )
+        return init_dict
+
+    def fit(self, df, group=None):
+        """
+        Fits a loose, tight, beta, and p combinations model. If you pass in
+        update group it will override the initial parameters with new
+        initial parameters based on the df you pass.
+
+        Args:
+            df:
+            group: (str) passing in the group will update the initialization
+                dictionary (not replacing the old one) for this particular fit.
+
+        Returns:
+
+        """
+        if group is not None:
+            init_dict = self.update_init_model(df=df, group=group)
+        else:
+            init_dict = deepcopy(self.init_dict)
+
+        fit_dict = deepcopy(self.fit_dict)
+        fe_init, re_init = compute_starting_params(init_dict)
+        fit_dict.update(fe_init=fe_init, re_init=re_init)
+
+        self.mod = CurveModel(df=df, **self.basic_model_dict)
+        self.mod.fit_params(**fit_dict)
+
+    def refresh(self):
+        self.mod = None
 
 
 class TightLooseBetaPModel(ModelPipeline):
