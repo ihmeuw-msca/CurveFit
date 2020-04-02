@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+from copy import deepcopy
+from collections import OrderedDict
 from scipy.optimize import bisect
 from .functions import *
 
@@ -165,6 +167,11 @@ def convex_combination(t, pred1, pred2, pred_fun,
         end_day (int, optional):
             Which day end to blend, after follow `pred1`.
     """
+    pred_ndim = pred1.ndim
+    if pred1.ndim == 1:
+        pred1 = pred1[None, :]
+    if pred2.ndim == 1:
+        pred2 = pred2[None, :]
 
     num_time_points = t.size
     assert pred1.shape == pred2.shape
@@ -198,6 +205,9 @@ def convex_combination(t, pred1, pred2, pred_fun,
     else:
         pred = None
         RuntimeError('Unknown prediction functional form')
+
+    if pred_ndim == 1:
+        pred = pred.ravel()
 
     return pred
 
@@ -277,7 +287,7 @@ def data_translator(data, input_space, output_space,
     Args:
         data (np.ndarray): data matrix or vector
         input_space (str | callable): input data space.
-        output_sapce (str | callable): output data space.
+        output_space (str | callable): output data space.
         threshold (float, optional):
             Thresholding for the number below 0 in the linear space.
 
@@ -329,6 +339,60 @@ def data_translator(data, input_space, output_space,
         output_data = output_data.ravel()
 
     return output_data
+
+
+def get_initial_params(model, groups, fit_arg_dict):
+    """
+    Runs a separate model for each group fixing the random effects to 0
+    and calculates what the initial values should be for the optimization
+    of the whole model.
+
+    Args:
+        model: (curvefit.CurveModel)
+        groups: (list) list of groups to get smart starting params for
+        fit_arg_dict: keyword arguments in dict that are passed to the
+            fit_params function
+
+    Returns:
+        (np.array) fe_init: fixed effects initial value
+        (np.array) re_init: random effects initial value
+    """
+    fixed_effects = OrderedDict()
+    fit_kwargs = deepcopy(fit_arg_dict)
+
+    # Fit a model for each group with fit_kwargs carried over
+    # from the settings for the overall model with a couple of adjustments.
+    for g in groups:
+        fixed_effects[g] = model.run_one_group_model(group=g, **fit_kwargs)
+    return fixed_effects
+
+
+def compute_starting_params(fe_dict):
+    """
+    Compute the starting parameters for a dictionary of fixed effects
+    by averaging them to get fixed effects for overall model and finding
+    deviation from average as the random effect.
+    Args:
+        fe_dict: OrderedDict of fixed effects to put together that are ordered
+            in the way that you want them to go into the model
+
+    Returns:
+        (np.array) fe_init: fixed effects initial value
+        (np.array) re_init: random effects initial value
+    """
+    fe_values = []
+    for k, v in fe_dict.items():
+        fe_values.append(v)
+    all_fixed_effects = np.vstack(fe_values)
+
+    # The new fixed effects initial value is the mean of the fixed effects
+    # across all single-group models.
+    fe_init = all_fixed_effects.mean(axis=0)
+
+    # The new random effects initial value is the single-group models' deviations
+    # from the mean, which is now the new fixed effects initial value.
+    re_init = (all_fixed_effects - fe_init).ravel()
+    return fe_init, re_init
 
 
 def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
