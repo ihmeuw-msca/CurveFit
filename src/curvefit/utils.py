@@ -15,15 +15,8 @@ def sizes_to_indices(sizes):
         list{range}:
             List the indices.
     """
-    indices = []
-    a = 0
-    b = 0
-    for i, size in enumerate(sizes):
-        b += size
-        indices.append(range(a, b))
-        a += size
-
-    return indices
+    sums = np.cumsum(sizes)
+    return [range(a, b) for a, b in zip(np.concatenate([[0], sums]), sums)]
 
 
 def get_obs_se(df, col_t, func=lambda x: 1 / (1 + x)):
