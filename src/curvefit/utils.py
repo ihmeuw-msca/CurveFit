@@ -80,6 +80,34 @@ def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
     df_result = pd.concat([df_all[g] for g in groups])
     return df_result
 
+def across_group_mean_std(df,
+                          col_val,
+                          col_group,
+                          col_axis):
+    """Compute the mean and std of the residual matrix across locations.
+
+    Args:
+        df (pd.DataFrame): Residual data frame.
+        col_val ('str'): Name for column that store the residual.
+        col_group ('str'): Name for column that store the group label.
+        col_axis (list{str}): List of two axis column names.
+
+    Returns:
+        pd.DataFrame:
+            Averaged residual mean and std data frame.
+    """
+    df_list = [
+        df[df[col_group] == group].copy()
+        for group in df[col_group].unique()
+    ]
+    for i, df_sub in enumerate(df_list):
+        df_sub_result = df_sub.groupby(col_axis, as_index=False).agg(
+            {col_val: [np.nanmean, np.nanstd]}
+        )
+        df_sub_result.columns = df_sub_result.columns.get_level_values(0)
+        df_list[i] = df_sub_result
+
+    return pd.concat(df_list)
 
 def neighbor_mean_std(df,
                       col_val,
