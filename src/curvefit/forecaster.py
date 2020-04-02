@@ -116,6 +116,7 @@ class Forecaster:
         data_dict = {'far_out': far_out, 'num_data': num_data}
         rows = itertools.product(*data_dict.values())
         new_data = pd.DataFrame.from_records(rows, columns=data_dict.keys())
+        new_data['data_index'] = new_data['far_out'] + new_data['num_data']
 
         new_data['residual_mean'] = self.mean_residual_model.predict(df=new_data)
         new_data['log_residual_std'] = self.std_residual_model.predict(df=new_data)

@@ -15,6 +15,7 @@ from curvefit.pv import PVModel
 from curvefit.utils import convex_combination, model_average
 from curvefit.utils import get_initial_params
 from curvefit.utils import compute_starting_params
+from curvefit.diagnostics import plot_draws
 
 
 class ModelPipeline:
@@ -114,6 +115,7 @@ class ModelPipeline:
         """
         Generate a copy of this class.
         """
+        print("Generating.")
         return deepcopy(self)
 
     def fit(self, df, group=None):
@@ -144,7 +146,7 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
-    def fit_residuals(self, smoothed_radius, exclude_below, exclude_groups):
+    def fit_residuals(self, smoothed_radius, covariates, exclude_below, exclude_groups):
         """
         Fits residuals given a smoothed radius, and some models to exclude.
         Exclude below excludes models with less than that many data points.
@@ -152,6 +154,8 @@ class ModelPipeline:
 
         Args:
             smoothed_radius: List[int] 2-element list of amount of smoothing for the residuals
+            covariates: List[str] which covariates to use to predict the residuals
+                choices of num_data, far_out, and data_index (where data_index = far_out + num_data)
             exclude_groups: List[str] which groups to exclude from the residual analysis
             exclude_below: (int) observations with less than exclude_below
                 will be excluded from the analysis
@@ -167,7 +171,7 @@ class ModelPipeline:
             residual_data=residual_data,
             mean_col='residual_mean',
             std_col='residual_std',
-            residual_covariates=['far_out', 'num_data'],
+            residual_covariates=covariates,
             residual_model_type='linear'
         )
 
@@ -284,10 +288,16 @@ class BasicModel(ModelPipeline):
         return predictions
 
 
+class BasicModelInit(BasicModel):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+
 class TightLooseBetaPModel(ModelPipeline):
-    def __init__(self, loose_beta_fit_dict, tight_beta_fit_dict,
-                 loose_p_fit_dict, tight_p_fit_dict, basic_model_dict,
-                 model_specific_dict,
+    def __init__(self, basic_fit_dict,
+                 basic_model_dict, model_specific_dict,
+                 loose_beta_fit=None, tight_beta_fit=None,
+                 loose_p_fit=None, tight_p_fit=None,
                  beta_model_extras=None, p_model_extras=None,
                  **pipeline_kwargs):
         """
@@ -297,10 +307,11 @@ class TightLooseBetaPModel(ModelPipeline):
         Args:
             **pipeline_kwargs: keyword arguments for the base class of ModelPipeline
 
-            loose_beta_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() for the loose beta model
-            tight_beta_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() fro the tight beta model
-            loose_p_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() for the loose p model
-            tight_p_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() fro the tight p model
+            basic_fit_dict: dictionary of keyword arguments to CurveModel.fit_params()
+            loose_beta_fit: dictionary of keyword arguments to override basic_fit_dict for the loose beta model
+            tight_beta_fit: dictionary of keyword arguments to override basic_fit_dict for the tight beta model
+            loose_p_fit: dictionary of keyword arguments to override basic_fit_dict for the loose p model
+            tight_p_fit: dictionary of keyword arguments to override basic_fit_dict fro the tight p model
 
             basic_model_dict: additional keyword arguments to the CurveModel class
                 col_obs_se: (str) of observation standard error
@@ -352,10 +363,19 @@ class TightLooseBetaPModel(ModelPipeline):
         if p_model_extras is not None:
             self.p_model_kwargs.update(p_model_extras)
 
-        self.loose_beta_fit_dict = loose_beta_fit_dict
-        self.tight_beta_fit_dict = tight_beta_fit_dict
-        self.loose_p_fit_dict = loose_p_fit_dict
-        self.tight_p_fit_dict = tight_p_fit_dict
+        self.loose_beta_fit_dict = deepcopy(basic_fit_dict)
+        self.tight_beta_fit_dict = deepcopy(basic_fit_dict)
+        self.loose_p_fit_dict = deepcopy(basic_fit_dict)
+        self.tight_p_fit_dict = deepcopy(basic_fit_dict)
+
+        if loose_beta_fit is not None:
+            self.loose_beta_fit_dict.update(loose_beta_fit)
+        if tight_beta_fit is not None:
+            self.tight_beta_fit_dict.update(tight_beta_fit)
+        if loose_p_fit is not None:
+            self.loose_p_fit_dict.update(loose_p_fit)
+        if tight_p_fit is not None:
+            self.tight_p_fit_dict.update(tight_p_fit)
 
         self.loose_beta_model = None
         self.tight_beta_model = None
@@ -444,6 +464,8 @@ class TightLooseBetaPModel(ModelPipeline):
             init_dict = deepcopy(self.init_dict)
 
         for param in ['beta', 'p']:
+            if getattr(self, f'{param}_weight') == 0:
+                continue
             for fit_type in ['loose', 'tight']:
                 model_arg_dict = deepcopy(getattr(self, f'{param}_model_kwargs'))
                 fit_arg_dict = deepcopy(getattr(self, f'{fit_type}_{param}_fit_dict'))
@@ -501,3 +523,7 @@ class TightLooseBetaPModel(ModelPipeline):
         else:
             raise RuntimeError
         return averaged_predictions
+
+    def plot_draws(self, prediction_times, sharex, sharey):
+        plot_draws(generator=self, sharex=sharex, sharey=sharey, prediction_times=prediction_times)
+
