@@ -80,6 +80,7 @@ def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
     df_result = pd.concat([df_all[g] for g in groups])
     return df_result
 
+
 def across_group_mean_std(df,
                           col_val,
                           col_group,
@@ -104,10 +105,11 @@ def across_group_mean_std(df,
         df_sub_result = df_sub.groupby(col_axis, as_index=False).agg(
             {col_val: [np.nanmean, np.nanstd]}
         )
-        df_sub_result.columns = df_sub_result.columns.get_level_values(0)
+        df_sub_result.columns = [*col_axis, 'mean', 'std']
         df_list[i] = df_sub_result
 
     return pd.concat(df_list)
+
 
 def neighbor_mean_std(df,
                       col_val,
