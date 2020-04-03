@@ -150,45 +150,33 @@ def neighbor_mean_std(df,
     assert all([isinstance(r, int) for r in radius])
 
     df_list = [
-        df[df[col_group] == group]
+        df[df[col_group] == group].reset_index()
         for group in df[col_group].unique()
     ]
+    # TODO: Make this faster
     for i, df_sub in enumerate(df_list):
-        index = df_sub[col_axis].values.astype(int)
-        index += np.array(axis_offset)
-        shape = tuple(index.max(axis=0) + 1)
+        index = np.unique(np.asarray(df_sub[col_axis].values), axis=0).astype(int)
+        new_df = pd.DataFrame({
+            'group': df_sub[col_group].iloc[0],
+            col_axis[0]: index[:, 0],
+            col_axis[1]: index[:, 1],
+            'residual_mean': np.nan,
+            'residual_std': np.nan
+        })
+        for j in index:
+            print(j, end='\r')
+            df_filter = df_sub.copy()
+            for k, ax in enumerate(col_axis):
+                rad = radius[k]
+                ax_filter = np.abs(df_sub[col_axis[k]] - j[k]) <= rad
+                df_filter = df_filter.loc[ax_filter]
+            mean = df_filter[col_val].mean()
+            std = df_filter[col_val].std()
+            subset = np.all(new_df[col_axis] == j, axis=1).values
+            new_df.loc[subset, 'residual_mean'] = mean
+            new_df.loc[subset, 'residual_std'] = std
 
-        mat = np.empty(shape)
-        mat.fill(np.nan)
-        mat[index[:, 0], index[:, 1]] = df_sub[col_val]
-
-        window_shape = tuple(np.array(radius)*2 + 1)
-        mat = np.pad(mat, ((radius[0],), (radius[1],)), 'constant',
-                     constant_values=np.nan)
-        view_shape = tuple(
-            np.subtract(mat.shape, window_shape) + 1) + window_shape
-        strides = mat.strides + mat.strides
-        sub_mat = np.lib.stride_tricks.as_strided(mat, view_shape, strides)
-        sub_mat = sub_mat.reshape(*shape, np.prod(window_shape))
-
-        mat_mean = np.nanmean(sub_mat, axis=2)
-        mat_std = np.nanstd(sub_mat, axis=2)
-
-        df_sub['residual_mean'] = mat_mean[index[:, 0], index[:, 1]]
-        df_sub['residual_std'] = mat_std[index[:, 0], index[:, 1]]
-
-        if compute_mad:
-            mat_mad = np.array([
-                [
-                    median_absolute_deviation(sub_mat[i, j, :],
-                                              nan_policy='omit')
-                    for j in range(sub_mat.shape[1])
-                ]
-                for i in range(sub_mat.shape[0])
-            ])
-            df_sub['residual_mat'] = mat_mad[index[:, 0], index[:, 1]]
-
-        df_list[i] = df_sub
+        df_list[i] = new_df
 
     return pd.concat(df_list)
 

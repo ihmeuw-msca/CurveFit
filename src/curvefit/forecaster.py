@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 import itertools
 from curvefit.utils import data_translator
+from curvefit.utils import across_group_mean_std
 
 
 class ResidualModel:
@@ -27,8 +28,6 @@ class ResidualModel:
         assert type(self.outcome) == str
         assert type(self.covariates) == list
 
-        self.coef = None
-
     def fit(self):
         pass
 
@@ -45,6 +44,7 @@ class LinearResidualModel(ResidualModel):
             **kwargs: keyword arguments to ResidualModel base class
         """
         super().__init__(**kwargs)
+        self.coef = None
 
     def fit(self):
         df = self.data.copy()
@@ -63,6 +63,26 @@ class LinearResidualModel(ResidualModel):
         df['log_num_data_transformed'] = np.log(df['num_data_transformed'])
         pred = np.asarray(df[self.covariates])
         return pred.dot(self.coef)
+
+
+class LocalSmootherResidualModel(ResidualModel):
+    def __init__(self, radius, **kwargs):
+        """
+        An n-dimensional smoother for the covariates that are passed.
+        Args:
+            radius: List[int] radius of smoother in each direction
+            **kwargs: keyword arguments to ResidualModel base class
+        """
+        super().__init__(**kwargs)
+        self.radius = radius
+        self.array = None
+
+    def fit(self):
+        df = self.data.copy()
+        array = np.asarray([self.covariates])
+        # smooth
+        self.array = smooth(array)
+
 
 
 class Forecaster:

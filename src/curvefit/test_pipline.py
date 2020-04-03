@@ -11,11 +11,12 @@ class APModel(BasicModel):
     """Alapha prior model.
     """
     def __init__(self, obs_bounds=None, **kwargs):
-        super().__init__(**kwargs)
 
         self.obs_bounds = [-np.inf, np.inf] if obs_bounds is None else obs_bounds
-        self.models = None
         self.fun_gprior = None
+        self.models = {}
+
+        super().__init__(**kwargs)
 
     def run_init_model(self):
         if 'fun_gprior' not in self.fit_dict or \
@@ -78,7 +79,7 @@ class APModel(BasicModel):
     def predict(self, times, predict_space, predict_group):
         predictions = self.models[predict_group].predict(
             t=times,
-            group_name = predict_group,
-            predict_functional_form = predict_space
+            group_name=predict_group,
+            prediction_functional_form=predict_space
         )
         return predictions

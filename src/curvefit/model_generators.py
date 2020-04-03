@@ -118,7 +118,7 @@ class ModelPipeline:
             exclude_below=exclude_below,
             mean_covariates=['num_data_transformed', 'far_out'],
             std_covariates=['log_num_data_transformed'],
-            exclude_groups=['Wuhan City, Hubei']
+            exclude_groups=['Wuhan City, Hubei', 'Sardegna']
         )
 
         # Create draws. Access them in self.draws by location.
