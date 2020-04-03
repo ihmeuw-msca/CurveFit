@@ -5,6 +5,7 @@
 import numpy as np
 from .model_generators import BasicModel
 from .model import CurveModel
+from copy import deepcopy
 
 
 class APModel(BasicModel):
@@ -15,6 +16,9 @@ class APModel(BasicModel):
         self.obs_bounds = [-np.inf, np.inf] if obs_bounds is None else obs_bounds
         self.fun_gprior = None
         self.models = {}
+        self.prior_modifier = lambda x: 10**(min(1.0, max(-2.0,
+            0.3*x - 3.5
+        )))
 
         super().__init__(**kwargs)
 
@@ -43,7 +47,15 @@ class APModel(BasicModel):
             **self.basic_model_dict
         )
 
-        model.fit_params(**self.fit_dict)
+        fit_dict = deepcopy(self.fit_dict)
+        fe_gprior = fit_dict['fe_gprior']
+        fe_gprior[1][1] *= self.prior_modifier(model.num_obs)
+
+        fit_dict.update({
+            'fe_gprior': fe_gprior
+        })
+        # print(fit_dict['fe_gprior'])
+        model.fit_params(**fit_dict)
         return model
 
     def run_filtered_models(self, df, obs_bounds):
