@@ -12,20 +12,13 @@ def plot_draws(generator, prediction_times, sharex, sharey, plot_data):
         prediction_times: (np.array) of prediction times
         sharex: fix the x axes
         sharey: fix the y axes
-        plot_data: whether or not to plot the data
-    Returns:
-
     """
     fig, ax = plt.subplots(len(generator.groups), 1, figsize=(12, 4 * len(generator.groups)),
                            sharex=sharex, sharey=sharey)
     for i, group in enumerate(generator.groups):
-        mean = np.vstack(generator.draws[group]).mean(axis=0)
-        for j in range(len(generator.draws[group])):
+        mean = generator.draws[group].mean(axis=0)
+        for j in range(generator.draws[group].shape[0]):
             ax[i].plot(prediction_times, generator.draws[group][j], c='blue', alpha=0.1)
-            if plot_data:
-                sim_data = generator.simulated_data[group][j]
-                ax[i].scatter(sim_data[generator.col_t], sim_data[generator.col_obs_compare],
-                              c=sim_data['simulated'], alpha=0.3)
         ax[i].plot(prediction_times, mean, c='red')
         ax[i].plot(prediction_times, generator.mean_predictions[group], c='black')
         df_data = generator.all_data.loc[generator.all_data[generator.col_group] == group].copy()

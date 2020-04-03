@@ -146,7 +146,7 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
-    def fit_residuals(self, smoothed_radius, covariates, exclude_below, exclude_groups):
+    def fit_residuals(self, smoothed_radius, covariates, exclude_below, exclude_groups, std_floor=1e-3):
         """
         Fits residuals given a smoothed radius, and some models to exclude.
         Exclude below excludes models with less than that many data points.
@@ -159,6 +159,7 @@ class ModelPipeline:
             exclude_groups: List[str] which groups to exclude from the residual analysis
             exclude_below: (int) observations with less than exclude_below
                 will be excluded from the analysis
+            std_floor: (float) minimum standard deviation (or coefficient of variation given theta)
 
         Returns:
 
@@ -166,6 +167,7 @@ class ModelPipeline:
         residual_data = self.pv.get_smoothed_residuals(radius=smoothed_radius)
         residual_data = residual_data.loc[residual_data['num_data'] > exclude_below].copy()
         residual_data = residual_data.loc[~residual_data[self.col_group].isin(exclude_groups)].copy()
+        residual_data['residual_std'] = residual_data['residual_std'].apply(lambda x: max(x, std_floor))
 
         self.forecaster.fit_residuals(
             residual_data=residual_data,
@@ -175,65 +177,41 @@ class ModelPipeline:
             residual_model_type='linear'
         )
 
-    def create_draws(self, num_draws, num_forecast_out, prediction_times,
+    def create_draws(self, num_draws, prediction_times,
                      theta=1, std_threshold=1e-2):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
         for far out and num data points.
 
         Args:
-
             num_draws: (int) the number of draws to take
-            num_forecast_out: (int) how far out into the future should residual simulations be taken
-            prediction_times: (int) which times to produce final predictions at
+            prediction_times: (int) which times to produce final predictions (draws) at
             std_threshold: (float) floor for standard deviation
             theta: (float) between 0 and 1, how much scaling of the residuals to do relative to the prediction mean
         """
         if self.pv.all_residuals is None:
             raise RuntimeError("Need to first run predictive validity with self.run_predictive_validity.")
 
-        generator = self.generate()
-
-        self.mean_predictions = {}
-        self.simulated_data = {}
-        self.draws = {}
-
         self.fit(df=self.all_data)
 
+        self.mean_predictions = {}
+        self.draws = {}
+
         for group in self.groups:
-            sims = self.forecaster.simulate(
-                mp=self,
-                far_out=num_forecast_out,
-                num_simulations=num_draws,
-                group=group,
-                theta=theta,
-                epsilon=std_threshold
-            )
-            self.simulated_data[group] = sims
             self.mean_predictions[group] = self.predict(
                 times=prediction_times, predict_space=self.predict_space, predict_group=group
             )
 
         for group in self.groups:
-            self.draws[group] = []
-
-        for i in range(num_draws):
-            new_data = []
-
-            for group in self.groups:
-                new_data.append(self.simulated_data[group][i])
-            new_data = pd.concat(new_data)
-
-            print(f"Creating {i}th draw.", end='\r')
-            generator.fit(df=new_data)
-
-            for group in self.groups:
-                predictions = generator.predict(
-                    times=prediction_times,
-                    predict_space=self.predict_space,
-                    predict_group=group
-                )
-                self.draws[group].append(predictions)
+            draws = self.forecaster.simulate(
+                mp=self,
+                num_simulations=num_draws,
+                prediction_times=prediction_times,
+                group=group,
+                theta=theta,
+                epsilon=std_threshold
+            )
+            self.draws[group] = draws
 
         return self
 

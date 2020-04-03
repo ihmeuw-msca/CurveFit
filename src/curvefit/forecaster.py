@@ -124,14 +124,14 @@ class Forecaster:
 
         return new_data
 
-    def simulate(self, mp, far_out, num_simulations, group, epsilon=1e-2, theta=1):
+    def simulate(self, mp, num_simulations, prediction_times, group, epsilon=1e-2, theta=1):
         """
         Simulate the residuals based on the mean and standard deviation of predicting
         into the future.
 
         Args:
             mp: (curvefit.model_generator.ModelPipeline) model pipeline
-            far_out: (int) how far out into the future to predict
+            prediction_times: (np.array) times to create predictions at
             num_simulations: number of simulations
             group: (str) the group to make the simulations for
             epsilon: (epsilon) the floor for standard deviation moving out into the future
@@ -141,59 +141,26 @@ class Forecaster:
             List[pd.DataFrame] list of data frames for each simulation
         """
         data = mp.all_data.loc[mp.all_data[mp.col_group] == group].copy()
-        max_t = data[mp.col_t].max()
+        max_t = int(np.round(data[mp.col_t].max()))
         num_obs = data.loc[~data[mp.col_obs_compare].isnull()][mp.col_group].count()
 
-        num_out = np.array(range(far_out)) + 1
-        forecast_times = max_t + num_out
+        predictions = mp.mean_predictions[group]
 
-        observations = np.asarray(data[mp.col_obs_compare])
-        obs_times = np.asarray(data[mp.col_t])
-        all_times = np.append(obs_times, forecast_times)
+        add_noise = prediction_times > max_t
+        forecast_out_times = prediction_times[add_noise] - max_t
 
-        mean_pred = mp.predict(
-            times=forecast_times, predict_space=mp.predict_space, predict_group=group
-        )
         residuals = self.predict(
-            far_out=num_out,
-            num_data=np.array([num_obs])
+            far_out=forecast_out_times, num_data=np.array([num_obs])
         )
         mean_residual = residuals['residual_mean'].values
         std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
 
-        error = np.random.normal(
-            loc=mean_residual, scale=std_residual, size=(num_simulations, far_out)
-        )
-        forecast_data = mean_pred - (mean_pred ** theta) * error
-        simulated_flag = np.append(
-            np.repeat(0, len(observations)),
-            np.repeat(1, far_out)
-        )
-        cov_dict = {}
-        for cov in mp.all_cov_names:
-            covariate = data[cov].unique()
-            assert len(covariate) == 1, f"There is not a unique covariate value for {cov} group {group}"
-            cov_dict[cov] = covariate[0]
+        no_error = np.zeros(shape=(num_simulations, max_t))
+        error = np.random.normal(mean_residual, scale=std_residual, size=(num_simulations, sum(add_noise)))
+        all_error = np.hstack([no_error, error])
 
-        dfs = []
-        for i in range(num_simulations):
-            new_observations = np.append(observations, forecast_data[i, :])
-            # translate into new space with data translator
-            fit_space_new_observations = data_translator(
-                data=new_observations, input_space=mp.predict_space, output_space=mp.fun
-            )
-            df = pd.DataFrame({
-                mp.col_t: all_times,
-                mp.col_obs: fit_space_new_observations,
-                mp.col_obs_compare: new_observations,
-                mp.col_group: group,
-                'simulated': simulated_flag,
-                'intercept': 1
-            })
-            for k, v in cov_dict.items():
-                df[k] = v
-            if mp.obs_se_func is not None:
-                df[mp.col_obs_se] = df[mp.col_t].apply(mp.obs_se_func)
-            dfs.append(df)
-
-        return dfs
+        noisy_forecast = predictions - (predictions ** theta) * all_error
+        noisy_forecast = data_translator(
+            data=noisy_forecast, input_space=mp.predict_space, output_space=mp.predict_space
+        )
+        return noisy_forecast
