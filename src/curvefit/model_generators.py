@@ -82,7 +82,7 @@ class ModelPipeline:
         self.draw_models = None
 
     def run(self, n_draws, prediction_times, cv_threshold,
-            smoothed_radius, exclude_below):
+            smoothed_radius, exclude_groups, exclude_below=0):
         """
         Runs the whole model with PV and forecasting residuals and creating draws.
 
@@ -94,6 +94,8 @@ class ModelPipeline:
             smoothed_radius: List[int] residual smoothing before running the
                 residual forecast -- how many neighbors to look at, e.g. [3, 3]
                 would smooth over a radius of 3
+            exclude_groups: List[str] list of your group names that you want to exclude
+                from the residual analysis. should be Wuhan
             exclude_below: (int) exclude results from the predictive validity analysis
                 that had less than this many data points -- just for going into the regression
                 to predict the coefficient of variation (low numbers of data points makes this unstable)
@@ -103,6 +105,7 @@ class ModelPipeline:
         assert type(cv_threshold) == float
         assert type(smoothed_radius) == list
         assert type(exclude_below) == int
+        assert type(exclude_groups) == list
 
         # Setup the initial model (optional for some subclasses)
         self.run_init_model()
@@ -118,7 +121,7 @@ class ModelPipeline:
             exclude_below=exclude_below,
             mean_covariates=['far_out', 'num_data'],
             std_covariates=['far_out', 'num_data'],
-            exclude_groups=['Wuhan City, Hubei']
+            exclude_groups=exclude_groups
         )
 
         # Create draws. Access them in self.draws by location.
