@@ -125,6 +125,7 @@ class CurveModel:
         self.params = None
         self.fe_gprior = np.array([[0.0, np.inf]]*self.num_fe)
         self.re_gprior = np.array([[0.0, np.inf]]*self.num_fe)
+        self.fun_gprior = None
 
     def unzip_x(self, x):
         """Unzip raw input to fixed effects and random effects.
@@ -201,6 +202,13 @@ class CurveModel:
         val += 0.5*np.sum(
             (re - self.re_gprior.T[0])**2/self.re_gprior.T[1]**2
         )
+        # other functional gprior
+        if self.fun_gprior is not None:
+            params = self.compute_params(x, expand=False)
+            val += 0.5*np.sum(
+                (self.fun_gprior[0](params) - self.fun_gprior[1][0])**2/
+                self.fun_gprior[1][1]**2
+            )
         return val
 
     def gradient(self, x, eps=1e-16):
@@ -232,6 +240,7 @@ class CurveModel:
                    re_bounds=None,
                    fe_gprior=None,
                    re_gprior=None,
+                   fun_gprior=None,
                    fixed_params=None,
                    smart_initialize=False,
                    fixed_params_initialize=None,
@@ -252,6 +261,8 @@ class CurveModel:
                 Gaussian prior for fixed effects.
             re_gprior (list of lists, optional):
                 Gaussian prior for random effects.
+            fun_gprior (list of lists, optional):
+                Functional Gaussian prior.
             fixed_params (list{str}, optional):
                 A list of parameter names that will be fixed at initial value.
             smart_initialize (bool, optional):
@@ -284,6 +295,13 @@ class CurveModel:
             self.re_gprior = np.array(re_gprior)
         if re_init is None:
             re_init = np.zeros(self.num_re)
+
+        if fun_gprior is not None:
+            assert len(fun_gprior) == 2
+            assert fun_gprior[1][1] > 0.0
+
+        self.fun_gprior = fun_gprior
+
 
         if fixed_params_initialize is not None:
             if not smart_initialize:
