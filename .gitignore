@@ -1,0 +1,4 @@
+# directories created by install procedure
+/dist
+/build/
+/src/curvefit.egg-info
