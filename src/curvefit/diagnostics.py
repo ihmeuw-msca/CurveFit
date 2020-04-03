@@ -3,7 +3,7 @@ from matplotlib import colors
 import numpy as np
 
 
-def plot_draws(generator, prediction_times, sharex, sharey, plot_data):
+def plot_uncertainty(generator, prediction_times, sharex, sharey):
     """
     Plot the draws from a model generator at some prediction times.
 
@@ -13,13 +13,15 @@ def plot_draws(generator, prediction_times, sharex, sharey, plot_data):
         sharex: fix the x axes
         sharey: fix the y axes
     """
-    fig, ax = plt.subplots(len(generator.groups), 1, figsize=(12, 4 * len(generator.groups)),
+    fig, ax = plt.subplots(len(generator.groups), 1, figsize=(8, 4 * len(generator.groups)),
                            sharex=sharex, sharey=sharey)
     for i, group in enumerate(generator.groups):
         mean = generator.draws[group].mean(axis=0)
-        for j in range(generator.draws[group].shape[0]):
-            ax[i].plot(prediction_times, generator.draws[group][j], c='blue', alpha=0.1)
-        ax[i].plot(prediction_times, mean, c='red')
+        lower = np.quantile(generator.draws[group], axis=0, q=0.025)
+        upper = np.quantile(generator.draws[group], axis=0, q=0.975)
+        ax[i].plot(prediction_times, mean, c='red', linestyle=':')
+        ax[i].plot(prediction_times, lower, c='red', linestyle=':')
+        ax[i].plot(prediction_times, upper, c='red', linestyle=':')
         ax[i].plot(prediction_times, generator.mean_predictions[group], c='black')
         df_data = generator.all_data.loc[generator.all_data[generator.col_group] == group].copy()
         ax[i].scatter(df_data[generator.col_t], df_data[generator.col_obs_compare])
