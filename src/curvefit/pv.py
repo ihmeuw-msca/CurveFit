@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-from curvefit.diagnostics import plot_residuals, plot_predictions
+from curvefit.diagnostics import plot_residuals, plot_predictions, plot_residuals_1d
 from curvefit.utils import neighbor_mean_std
 
 
@@ -72,7 +72,6 @@ class PVGroup:
         # which observations are we comparing the predictions to? and how much data do we have?
         self.compare_observations = self.grp_df[self.col_obs_compare].values
         self.amount_data = np.array(range(len(self.compare_observations))) + 1
-
         self.models = [model_generator.generate() for i in range(self.num_times)]
         self.prediction_matrix = None
         self.residual_matrix = None
@@ -160,6 +159,7 @@ class PVGroup:
             self.col_grp: self.predict_group,
             'far_out': self.residuals[:, 0],
             'num_data': self.residuals[:, 1],
+            'data_index': self.residuals[:, 0] + self.residuals[:, 1],
             'residual': self.residuals[:, 2]
         })
 
@@ -268,7 +268,27 @@ class PVModel:
         )
         return smoothed_residuals
 
-    def plot_residuals(self, radius,  exclude=None, absolute=False):
+    def plot_simple_residuals(self, x_axis, y_axis, radius, color=None, exclude_groups=None):
+        """
+        Make simple residual scatter plots by location.
+        Args:
+            x_axis: (str)
+            y_axis: (str)
+            radius: List[int] radius for smoothing
+            color: (str)
+
+        Returns:
+
+        """
+        smooth = self.get_smoothed_residuals(radius=radius)
+        if exclude_groups is not None:
+            smooth = smooth.loc[~smooth[self.col_group].isin(exclude_groups)].copy()
+        plot_residuals_1d(residual_df=smooth, x_axis=x_axis, y_axis=y_axis, group_col=self.col_group, color=color)
+        for g in self.groups:
+            plot_residuals_1d(residual_df=smooth, x_axis=x_axis, y_axis=y_axis,
+                              group_col=self.col_group, color=color, group=g)
+
+    def triangle_residual_plots(self, radius, x_axis='far_out', y_axis='num_data', exclude=None, absolute=False):
         """
         Plot all of the residuals based on some exclusion criteria for
         number of data points that were used in the fitting and some radius
@@ -278,19 +298,30 @@ class PVModel:
             radius: List[int]
             absolute: (bool) plot mean residuals by value or absolute value
             exclude: (int) exclude model fits with under this many data points
+            x_axis: (str) the x-axis variable to plot (one of far_out, num_data, or data_index)
+            y_axis: (str) the y-axis variable to plot (one of far_out, num_data, or data_index)
         """
         smoothed_residuals = self.get_smoothed_residuals(radius=radius)
         smoothed_residuals = smoothed_residuals.loc[smoothed_residuals['num_data'] > exclude].copy()
 
-        for k, v in self.pv_groups.items():
-            plot_residuals(residual_array=v.residuals, group_name=k, absolute=absolute)
+        for i, (k, v) in enumerate(self.pv_groups.items()):
+
+            residuals = self.all_residuals.loc[self.all_residuals[self.col_group] == k].copy()
+            plot_residuals(residual_array=np.asarray(residuals[[x_axis, y_axis, 'residual']]),
+                           group_name=k, absolute=absolute,
+                           x_label=x_axis, y_label=y_axis)
+
             smooth = smoothed_residuals.loc[smoothed_residuals[self.col_group] == k]
-            smooth_mean = np.asarray(smooth[['far_out', 'num_data', 'residual_mean']])
-            smooth_std = np.asarray(smooth[['far_out', 'num_data', 'residual_std']])
+            smooth_mean = np.asarray(smooth[[x_axis, y_axis, 'residual_mean']])
+            smooth_std = np.asarray(smooth[[x_axis, y_axis, 'residual_std']])
             plot_residuals(residual_array=smooth_mean,
-                           group_name=f'{k} smooth mean radius {radius}', absolute=absolute)
+                           group_name=f'{k} smooth mean radius {radius}',
+                           absolute=absolute,
+                           x_label=x_axis, y_label=y_axis)
             plot_residuals(residual_array=smooth_std,
-                           group_name=f'{k} smooth std radius {radius}', absolute=True)
+                           group_name=f'{k} smooth std radius {radius}',
+                           absolute=True,
+                           x_label=x_axis, y_label=y_axis)
 
     def plot_predictions(self, group_name):
         """

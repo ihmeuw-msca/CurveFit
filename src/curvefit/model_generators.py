@@ -7,7 +7,6 @@ function that takes those arguments. That callable will be generated with the mo
 """
 
 from copy import deepcopy
-import pandas as pd
 
 from curvefit.model import CurveModel
 from curvefit.forecaster import Forecaster
@@ -15,6 +14,7 @@ from curvefit.pv import PVModel
 from curvefit.utils import convex_combination, model_average
 from curvefit.utils import get_initial_params
 from curvefit.utils import compute_starting_params
+from curvefit.diagnostics import plot_uncertainty
 
 
 class ModelPipeline:
@@ -81,6 +81,54 @@ class ModelPipeline:
         self.draws = None
         self.draw_models = None
 
+    def run(self, n_draws, prediction_times, cv_threshold,
+            smoothed_radius, exclude_below):
+        """
+        Runs the whole model with PV and forecasting residuals and creating draws.
+
+        Args:
+            n_draws: (int) number of draws to produce
+            prediction_times: (np.array) array of times to make predictions at
+            cv_threshold: (float) lower bound on the coefficient of variation
+                for the residuals simulation
+            smoothed_radius: List[int] residual smoothing before running the
+                residual forecast -- how many neighbors to look at, e.g. [3, 3]
+                would smooth over a radius of 3
+            exclude_below: (int) exclude results from the predictive validity analysis
+                that had less than this many data points -- just for going into the regression
+                to predict the coefficient of variation (low numbers of data points makes this unstable)
+        Returns:
+        """
+        assert type(n_draws) == int
+        assert type(cv_threshold) == float
+        assert type(smoothed_radius) == list
+        assert type(exclude_below) == int
+
+        # Setup the initial model (optional for some subclasses)
+        self.run_init_model()
+
+        # Run predictive validity with a theta = 1, means everything is in relative space
+        # -- relative mean bias, relative standard deviation (coefficient of variation)
+        self.run_predictive_validity(theta=1)
+
+        # Excludes Wuhan from the residual fitting.
+        # Right now only std_covariates are used.
+        self.fit_residuals(
+            smoothed_radius=smoothed_radius,
+            exclude_below=exclude_below,
+            mean_covariates=['num_data_transformed', 'far_out'],
+            std_covariates=['log_num_data_transformed'],
+            exclude_groups=['Wuhan City, Hubei']
+        )
+
+        # Create draws. Access them in self.draws by location.
+        self.create_draws(
+            num_draws=n_draws,
+            std_threshold=cv_threshold,
+            prediction_times=prediction_times,
+            theta=1
+        )
+
     def setup_pipeline(self):
         """
         Sets up the pipeline for running predictive validity and forecasting data out.
@@ -144,7 +192,8 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
-    def fit_residuals(self, smoothed_radius, exclude_below, exclude_groups):
+    def fit_residuals(self, smoothed_radius, mean_covariates, std_covariates,
+                      exclude_below, exclude_groups, std_floor=1e-5):
         """
         Fits residuals given a smoothed radius, and some models to exclude.
         Exclude below excludes models with less than that many data points.
@@ -152,9 +201,15 @@ class ModelPipeline:
 
         Args:
             smoothed_radius: List[int] 2-element list of amount of smoothing for the residuals
+            mean_covariates: List[str] which covariates to use to predict the residuals
+                choices of num_data, far_out, and data_index (where data_index = far_out + num_data)
+            std_covariates: List[str] which covariates to use to predict the coefficient of variation
+                in the residuals
             exclude_groups: List[str] which groups to exclude from the residual analysis
             exclude_below: (int) observations with less than exclude_below
                 will be excluded from the analysis
+            std_floor: (float) minimum standard deviation (or coefficient of variation given theta)
+                for the regression inputs
 
         Returns:
 
@@ -162,76 +217,60 @@ class ModelPipeline:
         residual_data = self.pv.get_smoothed_residuals(radius=smoothed_radius)
         residual_data = residual_data.loc[residual_data['num_data'] > exclude_below].copy()
         residual_data = residual_data.loc[~residual_data[self.col_group].isin(exclude_groups)].copy()
+        residual_data['residual_std'] = residual_data['residual_std'].apply(lambda x: max(x, std_floor))
 
         self.forecaster.fit_residuals(
             residual_data=residual_data,
             mean_col='residual_mean',
             std_col='residual_std',
-            residual_covariates=['far_out', 'num_data'],
+            mean_covariates=mean_covariates,
+            std_covariates=std_covariates,
             residual_model_type='linear'
         )
 
-    def create_draws(self, num_draws, num_forecast_out, prediction_times,
+    def create_draws(self, num_draws, prediction_times,
                      theta=1, std_threshold=1e-2):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
         for far out and num data points.
 
         Args:
-
             num_draws: (int) the number of draws to take
-            num_forecast_out: (int) how far out into the future should residual simulations be taken
-            prediction_times: (int) which times to produce final predictions at
+            prediction_times: (int) which times to produce final predictions (draws) at
             std_threshold: (float) floor for standard deviation
             theta: (float) between 0 and 1, how much scaling of the residuals to do relative to the prediction mean
         """
         if self.pv.all_residuals is None:
             raise RuntimeError("Need to first run predictive validity with self.run_predictive_validity.")
 
-        generator = self.generate()
-
-        self.mean_predictions = {}
-        self.simulated_data = {}
-        self.draws = {}
-
+        # Get the best fit we can
         self.fit(df=self.all_data)
 
+        self.mean_predictions = {}
+        self.draws = {}
+
         for group in self.groups:
-            sims = self.forecaster.simulate(
-                mp=self,
-                far_out=num_forecast_out,
-                num_simulations=num_draws,
-                group=group,
-                theta=theta,
-                epsilon=std_threshold
-            )
-            self.simulated_data[group] = sims
+            # Get the mean prediction for each group
             self.mean_predictions[group] = self.predict(
                 times=prediction_times, predict_space=self.predict_space, predict_group=group
             )
 
+        # Loop through each group, forecasting the residuals and making draws
         for group in self.groups:
-            self.draws[group] = []
-
-        for i in range(num_draws):
-            new_data = []
-
-            for group in self.groups:
-                new_data.append(self.simulated_data[group][i])
-            new_data = pd.concat(new_data)
-
-            print(f"Creating {i}th draw.", end='\r')
-            generator.fit(df=new_data)
-
-            for group in self.groups:
-                predictions = generator.predict(
-                    times=prediction_times,
-                    predict_space=self.predict_space,
-                    predict_group=group
-                )
-                self.draws[group].append(predictions)
+            draws = self.forecaster.simulate(
+                mp=self,
+                num_simulations=num_draws,
+                prediction_times=prediction_times,
+                group=group,
+                theta=theta,
+                epsilon=std_threshold
+            )
+            self.draws[group] = draws
 
         return self
+
+    def plot_draws(self, prediction_times, sharex, sharey):
+        plot_uncertainty(generator=self, sharex=sharex, sharey=sharey, prediction_times=prediction_times)
 
 
 class BasicModel(ModelPipeline):
@@ -284,10 +323,101 @@ class BasicModel(ModelPipeline):
         return predictions
 
 
+class BasicModelWithInit(BasicModel):
+    def __init__(self, smart_init_options=None, **kwargs):
+        if smart_init_options is None:
+            smart_init_options = {}
+        self.smart_init_options = smart_init_options
+
+        super().__init__(**kwargs)
+
+        if self.fit_dict['options']:
+            self.smart_init_options = {**self.fit_dict['options'],
+                                       **self.smart_init_options}
+
+        self.init_dict = None
+        self.mod = None
+
+    def run_init_model(self):
+        self.init_dict = self.get_init_dict(df=self.all_data,
+                                            groups=self.groups)
+
+    def update_init_model(self, df, group):
+        """
+        Update the initial model with a re-fit model
+        from the specified group. Returns a new copy of the init dict
+
+        Args:
+            df: (pd.DataFrame) data used to update the init model
+            group: (str) the group to update
+
+        Returns:
+
+        """
+        new_init_dict = deepcopy(self.init_dict)
+        new_init_dict.update(self.get_init_dict(df=df, groups=[group]))
+        return new_init_dict
+
+    def get_init_dict(self, df, groups):
+        """
+        Run the init model for each location.
+
+        Args:
+            df: (pd.DataFrame) data frame to fit the model that will
+                be subset by group
+            groups: (str) groups to get in the dict
+
+        Returns:
+            (dict) dictionary of fixed effects keyed by group
+        """
+        model = CurveModel(df=df,
+                           **self.basic_model_dict)
+
+        init_fit_dict = deepcopy(self.fit_dict)
+        init_fit_dict.update(options=self.smart_init_options)
+
+        init_dict = get_initial_params(
+            groups=groups,
+            model=model,
+            fit_arg_dict=init_fit_dict
+        )
+        return init_dict
+
+    def fit(self, df, group=None):
+        """
+        Fits a loose, tight, beta, and p combinations model. If you pass in
+        update group it will override the initial parameters with new
+        initial parameters based on the df you pass.
+
+        Args:
+            df:
+            group: (str) passing in the group will update the initialization
+                dictionary (not replacing the old one) for this particular fit.
+
+        Returns:
+
+        """
+        if group is not None:
+            init_dict = self.update_init_model(df=df, group=group)
+        else:
+            init_dict = deepcopy(self.init_dict)
+
+        fit_dict = deepcopy(self.fit_dict)
+        fe_init, re_init = compute_starting_params(init_dict)
+        fit_dict.update(fe_init=fe_init, re_init=re_init)
+
+        self.mod = CurveModel(df=df, **self.basic_model_dict)
+        self.mod.fit_params(**fit_dict)
+
+    def refresh(self):
+        self.mod = None
+
+
 class TightLooseBetaPModel(ModelPipeline):
-    def __init__(self, loose_beta_fit_dict, tight_beta_fit_dict,
-                 loose_p_fit_dict, tight_p_fit_dict, basic_model_dict,
-                 model_specific_dict,
+    def __init__(self, basic_fit_dict,
+                 basic_model_dict, model_specific_dict,
+                 loose_beta_fit=None, tight_beta_fit=None,
+                 loose_p_fit=None, tight_p_fit=None,
                  beta_model_extras=None, p_model_extras=None,
                  **pipeline_kwargs):
         """
@@ -297,10 +427,11 @@ class TightLooseBetaPModel(ModelPipeline):
         Args:
             **pipeline_kwargs: keyword arguments for the base class of ModelPipeline
 
-            loose_beta_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() for the loose beta model
-            tight_beta_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() fro the tight beta model
-            loose_p_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() for the loose p model
-            tight_p_fit_dict: dictionary of keyword arguments to CurveModel.fit_params() fro the tight p model
+            basic_fit_dict: dictionary of keyword arguments to CurveModel.fit_params()
+            loose_beta_fit: dictionary of keyword arguments to override basic_fit_dict for the loose beta model
+            tight_beta_fit: dictionary of keyword arguments to override basic_fit_dict for the tight beta model
+            loose_p_fit: dictionary of keyword arguments to override basic_fit_dict for the loose p model
+            tight_p_fit: dictionary of keyword arguments to override basic_fit_dict fro the tight p model
 
             basic_model_dict: additional keyword arguments to the CurveModel class
                 col_obs_se: (str) of observation standard error
@@ -352,10 +483,19 @@ class TightLooseBetaPModel(ModelPipeline):
         if p_model_extras is not None:
             self.p_model_kwargs.update(p_model_extras)
 
-        self.loose_beta_fit_dict = loose_beta_fit_dict
-        self.tight_beta_fit_dict = tight_beta_fit_dict
-        self.loose_p_fit_dict = loose_p_fit_dict
-        self.tight_p_fit_dict = tight_p_fit_dict
+        self.loose_beta_fit_dict = deepcopy(basic_fit_dict)
+        self.tight_beta_fit_dict = deepcopy(basic_fit_dict)
+        self.loose_p_fit_dict = deepcopy(basic_fit_dict)
+        self.tight_p_fit_dict = deepcopy(basic_fit_dict)
+
+        if loose_beta_fit is not None:
+            self.loose_beta_fit_dict.update(loose_beta_fit)
+        if tight_beta_fit is not None:
+            self.tight_beta_fit_dict.update(tight_beta_fit)
+        if loose_p_fit is not None:
+            self.loose_p_fit_dict.update(loose_p_fit)
+        if tight_p_fit is not None:
+            self.tight_p_fit_dict.update(tight_p_fit)
 
         self.loose_beta_model = None
         self.tight_beta_model = None
@@ -444,6 +584,8 @@ class TightLooseBetaPModel(ModelPipeline):
             init_dict = deepcopy(self.init_dict)
 
         for param in ['beta', 'p']:
+            if getattr(self, f'{param}_weight') == 0:
+                continue
             for fit_type in ['loose', 'tight']:
                 model_arg_dict = deepcopy(getattr(self, f'{param}_model_kwargs'))
                 fit_arg_dict = deepcopy(getattr(self, f'{fit_type}_{param}_fit_dict'))
