@@ -7,7 +7,6 @@ function that takes those arguments. That callable will be generated with the mo
 """
 
 from copy import deepcopy
-import pandas as pd
 
 from curvefit.model import CurveModel
 from curvefit.forecaster import Forecaster
@@ -15,7 +14,7 @@ from curvefit.pv import PVModel
 from curvefit.utils import convex_combination, model_average
 from curvefit.utils import get_initial_params
 from curvefit.utils import compute_starting_params
-from curvefit.diagnostics import plot_draws
+from curvefit.diagnostics import plot_uncertainty
 
 
 class ModelPipeline:
@@ -82,6 +81,54 @@ class ModelPipeline:
         self.draws = None
         self.draw_models = None
 
+    def run(self, n_draws, prediction_times, cv_threshold,
+            smoothed_radius, exclude_below):
+        """
+        Runs the whole model with PV and forecasting residuals and creating draws.
+
+        Args:
+            n_draws: (int) number of draws to produce
+            prediction_times: (np.array) array of times to make predictions at
+            cv_threshold: (float) lower bound on the coefficient of variation
+                for the residuals simulation
+            smoothed_radius: List[int] residual smoothing before running the
+                residual forecast -- how many neighbors to look at, e.g. [3, 3]
+                would smooth over a radius of 3
+            exclude_below: (int) exclude results from the predictive validity analysis
+                that had less than this many data points -- just for going into the regression
+                to predict the coefficient of variation (low numbers of data points makes this unstable)
+        Returns:
+        """
+        assert type(n_draws) == int
+        assert type(cv_threshold) == float
+        assert type(smoothed_radius) == list
+        assert type(exclude_below) == int
+
+        # Setup the initial model (optional for some subclasses)
+        self.run_init_model()
+
+        # Run predictive validity with a theta = 1, means everything is in relative space
+        # -- relative mean bias, relative standard deviation (coefficient of variation)
+        self.run_predictive_validity(theta=1)
+
+        # Excludes Wuhan from the residual fitting.
+        # Right now only std_covariates are used.
+        self.fit_residuals(
+            smoothed_radius=smoothed_radius,
+            exclude_below=exclude_below,
+            mean_covariates=['num_data_transformed', 'far_out'],
+            std_covariates=['log_num_data_transformed'],
+            exclude_groups=['Wuhan City, Hubei']
+        )
+
+        # Create draws. Access them in self.draws by location.
+        self.create_draws(
+            num_draws=n_draws,
+            std_threshold=cv_threshold,
+            prediction_times=prediction_times,
+            theta=1
+        )
+
     def setup_pipeline(self):
         """
         Sets up the pipeline for running predictive validity and forecasting data out.
@@ -146,7 +193,8 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
-    def fit_residuals(self, smoothed_radius, covariates, exclude_below, exclude_groups, std_floor=1e-3):
+    def fit_residuals(self, smoothed_radius, mean_covariates, std_covariates,
+                      exclude_below, exclude_groups, std_floor=1e-5):
         """
         Fits residuals given a smoothed radius, and some models to exclude.
         Exclude below excludes models with less than that many data points.
@@ -154,12 +202,15 @@ class ModelPipeline:
 
         Args:
             smoothed_radius: List[int] 2-element list of amount of smoothing for the residuals
-            covariates: List[str] which covariates to use to predict the residuals
+            mean_covariates: List[str] which covariates to use to predict the residuals
                 choices of num_data, far_out, and data_index (where data_index = far_out + num_data)
+            std_covariates: List[str] which covariates to use to predict the coefficient of variation
+                in the residuals
             exclude_groups: List[str] which groups to exclude from the residual analysis
             exclude_below: (int) observations with less than exclude_below
                 will be excluded from the analysis
             std_floor: (float) minimum standard deviation (or coefficient of variation given theta)
+                for the regression inputs
 
         Returns:
 
@@ -173,7 +224,8 @@ class ModelPipeline:
             residual_data=residual_data,
             mean_col='residual_mean',
             std_col='residual_std',
-            residual_covariates=covariates,
+            mean_covariates=mean_covariates,
+            std_covariates=std_covariates,
             residual_model_type='linear'
         )
 
@@ -192,16 +244,19 @@ class ModelPipeline:
         if self.pv.all_residuals is None:
             raise RuntimeError("Need to first run predictive validity with self.run_predictive_validity.")
 
+        # Get the best fit we can
         self.fit(df=self.all_data)
 
         self.mean_predictions = {}
         self.draws = {}
 
         for group in self.groups:
+            # Get the mean prediction for each group
             self.mean_predictions[group] = self.predict(
                 times=prediction_times, predict_space=self.predict_space, predict_group=group
             )
 
+        # Loop through each group, forecasting the residuals and making draws
         for group in self.groups:
             draws = self.forecaster.simulate(
                 mp=self,
@@ -214,6 +269,9 @@ class ModelPipeline:
             self.draws[group] = draws
 
         return self
+
+    def plot_draws(self, prediction_times, sharex, sharey):
+        plot_uncertainty(generator=self, sharex=sharex, sharey=sharey, prediction_times=prediction_times)
 
 
 class BasicModel(ModelPipeline):
@@ -586,7 +644,3 @@ class TightLooseBetaPModel(ModelPipeline):
         else:
             raise RuntimeError
         return averaged_predictions
-
-    def plot_draws(self, prediction_times, sharex, sharey):
-        plot_draws(generator=self, sharex=sharex, sharey=sharey, prediction_times=prediction_times)
-
