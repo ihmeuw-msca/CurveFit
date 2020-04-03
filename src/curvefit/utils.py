@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+from copy import deepcopy
+from collections import OrderedDict
 from scipy.optimize import bisect
 from .functions import *
 from scipy.stats import median_absolute_deviation
@@ -78,6 +80,36 @@ def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
     # combine all the data frames
     df_result = pd.concat([df_all[g] for g in groups])
     return df_result
+
+
+def across_group_mean_std(df,
+                          col_val,
+                          col_group,
+                          col_axis):
+    """Compute the mean and std of the residual matrix across locations.
+
+    Args:
+        df (pd.DataFrame): Residual data frame.
+        col_val ('str'): Name for column that store the residual.
+        col_group ('str'): Name for column that store the group label.
+        col_axis (list{str}): List of two axis column names.
+
+    Returns:
+        pd.DataFrame:
+            Averaged residual mean and std data frame.
+    """
+    df_list = [
+        df[df[col_group] == group].copy()
+        for group in df[col_group].unique()
+    ]
+    for i, df_sub in enumerate(df_list):
+        df_sub_result = df_sub.groupby(col_axis, as_index=False).agg(
+            {col_val: [np.nanmean, np.nanstd]}
+        )
+        df_sub_result.columns = [*col_axis, 'mean', 'std']
+        df_list[i] = df_sub_result
+
+    return pd.concat(df_list)
 
 
 def neighbor_mean_std(df,
@@ -300,7 +332,7 @@ def data_translator(data, input_space, output_space,
     Args:
         data (np.ndarray): data matrix or vector
         input_space (str | callable): input data space.
-        output_sapce (str | callable): output data space.
+        output_space (str | callable): output data space.
         threshold (float, optional):
             Thresholding for the number below 0 in the linear space.
 
@@ -354,6 +386,59 @@ def data_translator(data, input_space, output_space,
     return output_data
 
 
+def get_initial_params(model, groups, fit_arg_dict):
+    """
+    Runs a separate model for each group fixing the random effects to 0
+    and calculates what the initial values should be for the optimization
+    of the whole model.
+
+    Args:
+        model: (curvefit.CurveModel)
+        groups: (list) list of groups to get smart starting params for
+        fit_arg_dict: keyword arguments in dict that are passed to the
+            fit_params function
+
+    Returns:
+        (np.array) fe_init: fixed effects initial value
+        (np.array) re_init: random effects initial value
+    """
+    fixed_effects = OrderedDict()
+    fit_kwargs = deepcopy(fit_arg_dict)
+
+    # Fit a model for each group with fit_kwargs carried over
+    # from the settings for the overall model with a couple of adjustments.
+    for g in groups:
+        fixed_effects[g] = model.run_one_group_model(group=g, **fit_kwargs)
+    return fixed_effects
+
+
+def compute_starting_params(fe_dict):
+    """
+    Compute the starting parameters for a dictionary of fixed effects
+    by averaging them to get fixed effects for overall model and finding
+    deviation from average as the random effect.
+    Args:
+        fe_dict: OrderedDict of fixed effects to put together that are ordered
+            in the way that you want them to go into the model
+
+    Returns:
+        (np.array) fe_init: fixed effects initial value
+        (np.array) re_init: random effects initial value
+    """
+    fe_values = []
+    for k, v in fe_dict.items():
+        fe_values.append(v)
+    all_fixed_effects = np.vstack(fe_values)
+
+    # The new fixed effects initial value is the mean of the fixed effects
+    # across all single-group models.
+    fe_init = all_fixed_effects.mean(axis=0)
+
+    # The new random effects initial value is the single-group models' deviations
+    # from the mean, which is now the new fixed effects initial value.
+    re_init = (all_fixed_effects - fe_init).ravel()
+    return fe_init, re_init
+ 
 
 def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
     """Compute p from alpha, beta and slopes of derf at given point.
@@ -388,14 +473,10 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
     p = np.zeros(alpha.size)
 
     for i in range(alpha.size):
-        f = lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) - \
-                      slopes[i]
-        if f(-30.0)*f(0.0) > 0.0:
-            print(alpha[i], beta[i], slopes[i], f(-30.0), f(0.0))
         x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
-                   slopes[i], -30.0, 0.0)
+                   slopes[i], -15.0, 0.0)
         p[i] = np.exp(x)
-
+    
     return p
 
 
@@ -471,3 +552,4 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
         truncated_draws = truncated_draws.ravel()
 
     return truncated_draws
+
