@@ -121,12 +121,17 @@ def create_draws(t, model_all, num_draws=1000):
     return draws
 
 
-def create_draws_for_all(t, model_all, covs, num_draws=1000):
+def create_draws_for_all(t, model_all, covs, num_draws=1000,
+                         diag_protection=None):
     assert covs.size == model_all.num_fe
     covs = covs.reshape(1, model_all.num_fe)
 
     fe, re = model_all.unzip_x(model_all.result.x)
     re_empirical_cov_mat = np.cov(re.T)
+    if diag_protection is not None:
+        re_empirical_cov_mat = np.linalg.inv(
+            np.linalg.inv(re_empirical_cov_mat) + np.diag(diag_protection))
+
     re_samples = np.random.multivariate_normal(np.zeros(model_all.num_fe),
                                                re_empirical_cov_mat,
                                                size=num_draws)
@@ -142,7 +147,7 @@ def create_draws_for_all(t, model_all, covs, num_draws=1000):
         for params in params_samples
     ])
 
-    return draws
+    return draws, fe_samples, params_samples
 
 
 def swap_cov(models, col_covs):
