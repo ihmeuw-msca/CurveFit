@@ -162,7 +162,6 @@ class ModelPipeline:
         """
         Generate a copy of this class.
         """
-        print("Generating.")
         return deepcopy(self)
 
     def fit(self, df, group=None):

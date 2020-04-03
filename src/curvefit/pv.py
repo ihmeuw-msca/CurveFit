@@ -72,7 +72,6 @@ class PVGroup:
         # which observations are we comparing the predictions to? and how much data do we have?
         self.compare_observations = self.grp_df[self.col_obs_compare].values
         self.amount_data = np.array(range(len(self.compare_observations))) + 1
-        print("Generating models")
         self.models = [model_generator.generate() for i in range(self.num_times)]
         self.prediction_matrix = None
         self.residual_matrix = None
