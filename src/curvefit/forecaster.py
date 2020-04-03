@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 import itertools
 from curvefit.utils import data_translator
-from curvefit.utils import across_group_mean_std
+from curvefit.utils import neighbor_mean_std
 
 
 class ResidualModel:
@@ -75,14 +75,31 @@ class LocalSmootherResidualModel(ResidualModel):
         """
         super().__init__(**kwargs)
         self.radius = radius
-        self.array = None
+        self.smoothed = None
 
     def fit(self):
         df = self.data.copy()
-        array = np.asarray([self.covariates])
+        df['Smooth_Group'] = 'All'
         # smooth
-        self.array = smooth(array)
+        self.smoothed = neighbor_mean_std(
+            df=df, col_val=self.outcome,
+            col_group='Smooth_Group',
+            col_axis=self.covariates,
+            radius=self.radius
+        )
 
+    def predict(self, df):
+        data = df.copy()
+
+        self.smoothed['data_index'] = self.smoothed['far_out'] + self.smoothed['num_data']
+        max_data_index = self.smoothed['data_index'].max()
+        max_cv = self.smoothed.loc[self.smoothed['data_index'] >= (max_data_index - 2)][self.outcome].mean()
+
+        data = data.merge(self.smoothed, on=self.covariates)
+        nans = np.isnan(data[self.outcome])
+        data.loc[nans, self.outcome] = max_cv
+
+        return data
 
 
 class Forecaster:
@@ -96,7 +113,8 @@ class Forecaster:
         self.std_residual_model = None
 
     def fit_residuals(self, residual_data, mean_col, std_col,
-                      mean_covariates, std_covariates, residual_model_type):
+                      mean_covariates, std_covariates, residual_model_type,
+                      smooth_radius=None):
         """
         Run a regression for the mean and standard deviation
         of the scaled residuals.
@@ -111,7 +129,8 @@ class Forecaster:
             mean_covariates: (str) the covariates to include in the regression of residuals for mean
             std_covariates: (str) the covariates to include in the regression of residuals for std
             residual_model_type: (str) what type of residual model to it
-                types include 'linear'
+                types include 'linear' and 'local'
+            smooth_radius: (optional List[int]) smoother to pass to the Local residual smoother
 
         """
         residual_data[f'log_{std_col}'] = np.log(residual_data[std_col])
@@ -122,10 +141,19 @@ class Forecaster:
             self.std_residual_model = LinearResidualModel(
                 data=residual_data, outcome=f'log_{std_col}', covariates=std_covariates
             )
+        elif residual_model_type == 'local':
+            if smooth_radius is None:
+                raise RuntimeError("Need a value for smooth radius if you're doing local smoothing.")
+            self.mean_residual_model = LocalSmootherResidualModel(
+                data=residual_data, outcome=mean_col, covariates=mean_covariates, radius=smooth_radius
+            )
+            self.std_residual_model = LocalSmootherResidualModel(
+                data=residual_data, outcome=std_col, covariates=std_covariates, radius=smooth_radius
+            )
         else:
             raise ValueError(f"Unknown residual model type {residual_model_type}.")
 
-        self.mean_residual_model.fit()
+        # self.mean_residual_model.fit()
         self.std_residual_model.fit()
 
     def predict(self, far_out, num_data):
@@ -146,8 +174,8 @@ class Forecaster:
         new_data['data_index'] = new_data['far_out'] + new_data['num_data']
 
         new_data['residual_mean'] = self.mean_residual_model.predict(df=new_data)
-        new_data['log_residual_std'] = self.std_residual_model.predict(df=new_data)
-        new_data['residual_std'] = np.exp(new_data['log_residual_std'])
+        new_data['residual_mean'] = 0
+        new_data['residual_std'] = self.std_residual_model.predict(df=new_data)
 
         return new_data
 

@@ -117,8 +117,8 @@ class ModelPipeline:
             smoothed_radius=smoothed_radius,
             exclude_below=exclude_below,
             mean_covariates=['num_data_transformed', 'far_out'],
-            std_covariates=['log_num_data_transformed'],
-            exclude_groups=['Wuhan City, Hubei', 'Sardegna']
+            std_covariates=['far_out', 'num_data'],
+            exclude_groups=['Wuhan City, Hubei']
         )
 
         # Create draws. Access them in self.draws by location.
@@ -214,18 +214,19 @@ class ModelPipeline:
         Returns:
 
         """
-        residual_data = self.pv.get_smoothed_residuals(radius=smoothed_radius)
+        residual_data = self.pv.all_residuals.copy()
         residual_data = residual_data.loc[residual_data['num_data'] > exclude_below].copy()
         residual_data = residual_data.loc[~residual_data[self.col_group].isin(exclude_groups)].copy()
-        residual_data['residual_std'] = residual_data['residual_std'].apply(lambda x: max(x, std_floor))
+        # residual_data['residual_std'] = residual_data['residual_std'].apply(lambda x: max(x, std_floor))
 
         self.forecaster.fit_residuals(
+            smooth_radius=smoothed_radius,
             residual_data=residual_data,
-            mean_col='residual_mean',
-            std_col='residual_std',
+            mean_col='residual',
+            std_col='residual',
             mean_covariates=mean_covariates,
             std_covariates=std_covariates,
-            residual_model_type='linear'
+            residual_model_type='local'
         )
 
     def create_draws(self, num_draws, prediction_times,
