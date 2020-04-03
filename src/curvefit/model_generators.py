@@ -218,7 +218,6 @@ class ModelPipeline:
         residual_data = residual_data.loc[residual_data['num_data'] > exclude_below].copy()
         residual_data = residual_data.loc[~residual_data[self.col_group].isin(exclude_groups)].copy()
         # residual_data['residual_std'] = residual_data['residual_std'].apply(lambda x: max(x, std_floor))
-
         self.forecaster.fit_residuals(
             smooth_radius=smoothed_radius,
             residual_data=residual_data,
