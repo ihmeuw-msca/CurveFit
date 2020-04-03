@@ -21,9 +21,8 @@ We considered two functional forms so far when modeling the COVID-19 epidemic.
 - **Generalized Logistic:** <img src="https://render.githubusercontent.com/render/math?math=f(t: \alpha, \beta, p) = \frac{p}{1 %2B \exp(-\alpha(t-\beta))}">
 
 
- - **Generalized Gaussian Error Function** \[
- f(t;  \alpha, \beta, p) = \frac{p}{2}\left(\Psi(\alpha(t-\beta)\right) = \frac{p}{2}\left(1+ \frac{2}{\sqrt{\pi}}\int_{0}^{\alpha(t-\beta)} \exp\left(-\tau^2\right)d\tau\right)
-\]
+ - **Generalized Gaussian Error Function** 
+ <img src="https://render.githubusercontent.com/render/math?math=f(t: \alpha, \beta, p) = \frac{p}{2}\left(\Psi(\alpha(t-\beta)\right) = \frac{p}{2}\left(1 %2B \frac{2}{\sqrt{\pi}}\int_{0}^{\alpha(t-\beta)} \exp\left(-\tau^2\right)d\tau\right)">
 
 Each form has comparable fundamental parameters:
 
