@@ -49,13 +49,19 @@ class LinearResidualModel(ResidualModel):
     def fit(self):
         df = self.data.copy()
         df['intercept'] = 1
-        pred = np.asarray(df[['intercept'] + self.covariates])
+        df['inv_num_data'] = 1 / df['num_data']
+        df['num_data_transformed'] = 1 / (1 + df['num_data'])
+        df['log_num_data_transformed'] = np.log(df['num_data_transformed'])
+        pred = np.asarray(df[self.covariates])
         out = np.asarray(df[[self.outcome]])
         self.coef = np.linalg.inv(pred.T.dot(pred)).dot(pred.T).dot(out)
 
     def predict(self, df):
         df['intercept'] = 1
-        pred = np.asarray(df[['intercept'] + self.covariates])
+        df['inv_num_data'] = 1 / df['num_data']
+        df['num_data_transformed'] = 1 / (1 + df['num_data'])
+        df['log_num_data_transformed'] = np.log(df['num_data_transformed'])
+        pred = np.asarray(df[self.covariates])
         return pred.dot(self.coef)
 
 
@@ -70,7 +76,7 @@ class Forecaster:
         self.std_residual_model = None
 
     def fit_residuals(self, residual_data, mean_col, std_col,
-                      residual_covariates, residual_model_type):
+                      mean_covariates, std_covariates, residual_model_type):
         """
         Run a regression for the mean and standard deviation
         of the scaled residuals.
@@ -82,7 +88,8 @@ class Forecaster:
                 of the residuals
             std_col: (str) the name of the column that has the std
                 of the residuals
-            residual_covariates: (str) the covariates to include in the regression
+            mean_covariates: (str) the covariates to include in the regression of residuals for mean
+            std_covariates: (str) the covariates to include in the regression of residuals for std
             residual_model_type: (str) what type of residual model to it
                 types include 'linear'
 
@@ -90,10 +97,10 @@ class Forecaster:
         residual_data[f'log_{std_col}'] = np.log(residual_data[std_col])
         if residual_model_type == 'linear':
             self.mean_residual_model = LinearResidualModel(
-                data=residual_data, outcome=mean_col, covariates=residual_covariates
+                data=residual_data, outcome=mean_col, covariates=mean_covariates
             )
             self.std_residual_model = LinearResidualModel(
-                data=residual_data, outcome=f'log_{std_col}', covariates=residual_covariates
+                data=residual_data, outcome=f'log_{std_col}', covariates=std_covariates
             )
         else:
             raise ValueError(f"Unknown residual model type {residual_model_type}.")
@@ -156,7 +163,7 @@ class Forecaster:
         std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
 
         no_error = np.zeros(shape=(num_simulations, max_t))
-        error = np.random.normal(mean_residual, scale=std_residual, size=(num_simulations, sum(add_noise)))
+        error = np.random.normal(0, scale=std_residual, size=(num_simulations, sum(add_noise)))
         all_error = np.hstack([no_error, error])
 
         noisy_forecast = predictions - (predictions ** theta) * all_error
