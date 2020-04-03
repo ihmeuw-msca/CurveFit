@@ -116,7 +116,7 @@ class ModelPipeline:
         self.fit_residuals(
             smoothed_radius=smoothed_radius,
             exclude_below=exclude_below,
-            mean_covariates=['num_data_transformed', 'far_out'],
+            mean_covariates=['far_out', 'num_data'],
             std_covariates=['far_out', 'num_data'],
             exclude_groups=['Wuhan City, Hubei']
         )
