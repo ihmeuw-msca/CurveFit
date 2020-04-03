@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 from curvefit.diagnostics import plot_residuals, plot_predictions, plot_residuals_1d
 from curvefit.utils import neighbor_mean_std
-from matplotlib import pyplot as plt
 
 
 class PVGroup:
