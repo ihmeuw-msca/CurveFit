@@ -170,7 +170,7 @@ def neighbor_mean_std(df,
                 rad = radius[k]
                 ax_filter = np.abs(df_sub[col_axis[k]] - j[k]) <= rad
                 df_filter = df_filter.loc[ax_filter]
-            mean = np.abs(df_filter[col_val]).mean()
+            mean = df_filter[col_val].mean()
             std = df_filter[col_val].std()
             subset = np.all(new_df[col_axis] == j, axis=1).values
             new_df.loc[subset, 'residual_mean'] = mean
