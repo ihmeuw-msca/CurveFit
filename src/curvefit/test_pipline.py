@@ -6,42 +6,84 @@ import numpy as np
 from .model_generators import BasicModel
 from .model import CurveModel
 from .utils import *
+from .functions import *
 from copy import deepcopy
-
+import matplotlib.pyplot as plt
 
 class APModel(BasicModel):
     """Alapha prior model.
     """
     def __init__(self, obs_bounds=None,
-                 prior_modifier=None, **kwargs):
+                 prior_modifier=None,
+                 peaked_groups=None,
+                 joint_model_fit_dict=None,
+                 **kwargs):
 
         self.obs_bounds = [-np.inf, np.inf] if obs_bounds is None else obs_bounds
         self.fun_gprior = None
         self.models = {}
         self.prior_modifier = prior_modifier
         if self.prior_modifier is None:
-            self.prior_modifier = lambda x: 10**(min(1.0, max(-2.0,
+            self.prior_modifier = lambda x: 10**(min(0.0, max(-2.0,
                 0.3*x - 3.5
             )))
 
+        self.peaked_groups = peaked_groups
+        self.joint_model_fit_dict = {} if joint_model_fit_dict is None else \
+            joint_model_fit_dict
+
+        self.joint_model_fit_dict = {
+            **deepcopy(kwargs['fit_dict']),
+            **deepcopy(self.joint_model_fit_dict)
+        }
+
         super().__init__(**kwargs)
+        self.run_init_model()
 
     def run_init_model(self):
+        # update functional prior
         if 'fun_gprior' not in self.fit_dict or \
-            self.fit_dict['fun_gprior'] is None:
-            models = self.run_filtered_models(self.all_data,
-                                              self.obs_bounds)
-            a = np.array([model.params[0, 0]
-                          for group, model in models.items()])
-            b = np.array([model.params[1, 0]
-                          for group, model in models.items()])
-            prior_mean = np.log(a*b).mean()
-            prior_std = np.log(a*b).std()
-            self.fun_gprior = [lambda params: np.log(params[0]*params[1]),
-                               [prior_mean, prior_std]]
+                self.fit_dict['fun_gprior'] is None:
+            groups = self.peaked_groups if self.peaked_groups is not None else \
+                self.groups
+            models = self.run_models(self.all_data, groups)
+            self.fun_gprior = self.get_log_alpha_beta_prior(models)
+            print('create log-alpha-beta prior', self.fun_gprior[1])
             self.fit_dict.update({
                 'fun_gprior': self.fun_gprior
             })
+
+        if self.peaked_groups is not None:
+            model = self.run_joint_model(self.all_data, self.peaked_groups)
+            beta_fe_gprior = self.get_beta_fe_gprior(model)
+            print('update beta fe gprior to', beta_fe_gprior)
+            if 'fe_gprior' in self.fit_dict:
+                fe_gprior = self.fit_dict['fe_gprior']
+            else:
+                fe_gprior = [[0.0, np.inf]]*model.num_fe
+            fe_gprior[1] = beta_fe_gprior
+            self.fit_dict.update({
+                'fe_gprior': deepcopy(fe_gprior)
+            })
+
+
+    def get_log_alpha_beta_prior(self, models):
+        a = np.array([model.params[0, 0]
+                      for group, model in models.items()])
+        b = np.array([model.params[1, 0]
+                      for group, model in models.items()])
+        prior_mean = np.log(a*b).mean()
+        prior_std = np.log(a*b).std()
+
+        return [lambda params: np.log(params[0]*params[1]),
+                [prior_mean, prior_std]]
+
+    def get_beta_fe_gprior(self, model):
+        fe, re = model.unzip_x(model.result.x)
+        beta_fe_mean = fe[1]
+        beta_fe_std = np.std(re[:, 1])
+
+        return [beta_fe_mean, beta_fe_std]
 
     def run_model(self, df, group):
         """Run each individual model.
@@ -54,6 +96,8 @@ class APModel(BasicModel):
         fit_dict = deepcopy(self.fit_dict)
         fe_gprior = fit_dict['fe_gprior']
         fe_gprior[1][1] *= self.prior_modifier(model.num_obs)
+        print(group)
+        print('\t update beta fe_gprior to', fe_gprior)
 
         fit_dict.update({
             'fe_gprior': fe_gprior
@@ -61,6 +105,25 @@ class APModel(BasicModel):
         # print(fit_dict['fe_gprior'])
         model.fit_params(**fit_dict)
         return model
+
+    def run_models(self, df, groups):
+        models = {}
+        for group in groups:
+            models.update({
+                group: self.run_model(df, group)
+            })
+
+        return models
+
+    def run_joint_model(self, df, groups):
+        model = CurveModel(
+            df=df[df[self.col_group].isin(groups)].copy(),
+            **self.basic_model_dict
+        )
+        model.fit_params(**self.joint_model_fit_dict)
+
+        return model
+
 
     def run_filtered_models(self, df, obs_bounds):
         """Run filtered models.
@@ -99,6 +162,22 @@ class APModel(BasicModel):
             prediction_functional_form=predict_space
         )
         return predictions
+
+    def plot_result(self, t):
+        models = self.models
+        fig, ax = plt.subplots(len(models), 2, figsize=(8*2, 4*len(models)))
+        for i, (location, model) in enumerate(models.items()):
+            ax[i, 0].scatter(model.t, model.obs)
+            ax[i, 0].plot(t, y)
+            ax[i, 0].set_title(location)
+
+            dy = derf(t, model.params[:, 0])
+            derf_obs = data_translator(model.obs,
+                                       self.basic_model_dict['fun'], 'derf')
+            ax[i, 1].scatter(model.t, derf_obs)
+            ax[i, 1].plot(t, dy)
+            ax[i, 1].set_title(location)
+            ax[i, 1].set_ylim(0.0, max(dy.max(), derf_obs.max())*1.1)
 
     def create_overall_draws(self, t, models, covs, predict_fun,
                              alpha_times_beta=None,
