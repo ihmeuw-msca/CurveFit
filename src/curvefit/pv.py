@@ -288,7 +288,7 @@ class PVModel:
             plot_residuals_1d(residual_df=smooth, x_axis=x_axis, y_axis=y_axis,
                               group_col=self.col_group, color=color, group=g)
 
-    def triangle_residual_plots(self, radius, x_axis='far_out', y_axis='num_data', exclude=None, absolute=False):
+    def triangle_residual_plots(self, radius, x_axis='far_out', y_axis='num_data', exclude=0, absolute=False):
         """
         Plot all of the residuals based on some exclusion criteria for
         number of data points that were used in the fitting and some radius
@@ -310,7 +310,6 @@ class PVModel:
             plot_residuals(residual_array=np.asarray(residuals[[x_axis, y_axis, 'residual']]),
                            group_name=k, absolute=absolute,
                            x_label=x_axis, y_label=y_axis)
-
             smooth = smoothed_residuals.loc[smoothed_residuals[self.col_group] == k]
             smooth_mean = np.asarray(smooth[[x_axis, y_axis, 'residual_mean']])
             smooth_std = np.asarray(smooth[[x_axis, y_axis, 'residual_std']])

@@ -67,13 +67,14 @@ class ModelRunner:
 
         return models
 
-    def run_rich_models(self, obs_threshold,
+    def run_filtered_models(self, obs_bounds,
                         **fit_kwargs):
         """Run all the data rich models.
         """
         models = {}
         for group in self.groups:
-            if np.sum(self.df[self.col_group] == group) < obs_threshold:
+            num_obs = np.sum(self.df[self.col_group] == group)
+            if num_obs < obs_bounds[0] or num_obs > obs_bounds[1]:
                 continue
             models.update({
                 group: self.run_model(group, **fit_kwargs)
