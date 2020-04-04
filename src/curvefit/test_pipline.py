@@ -183,7 +183,8 @@ class APModel(BasicModel):
     def create_overall_draws(self, t, models, covs,
                              alpha_times_beta=None,
                              sample_size=100,
-                             slope_at=14):
+                             slope_at=14,
+                             epsilon=1e-2):
         """Create draws from given models.
 
         Args:
@@ -203,6 +204,8 @@ class APModel(BasicModel):
                 Number of samples
             slope_at (int | float, optional):
                 If return slopes samples, this is where to evaluation the slope.
+            epsilon (float, optional):
+                Floor of CV.
 
         Returns:
             np.ndarray:
@@ -252,8 +255,11 @@ class APModel(BasicModel):
         mean_curve = self.predict_space(t, params)
 
         # create draws for the residual
+        error = self.forecaster.create_residual_samples(
+            sample_size, t, 1, epsilon
+        )
 
-        pass
+        return mean_curve - (mean_curve**self.theta)*error
 
 
     def create_param_samples(self, models, params,
