@@ -167,6 +167,7 @@ class APModel(BasicModel):
         models = self.models
         fig, ax = plt.subplots(len(models), 2, figsize=(8*2, 4*len(models)))
         for i, (location, model) in enumerate(models.items()):
+            y = model.fun(t, model.params[:, 0])
             ax[i, 0].scatter(model.t, model.obs)
             ax[i, 0].plot(t, y)
             ax[i, 0].set_title(location)
@@ -179,7 +180,7 @@ class APModel(BasicModel):
             ax[i, 1].set_title(location)
             ax[i, 1].set_ylim(0.0, max(dy.max(), derf_obs.max())*1.1)
 
-    def create_overall_draws(self, t, models, covs, predict_fun,
+    def create_overall_draws(self, t, models, covs,
                              alpha_times_beta=None,
                              sample_size=100,
                              slope_at=14):
@@ -194,8 +195,6 @@ class APModel(BasicModel):
                 Parameter names that we want samples for.
             covs (np.ndarray):
                 Covariates for the group want have the draws.
-            predict_fun (callable):
-                Prediction function.
             alpha_times_beta (float | None, optional):
                 If alpha_times_beta is `None` use the empirical distribution
                 for alpha samples, otherwise use the relation from beta to get
@@ -238,24 +237,24 @@ class APModel(BasicModel):
             alpha_samples = alpha_times_beta/beta_samples
             param_samples = np.vstack([alpha_samples, beta_samples])
 
+        alpha = np.median(param_samples[0])
+        beta = np.median(param_samples[1])
+        slope = np.median(samples['slope'])
 
-        p_samples = solve_p_from_dderf(param_samples[0],
-                                       param_samples[1],
-                                       samples['slope'],
-                                       slope_at=slope_at)
+        p = solve_p_from_dderf(
+            np.array([alpha]), np.array([beta]), np.array([slope]),
+            slope_at=slope_at
+        )[0]
 
-        param_samples = np.vstack([
-            param_samples,
-            p_samples
-        ])
+        params = np.array([alpha, beta, p])
 
-        draws = []
-        for i in range(sample_size):
-            draws.append(
-                predict_fun(t, param_samples[:, i])
-            )
+        # create mean curve
+        mean_curve = self.predict_space(t, params)
 
-        return np.vstack(draws)
+        # create draws for the residual
+
+        pass
+
 
     def create_param_samples(self, models, params,
                              sample_size=100,
@@ -316,5 +315,22 @@ class APModel(BasicModel):
 
         return samples
 
+    def process_draws(self, t):
+        """Process draws.
+        """
+        draws = {}
+        for group, draw in self.draws.items():
+            truncated_draws = truncate_draws(
+                t=t,
+                draws=self.draws[group],
+                draw_space=self.predict_space,
+                last_day=self.models[group].t[-1],
+                last_obs=self.models[group].obs[-1],
+                last_obs_space=self.fun
+            )
+            truncated_time = t[int(np.round(self.models[group].t[-1])) + 1:]
+            draws.update({
+                group: (truncated_time, truncated_draws)
+            })
 
-
+        return draws
