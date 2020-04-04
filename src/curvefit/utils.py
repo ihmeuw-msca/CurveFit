@@ -4,7 +4,17 @@ from copy import deepcopy
 from collections import OrderedDict
 from scipy.optimize import bisect
 from .functions import *
-from scipy.stats import median_absolute_deviation
+try :
+	from scipy.stats import median_absolute_deviation
+except ImportError :
+	# median_absolute_deviation is not in scipy before version 1.3.0
+	def median_absolute_deviation(vec, nan_policy='omit', scale=1.4826 ) :
+		assert nan_polisy == 'omit'
+		assert scale == 1.4826
+		assert len( vec.shape ) == 1
+		med = numpy.median( vec )
+		mad = numpy.median( abs(vec - med) )
+		return scale * mad
 
 
 def sizes_to_indices(sizes):
@@ -426,7 +436,7 @@ def compute_starting_params(fe_dict):
     # from the mean, which is now the new fixed effects initial value.
     re_init = (all_fixed_effects - fe_init).ravel()
     return fe_init, re_init
- 
+
 
 def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
     """Compute p from alpha, beta and slopes of derf at given point.
@@ -464,7 +474,7 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
         x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
                    slopes[i], -15.0, 0.0)
         p[i] = np.exp(x)
-    
+
     return p
 
 
@@ -544,4 +554,3 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
         truncated_draws = truncated_draws.ravel()
 
     return truncated_draws
-
