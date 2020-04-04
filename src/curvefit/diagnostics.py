@@ -1,30 +1,48 @@
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import numpy as np
+from curvefit.utils import data_translator
 
 
-def plot_uncertainty(generator, prediction_times, sharex, sharey):
+def plot_uncertainty(generator, prediction_times, sharex, sharey, draw_space, plot_obs, plot_draws=False):
     """
     Plot the draws from a model generator at some prediction times.
 
     Args:
         generator: (curvefit.model_generator.ModelPipeline) that has some draws
         prediction_times: (np.array) of prediction times
-        sharex: fix the x axes
-        sharey: fix the y axes
+        sharex: (bool) fix the x axes
+        sharey: (bool) fix the y axes
+        draw_space: (callable) which curvefit.functions space to plot the draws in
+        plot_obs: (str) column of observations to plot,
+        plot_draws: (bool) whether to plot all of the draws or just the summaries
     """
     fig, ax = plt.subplots(len(generator.groups), 1, figsize=(8, 4 * len(generator.groups)),
                            sharex=sharex, sharey=sharey)
     for i, group in enumerate(generator.groups):
-        mean = generator.draws[group].mean(axis=0)
-        lower = np.quantile(generator.draws[group], axis=0, q=0.025)
-        upper = np.quantile(generator.draws[group], axis=0, q=0.975)
+        draws = generator.draws[group].copy()
+        draws = data_translator(
+            data=draws,
+            input_space=generator.predict_space,
+            output_space=draw_space
+        )
+        mean_fit = generator.mean_predictions[group].copy()
+        mean_fit = data_translator(
+            data=mean_fit,
+            input_space=generator.predict_space,
+            output_space=draw_space
+        )
+        mean = draws.mean(axis=0)
+        lower = np.quantile(draws, axis=0, q=0.025)
+        upper = np.quantile(draws, axis=0, q=0.975)
+
         ax[i].plot(prediction_times, mean, c='red', linestyle=':')
         ax[i].plot(prediction_times, lower, c='red', linestyle=':')
         ax[i].plot(prediction_times, upper, c='red', linestyle=':')
-        ax[i].plot(prediction_times, generator.mean_predictions[group], c='black')
+
+        ax[i].plot(prediction_times, mean_fit, c='black')
         df_data = generator.all_data.loc[generator.all_data[generator.col_group] == group].copy()
-        ax[i].scatter(df_data[generator.col_t], df_data[generator.col_obs_compare])
+        ax[i].scatter(df_data[generator.col_t], df_data[plot_obs])
         ax[i].set_title(f"{group} predictions")
 
 

@@ -15,6 +15,7 @@ from curvefit.utils import convex_combination, model_average
 from curvefit.utils import get_initial_params
 from curvefit.utils import compute_starting_params
 from curvefit.diagnostics import plot_uncertainty
+from curvefit.utils import data_translator
 
 
 class ModelPipeline:
@@ -57,6 +58,14 @@ class ModelPipeline:
         self.fun = fun
         self.predict_space = predict_space
         self.obs_se_func = obs_se_func
+
+        # If we're doing predictive validity in log space, we want absolute residuals, which
+        # corresponds to theta = 0. If we're doing predictive validity in linear space, we want
+        # relative residuals, which corresponds to theta = 1.
+        if self.predict_space.__name__.startswith('log'):
+            self.theta = 0
+        else:
+            self.theta = 1
 
         if self.obs_se_func is not None:
             self.col_obs_se = 'obs_se'
@@ -112,15 +121,14 @@ class ModelPipeline:
 
         # Run predictive validity with a theta = 1, means everything is in relative space
         # -- relative mean bias, relative standard deviation (coefficient of variation)
-        self.run_predictive_validity(theta=1)
+        self.run_predictive_validity(theta=self.theta)
 
         # Excludes Wuhan from the residual fitting.
         # Right now only std_covariates are used.
         self.fit_residuals(
             smoothed_radius=smoothed_radius,
             exclude_below=exclude_below,
-            mean_covariates=['far_out', 'num_data'],
-            std_covariates=['far_out', 'num_data'],
+            covariates=['far_out', 'num_data'],
             exclude_groups=exclude_groups
         )
 
@@ -129,7 +137,7 @@ class ModelPipeline:
             num_draws=n_draws,
             std_threshold=cv_threshold,
             prediction_times=prediction_times,
-            theta=1
+            theta=self.theta
         )
 
     def setup_pipeline(self):
@@ -195,8 +203,8 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
-    def fit_residuals(self, smoothed_radius, mean_covariates, std_covariates,
-                      exclude_below, exclude_groups, std_floor=1e-5):
+    def fit_residuals(self, smoothed_radius, covariates,
+                      exclude_below, exclude_groups):
         """
         Fits residuals given a smoothed radius, and some models to exclude.
         Exclude below excludes models with less than that many data points.
@@ -204,30 +212,20 @@ class ModelPipeline:
 
         Args:
             smoothed_radius: List[int] 2-element list of amount of smoothing for the residuals
-            mean_covariates: List[str] which covariates to use to predict the residuals
-                choices of num_data, far_out, and data_index (where data_index = far_out + num_data)
-            std_covariates: List[str] which covariates to use to predict the coefficient of variation
-                in the residuals
+            covariates: List[str] which covariates to use to predict the residuals
             exclude_groups: List[str] which groups to exclude from the residual analysis
             exclude_below: (int) observations with less than exclude_below
                 will be excluded from the analysis
-            std_floor: (float) minimum standard deviation (or coefficient of variation given theta)
-                for the regression inputs
-
-        Returns:
-
         """
         residual_data = self.pv.all_residuals.copy()
         residual_data = residual_data.loc[residual_data['num_data'] > exclude_below].copy()
         residual_data = residual_data.loc[~residual_data[self.col_group].isin(exclude_groups)].copy()
-        # residual_data['residual_std'] = residual_data['residual_std'].apply(lambda x: max(x, std_floor))
+
         self.forecaster.fit_residuals(
             smooth_radius=smoothed_radius,
             residual_data=residual_data,
-            mean_col='residual',
-            std_col='residual',
-            mean_covariates=mean_covariates,
-            std_covariates=std_covariates,
+            col='residual',
+            covariates=covariates,
             residual_model_type='local'
         )
 
@@ -272,8 +270,14 @@ class ModelPipeline:
 
         return self
 
-    def plot_draws(self, prediction_times, sharex, sharey):
-        plot_uncertainty(generator=self, sharex=sharex, sharey=sharey, prediction_times=prediction_times)
+    def plot_draws(self, prediction_times, sharex=True, sharey=False, draw_space=None, plot_obs=None, plot_draws=False):
+        if draw_space is None:
+            draw_space = self.predict_space
+        if plot_obs is None:
+            plot_obs = self.col_obs_compare
+
+        plot_uncertainty(generator=self, sharex=sharex, sharey=sharey, prediction_times=prediction_times,
+                         draw_space=draw_space, plot_obs=plot_obs, plot_draws=plot_draws)
 
 
 class BasicModel(ModelPipeline):
