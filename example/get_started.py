@@ -11,6 +11,8 @@ rel_tol      = 1e-6
 import sys
 import pandas
 import numpy
+import sandbox
+sandbox.path()
 import curvefit
 #
 # model for the mean of the data
