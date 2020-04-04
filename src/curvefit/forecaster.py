@@ -266,7 +266,7 @@ class Forecaster:
         # mean_residual = residuals['residual_mean'].values
         std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
 
-        no_error = np.zeros(shape=(num_simulations, max_t))
+        no_error = np.zeros(shape=(num_simulations, sum(~add_noise)))
         error = np.random.normal(0, scale=std_residual, size=(num_simulations, sum(add_noise)))
         all_error = np.hstack([no_error, error])
 
