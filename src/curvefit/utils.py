@@ -526,14 +526,18 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
 
     if last_obs_space == 'erf':
         assert last_obs >= 0.0
+    else:
+        last_obs = np.exp(last_obs)
 
     last_day = int(np.round(last_day))
     assert last_day >= t.min() and last_day < t.max()
 
     derf_draws = data_translator(draws, draw_space, 'derf')
 
-    erf_draws = data_translator(derf_draws[:, last_day + 1:],
-                                'derf', 'erf') + last_obs
+    erf_draws = data_translator(
+        np.insert(derf_draws[:, last_day + 1:], 0, 0.0, axis=1),
+        'derf', 'erf') + last_obs
+
 
     truncated_draws = data_translator(erf_draws, 'erf', draw_space)
     if draw_ndim == 1:
