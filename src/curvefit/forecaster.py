@@ -223,6 +223,25 @@ class Forecaster:
 
         return new_data
 
+    def create_residual_samples(self, num_simulations, forecast_out_times, num_data, epsilon):
+        """
+
+        Args:
+            num_simulations: (int) number of draws
+            forecast_out_times: (np.array) of times
+            num_data: (int) number of existing data points
+            epsilon: (float) cv floor
+
+        Returns:
+            (np.ndarray) with shape (num_simulations, forecast_out_times)
+        """
+        residuals = self.predict(
+            far_out=forecast_out_times, num_data=np.array([num_data])
+        )
+        std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
+        error = np.random.normal(0, scale=std_residual, size=(num_simulations, len(std_residual)))
+        return error
+
     def simulate(self, mp, num_simulations, prediction_times, group, epsilon=1e-2, theta=1):
         """
         Simulate the residuals based on the mean and standard deviation of predicting
@@ -249,14 +268,13 @@ class Forecaster:
         no_noise = prediction_times <= max_t
 
         forecast_out_times = prediction_times[add_noise] - max_t
-
-        residuals = self.predict(
-            far_out=forecast_out_times, num_data=np.array([num_obs])
+        error = self.create_residual_samples(
+            num_simulations=num_simulations,
+            forecast_out_times=forecast_out_times,
+            num_data=num_obs,
+            epsilon=epsilon
         )
-        std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
-
         no_error = np.zeros(shape=(num_simulations, sum(no_noise)))
-        error = np.random.normal(0, scale=std_residual, size=(num_simulations, sum(add_noise)))
         all_error = np.hstack([no_error, error])
 
         noisy_forecast = predictions - (predictions ** theta) * all_error
