@@ -6,6 +6,8 @@ Aleksandr Aravkin (saravkin@uw.edu)
 Peng Zheng (zhengp@uw.edu)
 Marlena Bannick (mnorwood@uw.edu)
 
+### **For any inquiries, please contact covid19@healthdata.org.**
+
 ## Install
 
 Clone or download the repository and then do:

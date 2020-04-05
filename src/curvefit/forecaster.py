@@ -35,7 +35,7 @@ class ResidualModel:
         pass
 
 
-class LinearResidualModel(ResidualModel):
+class LinearRM(ResidualModel):
     def __init__(self, **kwargs):
         """
         A basic linear regression for the residuals.
@@ -65,10 +65,13 @@ class LinearResidualModel(ResidualModel):
         return pred.dot(self.coef)
 
 
-class LocalSmootherResidualModel(ResidualModel):
+class LocalSmoothDistanceExtrapolateRM(ResidualModel):
     def __init__(self, radius, **kwargs):
         """
-        An n-dimensional smoother for the covariates that are passed.
+        An n-dimensional smoother for the covariates that are passed. Extrapolates
+        for unobserved values of the covariates based on weighted average of all observed
+        where weights are the inverse of the distance in n-dimensional covariate space.
+
         Args:
             radius: List[int] radius of smoother in each direction
             **kwargs: keyword arguments to ResidualModel base class
@@ -111,7 +114,7 @@ class LocalSmootherResidualModel(ResidualModel):
         return data['residual_std'].values
 
 
-class SimpleExtrapolationResidualModel(ResidualModel):
+class LocalSmoothSimpleExtrapolateRM(ResidualModel):
     def __init__(self, radius, **kwargs):
         """
         An n-dimensional smoother for the covariates that are passed.
@@ -165,12 +168,9 @@ class Forecaster:
         new, potential future datasets that can then be fit by the ModelPipeline
         """
 
-        self.mean_residual_model = None
-        self.std_residual_model = None
+        self.residual_model = None
 
-    def fit_residuals(self, residual_data, mean_col, std_col,
-                      mean_covariates, std_covariates, residual_model_type,
-                      smooth_radius=None):
+    def fit_residuals(self, residual_data, col, covariates, residual_model_type, smooth_radius=None):
         """
         Run a regression for the mean and standard deviation
         of the scaled residuals.
@@ -178,39 +178,28 @@ class Forecaster:
         Args:
             residual_data: (pd.DataFrame) data frame of residuals
                 that has the columns listed in the covariate
-            mean_col: (str) the name of the column that has mean
                 of the residuals
-            std_col: (str) the name of the column that has the std
-                of the residuals
-            mean_covariates: (str) the covariates to include in the regression of residuals for mean
-            std_covariates: (str) the covariates to include in the regression of residuals for std
+            col: (str) the name of the column that has the residuals
+            covariates: (str) the covariates to include in the model for residuals
             residual_model_type: (str) what type of residual model to it
                 types include 'linear' and 'local'
             smooth_radius: (optional List[int]) smoother to pass to the Local residual smoother
 
         """
-        residual_data[f'log_{std_col}'] = np.log(residual_data[std_col])
         if residual_model_type == 'linear':
-            self.mean_residual_model = LinearResidualModel(
-                data=residual_data, outcome=mean_col, covariates=mean_covariates
-            )
-            self.std_residual_model = LinearResidualModel(
-                data=residual_data, outcome=f'log_{std_col}', covariates=std_covariates
+            self.residual_model = LinearRM(
+                data=residual_data, outcome=col, covariates=covariates
             )
         elif residual_model_type == 'local':
             if smooth_radius is None:
                 raise RuntimeError("Need a value for smooth radius if you're doing local smoothing.")
-            self.mean_residual_model = SimpleExtrapolationResidualModel(
-                data=residual_data, outcome=mean_col, covariates=mean_covariates, radius=smooth_radius
-            )
-            self.std_residual_model = SimpleExtrapolationResidualModel(
-                data=residual_data, outcome=std_col, covariates=std_covariates, radius=smooth_radius
+            self.residual_model = LocalSmoothSimpleExtrapolateRM(
+                data=residual_data, outcome=col, covariates=covariates, radius=smooth_radius
             )
         else:
             raise ValueError(f"Unknown residual model type {residual_model_type}.")
 
-        # self.mean_residual_model.fit()
-        self.std_residual_model.fit()
+        self.residual_model.fit()
 
     def predict(self, far_out, num_data):
         """
@@ -229,9 +218,8 @@ class Forecaster:
         new_data = pd.DataFrame.from_records(rows, columns=data_dict.keys())
         new_data['data_index'] = new_data['far_out'] + new_data['num_data']
 
-        # new_data['residual_mean'] = self.mean_residual_model.predict(df=new_data)
         new_data['residual_mean'] = 0
-        new_data['residual_std'] = self.std_residual_model.predict(df=new_data)
+        new_data['residual_std'] = self.residual_model.predict(df=new_data)
 
         return new_data
 
@@ -258,15 +246,16 @@ class Forecaster:
         predictions = mp.mean_predictions[group]
 
         add_noise = prediction_times > max_t
+        no_noise = prediction_times <= max_t
+
         forecast_out_times = prediction_times[add_noise] - max_t
 
         residuals = self.predict(
             far_out=forecast_out_times, num_data=np.array([num_obs])
         )
-        # mean_residual = residuals['residual_mean'].values
         std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
 
-        no_error = np.zeros(shape=(num_simulations, max_t))
+        no_error = np.zeros(shape=(num_simulations, sum(no_noise)))
         error = np.random.normal(0, scale=std_residual, size=(num_simulations, sum(add_noise)))
         all_error = np.hstack([no_error, error])
 
