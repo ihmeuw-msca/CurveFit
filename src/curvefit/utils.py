@@ -457,14 +457,26 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
         slopes = np.repeat(slopes, alpha.size)
 
     assert alpha.size == slopes.size
+    assert all(slopes > 0.0)
+    assert all(beta >= slope_at)
 
-    p = np.zeros(alpha.size)
+    # p = np.zeros(alpha.size)
+    #
+    # for i in range(alpha.size):
+    #     x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
+    #                slopes[i], -15.0, 0.0)
+    #     p[i] = np.exp(x)
+
+    tmp = alpha*(slope_at - beta)
+    p = np.sqrt(np.pi)*slopes/(2.0*alpha**2*np.abs(tmp)*np.exp(-tmp**2))
 
     for i in range(alpha.size):
-        x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
-                   slopes[i], -15.0, 0.0)
-        p[i] = np.exp(x)
-    
+        fun = lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) - \
+                        slopes[i]
+
+        if np.abs(fun(p[i])) > 1e-10:
+            print(fun(p[i]))
+
     return p
 
 
