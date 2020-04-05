@@ -2,7 +2,9 @@
 /dist/
 /build/
 /src/curvefit.egg-info/
-# directories created by mkdocs
+# directory created by docs/extract_md.py
+/docs/extract_md/
+# directory created by mkdocs
 /site/
 # vim editor swap files in any directory
 *.swp

@@ -1,6 +1,12 @@
 # makefile for easy manage package
 .PHONY: clean, tests
 
+doc_phony:
+
+docs: doc_phony
+	python docs/extract_md.py
+	mkdocs build
+
 build: setup.py
 	python setup.py build
 
