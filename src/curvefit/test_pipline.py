@@ -240,6 +240,8 @@ class APModel(BasicModel):
             alpha_samples = alpha_times_beta/beta_samples
             param_samples = np.vstack([alpha_samples, beta_samples])
 
+        # print(param_samples)
+
         alpha = np.median(param_samples[0])
         beta = max(slope_at + 1.0, np.median(param_samples[1]))
         slope = np.median(samples['slope'])
@@ -249,7 +251,10 @@ class APModel(BasicModel):
             slope_at=slope_at
         )[0]
 
+
         params = np.array([alpha, beta, p])
+
+        # print(params)
 
         # create mean curve
         mean_curve = self.predict_space(t, params)
@@ -259,7 +264,8 @@ class APModel(BasicModel):
             sample_size, t, 1, epsilon
         )
 
-        return mean_curve - (mean_curve**self.theta)*error
+        return mean_curve - (mean_curve**self.theta)*error - \
+               np.var(error, axis=0)*0.5
 
 
     def create_param_samples(self, models, params,
