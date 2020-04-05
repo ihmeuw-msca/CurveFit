@@ -1,5 +1,12 @@
 #! /bin/python3
 # vim: set expandtab:
+'''
+[begin_markdown get_started]
+
+# Getting Started Using CurveFit
+
+## Source Code
+``` python '''
 # -------------------------------------------------------------------------
 n_data       = 21
 num_params   = 3
@@ -29,6 +36,10 @@ def identity_fun(x) :
 # link function used for alpha, p
 def exp_fun(x) :
     return numpy.exp(x)
+#
+# inverse of function used for alpha, p
+def log_fun(x) :
+    return numpy.log(x)
 #
 # params_true
 params_true       = numpy.array( [ alpha_true, beta_true, p_true ] )
@@ -73,7 +84,10 @@ curve_model = curvefit.CurveModel(
 )
 #
 # fit_params
-fe_init         = params_true / 3.0
+inv_link_fun = [ log_fun, identity_fun, log_fun ]
+fe_init      = numpy.zeros( num_params )
+for i in range(num_params) :
+    fe_init[i]   = inv_link_fun[i](params_true[i] / 3.0)
 curve_model.fit_params(fe_init)
 params_estimate = curve_model.params
 #
@@ -83,3 +97,6 @@ for i in range(num_params) :
 #
 print('get_started.py: OK')
 sys.exit(0)
+''' ```
+[end_markdown get_started]
+'''

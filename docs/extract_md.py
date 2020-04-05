@@ -5,7 +5,8 @@
 output_dir = 'docs/extract_md'
 # list of files that contain markdown sections in them
 file_list = [
-    'docs/extract_md.py'
+    'docs/extract_md.py',
+    'example/get_started.py',
 ]
 # ----------------------------------------------------------------------------
 '''[begin_markdown extract_md]
@@ -42,11 +43,22 @@ text:
 <p/>
 Here *section_name* must be the same as in the start of this markdown section.
 
+## Code Blocks
+A code block within a markdown section begins and ends with three back quotes.
+Thuse there must be an even number of occurances of three back quotes.
+The other characters on the same line as the three back quotes are not
+included in the markdown output. (This enables one to begin or end a comment
+block without having those characters in the markdown output.)
+There is one exception to this rule: if a language name directly follows
+the three bakc quotes that start a code block, the language name is included
+in the output.
+
 [end_markdown extract_md]'''
 # ----------------------------------------------------------------------------
 import sys
 import re
 import os
+import pdb
 #
 # add program name to system error call
 def sys_exit(msg) :
@@ -72,8 +84,10 @@ section_list       = list()
 corresponding_file = list()
 #
 # pattern for start of markdown section
-pattern_begin = re.compile( '\\[begin_markdown\\s*(\\w*)\\]' )
-pattern_end   = re.compile( '\\[end_markdown\\s*(\\w*)\\]' )
+pattern_begin_markdown = re.compile( '\\[begin_markdown\\s*(\\w*)\\]' )
+pattern_end_markdown   = re.compile( '\\[end_markdown\\s*(\\w*)\\]' )
+pattern_begin_3quote   = re.compile( '[^\\n]*(```\\s*\\w*)[^\\n]*' )
+pattern_end_3quote     = re.compile( '[^\\n]*(```)[^\\n]*' )
 # -----------------------------------------------------------------------------
 # process each file in the list
 for file_in in file_list :
@@ -89,11 +103,11 @@ for file_in in file_list :
         #
         # match_begin
         data_rest   = file_data[data_index : ]
-        match_begin = pattern_begin.search(data_rest)
+        match_begin = pattern_begin_markdown.search(data_rest)
         #
         if match_begin == None :
             if data_index == 0 :
-                # There is no match for pattern_begin in this file.
+                # There is no match for pattern_begin_markdown in this file.
                 msg  = 'can not find: [begin_markdown section_name\]\n'
                 msg += 'in ' + file_in + '\n'
                 sys_exit(msg)
@@ -121,19 +135,47 @@ for file_in in file_list :
             #
             # match_end
             data_rest = file_data[data_index : ]
-            match_end = pattern_end.search(data_rest)
+            match_end = pattern_end_markdown.search(data_rest)
             #
             if match_end == None :
                 msg  = 'can not find: [end\_markdown section_name]\n'
                 msg += 'in ' + file_in + ', section ' + section_name + '\n'
                 sys_exit(msg)
             #
-            # write file for this section
+            # output_data
             output_start = data_index
             output_end   = data_index + match_end.start()
+            output_data  = file_data[ output_start : output_end ]
+            #
+            # remove characters on same line as triple back quote
+            data_index  = 0
+            match_begin = pattern_begin_3quote.search(output_data)
+            while match_begin != None :
+                begin_start = match_begin.start() + data_index
+                begin_end   = match_begin.end() + data_index
+                output_rest = output_data[ begin_end : ]
+                match_end   = pattern_end_3quote.search( output_rest )
+                if match_end == None :
+                    msg  = 'number of tripple backquotes is not even in '
+                    msg += file_in + '\n'
+                    sys_exit(msg)
+                end_start = match_end.start() + begin_end + data_index
+                end_end   = match_end.end()   + begin_end + data_index
+                #
+                data_left   = output_data[: begin_start ]
+                data_left  += match_begin.group(1)
+                data_left  += output_data[ begin_end : end_start ]
+                data_left  += match_end.group(1)
+                data_right  = output_data[ end_end : ]
+                #
+                output_data = data_left + data_right
+                data_index  = len(data_left)
+                match_begin = pattern_begin_3quote.search(data_right)
+            #
+            # write file for this section
             file_out = output_dir + '/' + section_name + '.md'
             file_ptr = open(file_out, 'w')
-            file_ptr.write( file_data[ output_start : output_end ] )
+            file_ptr.write( output_data )
             file_ptr.close()
             #
             # data_index
