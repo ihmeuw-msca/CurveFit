@@ -241,7 +241,7 @@ class APModel(BasicModel):
             param_samples = np.vstack([alpha_samples, beta_samples])
 
         alpha = np.median(param_samples[0])
-        beta = np.median(param_samples[1])
+        beta = max(slope_at + 1.0, np.median(param_samples[1]))
         slope = np.median(samples['slope'])
 
         p = solve_p_from_dderf(
