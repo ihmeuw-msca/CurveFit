@@ -74,7 +74,7 @@ def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
         obs_pre = np.insert(obs_now[:-1], 0, 0.0)
         t_now = df_g[col_t].values
         t_pre = np.insert(t_now[:-1], 0, -1.0)
-        ln_slope = np.log(np.maximum(1e-10, (obs_now - obs_pre)/(t_now - t_pre)))
+        ln_slope = np.log(np.maximum(1e-10, (obs_now - obs_pre) / (t_now - t_pre)))
         df_g[new_col] = ln_slope
         df_all[g] = df_g
     # combine all the data frames
@@ -152,8 +152,8 @@ def neighbor_mean_std(df,
     df_list = [
         df[df[col_group] == group].reset_index()
         for group in df[col_group].unique()
-    ]
-    # TODO: Make this faster
+    ]  # separate dataset by groups
+
     for i, df_sub in enumerate(df_list):
         index = np.unique(np.asarray(df_sub[col_axis].values), axis=0).astype(int)
         new_df = pd.DataFrame({
@@ -163,18 +163,47 @@ def neighbor_mean_std(df,
             'residual_mean': np.nan,
             'residual_std': np.nan
         })
-        for j in index:
-            print(j, end='\r')
-            df_filter = df_sub.copy()
-            for k, ax in enumerate(col_axis):
-                rad = radius[k]
-                ax_filter = np.abs(df_sub[col_axis[k]] - j[k]) <= rad
-                df_filter = df_filter.loc[ax_filter]
-            mean = df_filter[col_val].mean()
-            std = df_filter[col_val].std()
-            subset = np.all(new_df[col_axis] == j, axis=1).values
-            new_df.loc[subset, 'residual_mean'] = mean
-            new_df.loc[subset, 'residual_std'] = std
+        # Group rows by indices. It's like a 2d matrix, but each cell can have multiple entries (one per Location)
+        df_grouped_by_idx = df_sub.reset_index().fillna(0).groupby(by=[col_axis[0], col_axis[1]])
+        max_idx = np.max(index)
+        groups_locations = np.zeros((max_idx, max_idx)) - 1
+        groups = []
+        # Since the number of entities for any col_axis is undetermined, we have to keep it in a long list.
+        for idx, (name, group) in enumerate(df_grouped_by_idx):
+            s = int(name[0]) - 1
+            j = int(name[1]) - 1
+            groups.append(np.array(group[col_val].to_list()))
+            groups_locations[s, j] = idx
+
+        # Iterate over all combination of indices, calculate mean and variance around it.
+        for idx, row in new_df.iterrows():
+            s = int(row[col_axis[0]]) - 1
+            j = int(row[col_axis[1]]) - 1
+            total_sum = 0
+            total_count = 0
+            total_deviations_squared = 0
+
+            for k in range(max(s - radius[0], 0), min(s + radius[0] + 1, groups_locations.shape[0])):
+                for t in range(max(j - radius[1], 0), min(j + radius[1] + 1, groups_locations.shape[1])):
+                    location = int(groups_locations[k, t])
+                    if location == -1:
+                        continue
+                    residuals = groups[location]
+                    total_sum += residuals.sum()
+                    total_count += len(residuals)
+            if total_count == 0:
+                continue
+            mean = total_sum / total_count
+            new_df.at[idx, 'residual_mean'] = mean
+            for k in range(max(s - radius[0], 0), min(s + radius[0] + 1, groups_locations.shape[0])):
+                for t in range(max(j - radius[1], 0), min(j + radius[1] + 1, groups_locations.shape[1])):
+                    location = int(groups_locations[k, t])
+                    if location == -1:
+                        continue
+                    residuals = groups[location]
+                    total_deviations_squared += ((residuals - mean) ** 2).sum()
+            std = np.sqrt(total_deviations_squared / (total_count - 1))
+            new_df.at[idx, 'residual_std'] = std
 
         df_list[i] = new_df
 
@@ -212,29 +241,29 @@ def convex_combination(t, pred1, pred2, pred_fun,
     assert callable(pred_fun)
     assert start_day < end_day
 
-    a = 1.0/(end_day - start_day)
-    b = -start_day*a
-    lam = np.maximum(0.0, np.minimum(1.0, a*t + b))
+    a = 1.0 / (end_day - start_day)
+    b = -start_day * a
+    lam = np.maximum(0.0, np.minimum(1.0, a * t + b))
 
     if pred_fun.__name__ == 'log_erf':
         pred1 = np.exp(pred1)
         pred2 = np.exp(pred2)
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
+        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.log(np.cumsum(pred_tmp, axis=1))
     elif pred_fun.__name__ == 'erf':
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
+        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.cumsum(pred_tmp, axis=1)
     elif pred_fun.__name__ == 'log_derf':
         pred1_tmp = np.exp(pred1)
         pred2_tmp = np.exp(pred2)
-        pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
+        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.log(pred_tmp)
     elif pred_fun.__name__ == 'derf':
-        pred = lam*pred1 + (1.0 - lam)*pred2
+        pred = lam * pred1 + (1.0 - lam) * pred2
     else:
         pred = None
         RuntimeError('Unknown prediction functional form')
@@ -426,7 +455,7 @@ def compute_starting_params(fe_dict):
     # from the mean, which is now the new fixed effects initial value.
     re_init = (all_fixed_effects - fe_init).ravel()
     return fe_init, re_init
- 
+
 
 def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
     """Compute p from alpha, beta and slopes of derf at given point.
@@ -462,9 +491,9 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
 
     for i in range(alpha.size):
         x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
-                   slopes[i], -15.0, 0.0)
+                             slopes[i], -15.0, 0.0)
         p[i] = np.exp(x)
-    
+
     return p
 
 
@@ -484,7 +513,7 @@ def sample_from_samples(samples, sample_size):
     mean = np.mean(samples)
     std = np.std(samples)
 
-    new_samples = mean + np.random.randn(sample_size)*std
+    new_samples = mean + np.random.randn(sample_size) * std
 
     return new_samples
 
@@ -553,4 +582,3 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
         final_draws = final_draws.ravel()
 
     return final_draws
-
