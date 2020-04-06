@@ -67,6 +67,14 @@ class ModelPipeline:
         else:
             self.theta = 1
 
+        # If we're fitting in log space we ultimately want everything in
+        # normal space. But it's simulated normally in log space
+        # and we need mean to be unbiased in linear space.
+        #
+        # This flag will de-bias the draws
+        # mean in linear space to match exactly the exp mean in log space.
+        self.de_bias_draws = self.predict_space.__name__.startswith('log')
+
         if self.obs_se_func is not None:
             self.col_obs_se = 'obs_se'
             self.all_data[self.col_obs_se] = self.all_data[self.col_t].apply(self.obs_se_func)
@@ -266,11 +274,36 @@ class ModelPipeline:
                 theta=theta,
                 epsilon=std_threshold
             )
+            if self.de_bias_draws:
+                draws = draws - draws.var(axis=0) / 2
+
             self.draws[group] = draws
 
         return self
 
-    def plot_draws(self, prediction_times, sharex=True, sharey=False, draw_space=None, plot_obs=None, plot_draws=False):
+    def get_cv_matrices(self):
+        """
+        Get matrices of coefficient of variation by number of data points in the model
+        by how far out the model is predicting from the last data point.
+
+        Returns:
+            (pd.DataFrame)
+        """
+        return self.forecaster.residual_model.smoothed.pivot('num_data', 'far_out', 'residual_std')
+
+    def plot_draws(self, prediction_times, sharex=True, sharey=False, draw_space=None,
+                   plot_obs=None, plot_draws=False):
+        """
+        Plot the draws resulting from a model in any space. Does it for each group in the model.
+
+        Args:
+            prediction_times: (np.array) of prediction times for the model
+            sharex: (bool) fix x-axis across plots
+            sharey: (bool) fix y-axis across plots
+            draw_space: (callable) curvefit.functions what space to plot draws in
+            plot_obs: (str) name of column that represents data in draw_space
+            plot_draws: (bool) plot draws or just summaries
+        """
         if draw_space is None:
             draw_space = self.predict_space
         if plot_obs is None:

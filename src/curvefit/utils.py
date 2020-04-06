@@ -467,13 +467,18 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
         slopes = np.repeat(slopes, alpha.size)
 
     assert alpha.size == slopes.size
+    assert all(slopes > 0.0)
+    assert all(beta >= slope_at)
 
-    p = np.zeros(alpha.size)
+    # p = np.zeros(alpha.size)
+    #
+    # for i in range(alpha.size):
+    #     x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
+    #                slopes[i], -15.0, 0.0)
+    #     p[i] = np.exp(x)
 
-    for i in range(alpha.size):
-        x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
-                   slopes[i], -15.0, 0.0)
-        p[i] = np.exp(x)
+    tmp = alpha*(slope_at - beta)
+    p = np.sqrt(np.pi)*slopes/(2.0*alpha**2*np.abs(tmp)*np.exp(-tmp**2))
 
     return p
 
@@ -532,7 +537,7 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
         last_obs_space = last_obs_space.__name__
 
     assert draw_space in ['erf', 'derf', 'log_erf', 'log_derf']
-    assert last_obs_space in ['erf', 'log_erf']
+    assert last_obs_space in ['erf', 'derf', 'log_erf', 'log_derf']
 
     if last_obs_space == 'erf':
         assert last_obs >= 0.0
@@ -543,14 +548,23 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
     assert last_day >= t.min() and last_day < t.max()
 
     derf_draws = data_translator(draws, draw_space, 'derf')
+    derf_draws = derf_draws[:, last_day + 1:]
 
-    erf_draws = data_translator(
-        np.insert(derf_draws[:, last_day + 1:], 0, 0.0, axis=1),
-        'derf', 'erf') + last_obs
+    if draw_space == 'derf':
+        final_draws = derf_draws
+    elif draw_space == 'log_derf':
+        final_draws = data_translator(derf_draws, 'derf', 'log_derf')
+    elif draw_space == 'erf':
+        assert last_obs_space in ['erf', 'log_erf']
+        last_obs = last_obs if last_obs_space == 'erf' else np.exp(last_obs)
+        final_draws = data_translator(derf_draws, 'derf', 'erf') + last_obs
+    else:
+        assert last_obs_space in ['erf', 'log_erf']
+        last_obs = last_obs if last_obs_space == 'erf' else np.exp(last_obs)
+        final_draws = data_translator(derf_draws, 'derf', 'erf') + last_obs
+        final_draws = np.log(final_draws)
 
-
-    truncated_draws = data_translator(erf_draws, 'erf', draw_space)
     if draw_ndim == 1:
-        truncated_draws = truncated_draws.ravel()
+        final_draws = final_draws.ravel()
 
-    return truncated_draws
+    return final_draws
