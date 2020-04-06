@@ -156,7 +156,7 @@ for file_in in file_list :
                 output_rest = output_data[ begin_end : ]
                 match_end   = pattern_end_3quote.search( output_rest )
                 if match_end == None :
-                    msg  = 'number of tripple backquotes is not even in '
+                    msg  = 'number of triple backquotes is not even in '
                     msg += file_in + '\n'
                     sys_exit(msg)
                 end_start = match_end.start() + begin_end + data_index
