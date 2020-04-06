@@ -52,7 +52,7 @@ def get_obs_se(df, col_t, func=lambda x: 1 / (1 + x)):
     data['obs_se'] = data[col_t].apply(func)
     return data
 
-
+# TODO: replace with the data translator?
 def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
     """
     Adds a new column for the derivative of col_obs.
@@ -91,7 +91,7 @@ def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
     df_result = pd.concat([df_all[g] for g in groups])
     return df_result
 
-
+# TODO: replace by the neighbor_mean_std?
 def across_group_mean_std(df,
                           col_val,
                           col_group,
@@ -220,11 +220,12 @@ def neighbor_mean_std(df,
     return pd.concat(df_list)
 
 
+# TODO: replace by the data translator?
 def cumulative_derivative(array):
     arr = array.copy()
     return arr - np.insert(arr[:, :-1], 0, 0.0, axis=1)
 
-
+# TODO: change to use the data translator
 def convex_combination(t, pred1, pred2, pred_fun,
                        start_day=2, end_day=20):
     """Combine the prediction.
@@ -283,7 +284,7 @@ def convex_combination(t, pred1, pred2, pred_fun,
 
     return pred
 
-
+# TODO: use data_translator
 def model_average(pred1, pred2, w1, w2, pred_fun):
     """
     Average two models together in linear space.
@@ -323,7 +324,7 @@ def model_average(pred1, pred2, w1, w2, pred_fun):
 
     return pred
 
-
+# TODO: move the test from pv to here and test it not use the old code.
 def condense_residual_matrix(matrix, sequential_diffs, data_density):
     """
     Condense the residuals from a residual matrix to three columns
@@ -498,13 +499,6 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
     assert alpha.size == slopes.size
     assert all(slopes > 0.0)
     assert all(beta >= slope_at)
-
-    # p = np.zeros(alpha.size)
-    #
-    # for i in range(alpha.size):
-    #     x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
-    #                slopes[i], -15.0, 0.0)
-    #     p[i] = np.exp(x)
 
     tmp = alpha*(slope_at - beta)
     p = np.sqrt(np.pi)*slopes/(2.0*alpha**2*np.abs(tmp)*np.exp(-tmp**2))

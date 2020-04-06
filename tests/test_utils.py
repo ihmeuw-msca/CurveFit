@@ -8,6 +8,9 @@
 
 import numpy as np
 import pandas as pd
+import pytest
+import curvefit
+import curvefit.utils as utils
 from curvefit.legacy.utils import neighbor_mean_std as old_algorithm
 from curvefit.utils import neighbor_mean_std as new_algorithm
 
@@ -79,3 +82,58 @@ def test_neighbor_mean_std_consistent_with_old_algorithm():
     assert np.allclose(old_alg_result["residual_mean"], new_alg_result["residual_mean"])
     assert np.allclose(old_alg_result["residual_std"], new_alg_result["residual_std"])
     return None
+
+
+@pytest.mark.parametrize(('sizes', 'indices'),
+                         [(np.array([1, 1, 1]), [np.array([0]),
+                                                 np.array([1]),
+                                                 np.array([2])]),
+                          (np.array([1, 2, 3]), [np.array([0]),
+                                                 np.array([1, 2]),
+                                                 np.array([3, 4, 5])])])
+def test_sizes_to_indices(sizes, indices):
+    my_indices = utils.sizes_to_indices(sizes)
+    print(my_indices)
+    assert all([np.allclose(indices[i], my_indices[i])
+                for i in range(sizes.size)])
+
+@pytest.fixture
+def data():
+    return pd.DataFrame({
+        't': np.arange(5),
+        'group': 'All',
+        'obs': np.ones(5),
+        'cov': np.zeros(5)
+    })
+
+@pytest.mark.parametrize('func', [lambda x: 1 / (1 + x),
+                                  lambda x: x**2])
+def test_get_obs_se(data, func):
+    result = utils.get_obs_se(data, 't', func=func)
+    assert np.allclose(result['obs_se'], func(data['t']))
+
+
+@pytest.mark.parametrize('t', [np.arange(5)])
+@pytest.mark.parametrize(('start_day', 'end_day', 'pred_fun'),
+                         [(1, 3, curvefit.derf)])
+@pytest.mark.parametrize(('mat1', 'mat2', 'result'),
+                         [(np.ones(5), np.ones(5), np.ones(5)),
+                          (np.arange(5), np.ones(5),
+                           np.array([1.0, 1.0, 1.5, 3.0, 4.0]))])
+def test_convex_combination(t, mat1, mat2, pred_fun, start_day, end_day,
+                            result):
+    my_result = utils.convex_combination(t, mat1, mat2, pred_fun,
+                                         start_day=start_day,
+                                         end_day=end_day)
+
+    assert np.allclose(result, my_result)
+
+@pytest.mark.parametrize(('w1', 'w2', 'pred_fun'),
+                         [(0.3, 0.7, curvefit.derf)])
+@pytest.mark.parametrize(('mat1', 'mat2', 'result'),
+                         [(np.ones(5), np.ones(5), np.ones(5)),
+                          (np.ones(5), np.zeros(5), np.ones(5)*0.3),
+                          (np.zeros(5), np.ones(5), np.ones(5)*0.7)])
+def test_model_average(mat1, mat2, w1, w2, pred_fun, result):
+    my_result = utils.model_average(mat1, mat2, w1, w2, pred_fun)
+    assert np.allclose(result, my_result)
