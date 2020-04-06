@@ -597,3 +597,78 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
         final_draws = final_draws.ravel()
 
     return final_draws
+
+
+def smooth_draws(mat, radius=0, sort=False):
+    """Smooth the draw matrix in the column direction.
+
+    Args:
+        mat (np.ndarray):
+            Input matrix, either 1d or 2d array.
+        radius (int, optional):
+            Smoothing radius.
+        sort (bool, optional):
+            If `sort`, we sorting the matrix along the first dimension before
+            smoothing.
+
+    Returns:
+        np.ndarray:
+            Smoothed matrix.
+    """
+    mat = np.array(mat).copy()
+    if radius == 0:
+        return mat
+
+    radius = radius if mat.ndim == 1 else (0, radius)
+
+    if sort and mat.ndim == 2:
+        mat.sort(axis=0)
+
+    return smooth_mat(mat, radius=radius)
+
+
+def smooth_mat(mat, radius=None):
+    """Smooth the draw matrix in the column direction.
+
+        Args:
+            mat (np.ndarray):
+                Input matrix, either 1d or 2d array.
+            radius (int | tuple{int} | None, optional):
+                Smoothing radius.
+
+        Returns:
+            np.ndarray:
+                Smoothed matrix.
+    """
+    mat = np.array(mat).copy()
+
+    is_vector = mat.ndim == 1
+    if is_vector:
+        if isinstance(radius, int):
+            radius = (0, radius)
+        elif isinstance(radius, tuple):
+            assert len(radius) == 1
+            radius = (0, radius[0])
+        else:
+            RuntimeError('Wrong input of radius.')
+        mat = mat[None, :]
+
+    assert len(radius) == mat.ndim
+
+    shape = mat.shape
+
+    window_shape = tuple(np.array(radius)*2 + 1)
+    mat = np.pad(mat, ((radius[0],), (radius[1],)), 'constant',
+                 constant_values=np.nan)
+    view_shape = tuple(
+        np.subtract(mat.shape, window_shape) + 1) + window_shape
+    strides = mat.strides + mat.strides
+    sub_mat = np.lib.stride_tricks.as_strided(mat, view_shape, strides)
+    sub_mat = sub_mat.reshape(*shape, np.prod(window_shape))
+
+    mean = np.nanmean(sub_mat, axis=2)
+
+    if is_vector:
+        mean = mean.ravel()
+
+    return mean

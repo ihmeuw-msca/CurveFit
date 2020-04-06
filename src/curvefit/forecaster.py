@@ -115,27 +115,49 @@ class LocalSmoothDistanceExtrapolateRM(ResidualModel):
 
 
 class LocalSmoothSimpleExtrapolateRM(ResidualModel):
-    def __init__(self, radius, **kwargs):
+    def __init__(self, radius, num_smooths, **kwargs):
         """
         An n-dimensional smoother for the covariates that are passed.
         Args:
             radius: List[int] radius of smoother in each direction
+            num_smooths: (int) number of times to go through the smoothing process
             **kwargs: keyword arguments to ResidualModel base class
         """
         super().__init__(**kwargs)
         self.radius = radius
+        self.num_smooths = num_smooths
         self.smoothed = None
 
     def fit(self):
         df = self.data.copy()
-        df['Smooth_Group'] = 'All'
+        df['group'] = 'All'
         # smooth
         self.smoothed = neighbor_mean_std(
             df=df, col_val=self.outcome,
-            col_group='Smooth_Group',
+            col_group='group',
             col_axis=self.covariates,
             radius=self.radius
         )
+        if self.num_smooths > 1:
+            i = 1
+            data = self.smoothed.copy()
+            data.rename(columns={'residual_std': 'residual'}, inplace=True)
+            data.drop(columns={'residual_mean'}, axis=1, inplace=True)
+
+            while i < self.num_smooths:
+                self.smoothed = neighbor_mean_std(
+                    df=data, col_val='residual',
+                    col_group='group',
+                    col_axis=self.covariates,
+                    radius=self.radius
+                )
+                data = self.smoothed.copy()
+                data.rename(columns={'residual_mean': 'residual'}, inplace=True)
+                data.drop(['residual_std'], inplace=True, axis=1)
+                i += 1
+
+            self.smoothed.drop('residual_std', inplace=True, axis=1)
+            self.smoothed.rename(columns={'residual_mean': 'residual_std'}, inplace=True)
 
     def predict(self, df):
         data = df.copy()
@@ -170,7 +192,7 @@ class Forecaster:
 
         self.residual_model = None
 
-    def fit_residuals(self, residual_data, col, covariates, residual_model_type, smooth_radius=None):
+    def fit_residuals(self, residual_data, col, covariates, residual_model_type, smooth_radius=None, num_smooths=None):
         """
         Run a regression for the mean and standard deviation
         of the scaled residuals.
@@ -184,7 +206,7 @@ class Forecaster:
             residual_model_type: (str) what type of residual model to it
                 types include 'linear' and 'local'
             smooth_radius: (optional List[int]) smoother to pass to the Local residual smoother
-
+            num_smooths: (optional int) number of times to run the smoother
         """
         if residual_model_type == 'linear':
             self.residual_model = LinearRM(
@@ -193,8 +215,11 @@ class Forecaster:
         elif residual_model_type == 'local':
             if smooth_radius is None:
                 raise RuntimeError("Need a value for smooth radius if you're doing local smoothing.")
+            if num_smooths is None:
+                raise RuntimeError("Need a value for the number of smooths you want "
+                                   "to do if you're doing local smoothing.")
             self.residual_model = LocalSmoothSimpleExtrapolateRM(
-                data=residual_data, outcome=col, covariates=covariates, radius=smooth_radius
+                data=residual_data, outcome=col, covariates=covariates, radius=smooth_radius, num_smooths=num_smooths
             )
         else:
             raise ValueError(f"Unknown residual model type {residual_model_type}.")
@@ -239,7 +264,8 @@ class Forecaster:
             far_out=forecast_out_times, num_data=np.array([num_data])
         )
         std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
-        error = np.random.normal(0, scale=std_residual, size=(num_simulations, len(std_residual)))
+        standard_noise = np.random.randn(num_simulations)
+        error = np.outer(standard_noise, std_residual)
         return error
 
     def simulate(self, mp, num_simulations, prediction_times, group, epsilon=1e-2, theta=1):

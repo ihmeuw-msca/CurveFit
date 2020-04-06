@@ -99,7 +99,7 @@ class ModelPipeline:
         self.draw_models = None
 
     def run(self, n_draws, prediction_times, cv_threshold,
-            smoothed_radius, exclude_groups, exclude_below=0):
+            smoothed_radius, num_smooths, exclude_groups, exclude_below=0):
         """
         Runs the whole model with PV and forecasting residuals and creating draws.
 
@@ -111,6 +111,7 @@ class ModelPipeline:
             smoothed_radius: List[int] residual smoothing before running the
                 residual forecast -- how many neighbors to look at, e.g. [3, 3]
                 would smooth over a radius of 3
+            num_smooths: (int) number of iterations to run through for smoothing residuals
             exclude_groups: List[str] list of your group names that you want to exclude
                 from the residual analysis. should be Wuhan
             exclude_below: (int) exclude results from the predictive validity analysis
@@ -121,6 +122,7 @@ class ModelPipeline:
         assert type(n_draws) == int
         assert type(cv_threshold) == float
         assert type(smoothed_radius) == list
+        assert type(num_smooths) == int
         assert type(exclude_below) == int
         assert type(exclude_groups) == list
 
@@ -135,6 +137,7 @@ class ModelPipeline:
         # Right now only std_covariates are used.
         self.fit_residuals(
             smoothed_radius=smoothed_radius,
+            num_smooths=num_smooths,
             exclude_below=exclude_below,
             covariates=['far_out', 'num_data'],
             exclude_groups=exclude_groups
@@ -211,7 +214,7 @@ class ModelPipeline:
         """
         self.pv.run_pv(theta=theta)
 
-    def fit_residuals(self, smoothed_radius, covariates,
+    def fit_residuals(self, smoothed_radius, num_smooths, covariates,
                       exclude_below, exclude_groups):
         """
         Fits residuals given a smoothed radius, and some models to exclude.
@@ -220,6 +223,7 @@ class ModelPipeline:
 
         Args:
             smoothed_radius: List[int] 2-element list of amount of smoothing for the residuals
+            num_smooths: (int) how many smoothing iterations to go through
             covariates: List[str] which covariates to use to predict the residuals
             exclude_groups: List[str] which groups to exclude from the residual analysis
             exclude_below: (int) observations with less than exclude_below
@@ -234,7 +238,8 @@ class ModelPipeline:
             residual_data=residual_data,
             col='residual',
             covariates=covariates,
-            residual_model_type='local'
+            residual_model_type='local',
+            num_smooths=num_smooths
         )
 
     def create_draws(self, num_draws, prediction_times,
