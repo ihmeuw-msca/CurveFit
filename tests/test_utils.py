@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
     test utils
-    ~~~~~~~
+    ~~~~~~~~~~
 
     Test utils module
 """
@@ -14,8 +14,7 @@ from curvefit.utils import neighbor_mean_std as new_algorithm
 
 def generate_testing_problem(locations=("USA", "Europe", "Asia"),
                              timelines=(10, 20, 30),
-                             seed=42,
-                             ):
+                             seed=42):
     """
     Generates sample problem for testing utils.neighbor_mean_std function. The columns are:
         - 'group': group parameter,

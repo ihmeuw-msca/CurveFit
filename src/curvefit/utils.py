@@ -2,19 +2,19 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 from collections import OrderedDict
-from scipy.optimize import bisect
 from .functions import *
-try :
-	from scipy.stats import median_absolute_deviation
-except ImportError :
-	# median_absolute_deviation is not in scipy before version 1.3.0
-	def median_absolute_deviation(vec, nan_policy='omit', scale=1.4826 ) :
-		assert nan_polisy == 'omit'
-		assert scale == 1.4826
-		assert len( vec.shape ) == 1
-		med = numpy.median( vec )
-		mad = numpy.median( abs(vec - med) )
-		return scale * mad
+
+try:
+    from scipy.stats import median_absolute_deviation
+except ImportError:
+    # median_absolute_deviation is not in scipy before version 1.3.0
+    def median_absolute_deviation(vec, nan_policy='omit', scale=1.4826):
+        assert nan_policy == 'omit'
+        assert scale == 1.4826
+        assert len(vec.shape) == 1
+        med = np.median(vec)
+        mad = np.median(abs(vec - med))
+        return scale * mad
 
 
 def sizes_to_indices(sizes):
@@ -23,7 +23,7 @@ def sizes_to_indices(sizes):
         sizes (numpy.dnarray):
             An array consist of non-negative number.
     Returns:
-        list{range}:
+        list{numpy.ndarray}:
             List the indices.
     """
     indices = []
@@ -31,7 +31,7 @@ def sizes_to_indices(sizes):
     b = 0
     for i, size in enumerate(sizes):
         b += size
-        indices.append(range(a, b))
+        indices.append(np.arange(a, b))
         a += size
 
     return indices
