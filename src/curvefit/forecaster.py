@@ -145,7 +145,6 @@ class LocalSmoothSimpleExtrapolateRM(ResidualModel):
             data.drop(columns={'residual_mean'}, axis=1, inplace=True)
 
             while i < self.num_smooths:
-                print(f"Smoothing fof {i}")
                 self.smoothed = neighbor_mean_std(
                     df=data, col_val='residual',
                     col_group='group',
@@ -265,7 +264,8 @@ class Forecaster:
             far_out=forecast_out_times, num_data=np.array([num_data])
         )
         std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
-        error = np.random.normal(0, scale=std_residual, size=(num_simulations, len(std_residual)))
+        standard_noise = np.random.randn(num_simulations)
+        error = np.outer(standard_noise, std_residual)
         return error
 
     def simulate(self, mp, num_simulations, prediction_times, group, epsilon=1e-2, theta=1):
