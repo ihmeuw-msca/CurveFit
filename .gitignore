@@ -1,7 +1,17 @@
+# pycharm and mac specific
 *.idea
 *.DS_Store
-build
-dist
+# aleksei use
 data
 experiments
 *.egg-info
+# directories created by install procedure
+/dist/
+/build/
+/src/curvefit.egg-info/
+# directories created by mkdocs
+/site/
+# vim editor swap files in any directory
+*.swp
+# python compiled files in any directory
+*.pyc

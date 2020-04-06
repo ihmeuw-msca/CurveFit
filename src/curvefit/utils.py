@@ -4,7 +4,17 @@ from copy import deepcopy
 from collections import OrderedDict
 from scipy.optimize import bisect
 from .functions import *
-from scipy.stats import median_absolute_deviation
+try :
+	from scipy.stats import median_absolute_deviation
+except ImportError :
+	# median_absolute_deviation is not in scipy before version 1.3.0
+	def median_absolute_deviation(vec, nan_policy='omit', scale=1.4826 ) :
+		assert nan_polisy == 'omit'
+		assert scale == 1.4826
+		assert len( vec.shape ) == 1
+		med = numpy.median( vec )
+		mad = numpy.median( abs(vec - med) )
+		return scale * mad
 
 
 def sizes_to_indices(sizes):
@@ -498,13 +508,6 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
 
     tmp = alpha*(slope_at - beta)
     p = np.sqrt(np.pi)*slopes/(2.0*alpha**2*np.abs(tmp)*np.exp(-tmp**2))
-
-    for i in range(alpha.size):
-        fun = lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) - \
-                        slopes[i]
-
-        if np.abs(fun(p[i])) > 1e-10:
-            print(fun(p[i]))
 
     return p
 
