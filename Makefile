@@ -4,14 +4,20 @@
 build: setup.py
 	python setup.py build
 
+# make install with optional prefix=directory on command line
 install: setup.py
+ifdef prefix
+	python setup.py install --prefix=$(prefix)
+else
 	python setup.py install
+endif
 
 sdist: setup.py
 	python setup.py sdist
 
 tests:
 	pytest tests
+	python example/get_started.py
 
 clean:
 	find . -name "*.so*" | xargs rm -rf
