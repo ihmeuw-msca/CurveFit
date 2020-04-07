@@ -83,7 +83,7 @@ def dderf(t, params):
 
 # Student's T loss function
 def st_loss(x, nu = 1.0):
-    return np.log(1.0 + x**2/nu)
+    return np.sum(np.log(1.0 + x**2/nu))
 
 
 # Gaussian loss function
