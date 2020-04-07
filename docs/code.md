@@ -191,5 +191,10 @@ model.predict(
 ## Model Pipelines
 **`curvefit.pipelines`**
 
+*Documentation coming soon*
+
+
 ## Predictive Validity
 **`curvefit.pv`**
+
+*Documentation coming soon*
