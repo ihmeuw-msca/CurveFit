@@ -42,6 +42,12 @@
     
       <link rel="stylesheet" href="../assets/stylesheets/application.adb8469c.css">
       
+        <link rel="stylesheet" href="../assets/stylesheets/application-palette.a8b3c06d.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#4caf50">
       
     
     
@@ -63,7 +69,9 @@
     
   </head>
   
-    <body dir="ltr">
+    
+    
+    <body dir="ltr" data-md-color-primary="green" data-md-color-accent="green">
   
     <svg class="md-svg">
       <defs>
@@ -295,6 +303,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#model-pipelines" class="md-nav__link">
+    Model Pipelines
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#predictive-validity" class="md-nav__link">
+    Predictive Validity
+  </a>
+  
+</li>
+      
       
       
       
@@ -413,6 +435,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#model-pipelines" class="md-nav__link">
+    Model Pipelines
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#predictive-validity" class="md-nav__link">
+    Predictive Validity
+  </a>
+  
+</li>
+      
       
       
       
@@ -431,17 +467,14 @@
                 
                 
                 <h1 id="map-of-the-code">Map of the Code</h1>
-<p>In this documentation, we give a high-level overview of the purpose of different parts of the code base
-and how they fit together.</p>
-<p><code>CurveFit</code> is a package for fitting curves, and can be used to do only that if desired.
-However, due to its current usage for the IHME COVID-19 project, it has modules specifically for evaluating model 
-performance out beyond the range of time observed in the data. Likewise, it has modules for creating
-uncertainty intervals based on out of sample performance.
-First, we will walk through the <a href="#core-model">core model</a>, then discuss these extensions.</p>
-<p><em>NOTE: This page is currently under construction and being updated with additional documentation.</em></p>
+<p>We first start by walking through the <a href="#core-model">core curve fitting model</a>, 
+and then the extensions that make
+it possible for <code>CurveFit</code> to be used for forecasting 
+over time including <a href="#pipelines">pipelines</a> and <a href="#predictive-validity">predictive validity</a>.</p>
 <h2 id="core-model">Core Model</h2>
+<p><strong><code>curevefit.core</code></strong></p>
 <h3 id="setting-up-a-model">Setting Up a Model</h3>
-<p>The code for the core curve fitting model is <code>curvefit.model.CurveModel</code>.
+<p>The code for the core curve fitting model is <code>curvefit.core.model.CurveModel</code>.
 To initialize a <code>CurveModel</code>, you need a <code>pandas</code> data frame and information
 about what type of model you want to fit. It needs to know which columns
 represent what and some model parameters.</p>
@@ -462,8 +495,8 @@ represent what and some model parameters.</p>
 In this example, we want to fit to the log erf functional form (see <a href="#functions">functions</a>) with
 identity link functions for each parameter and identity variable link functions for each parameter.
 In this example, no parameters have covariates besides an intercept column of 1's.</p>
-<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">curvefit.model</span> <span class="kn">import</span> <span class="n">CurveModel</span>
-<span class="kn">from</span> <span class="nn">curvefit.functions</span> <span class="kn">import</span> <span class="n">log_erf</span>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">curvefit.core.model</span> <span class="kn">import</span> <span class="n">CurveModel</span>
+<span class="kn">from</span> <span class="nn">curvefit.core.functions</span> <span class="kn">import</span> <span class="n">log_erf</span>
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">CurveModel</span><span class="p">(</span>
     <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
@@ -593,6 +626,12 @@ make predictions at times 0, 1, and 2, for group <code>"A"</code>.</p>
     <span class="n">group_name</span><span class="o">=</span><span class="s2">&quot;A&quot;</span>
 <span class="p">)</span>
 </code></pre></div>
+
+
+<h2 id="model-pipelines">Model Pipelines</h2>
+<p><strong><code>curvefit.pipelines</code></strong></p>
+<h2 id="predictive-validity">Predictive Validity</h2>
+<p><strong><code>curvefit.pv</code></strong></p>
                 
                   
                 

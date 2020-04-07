@@ -42,6 +42,12 @@
     
       <link rel="stylesheet" href="assets/stylesheets/application.adb8469c.css">
       
+        <link rel="stylesheet" href="assets/stylesheets/application-palette.a8b3c06d.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#4caf50">
       
     
     
@@ -63,7 +69,9 @@
     
   </head>
   
-    <body dir="ltr">
+    
+    
+    <body dir="ltr" data-md-color-primary="green" data-md-color-accent="green">
   
     <svg class="md-svg">
       <defs>
@@ -178,9 +186,59 @@
       
     
     
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Home
+      </label>
+    
     <a href="." title="Home" class="md-nav__link md-nav__link--active">
       Home
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    Background
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihme-covid-19-project" class="md-nav__link">
+    IHME COVID-19 Project
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    Getting Started
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maintainers" class="md-nav__link">
+    Maintainers
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -238,6 +296,43 @@
     
   
   
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#background" class="md-nav__link">
+    Background
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ihme-covid-19-project" class="md-nav__link">
+    IHME COVID-19 Project
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#getting-started" class="md-nav__link">
+    Getting Started
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#maintainers" class="md-nav__link">
+    Maintainers
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -250,10 +345,39 @@
                 
                 
                 <h1 id="welcome-to-curve-fit">Welcome to Curve Fit!</h1>
-<p>Our documentation is currently under construction. Please see <a href="methods/">here</a>
-for discussion of the statistical methods and <a href="code/">here</a> for code documentation.</p>
-<p>For any IHME COVID-19 related inquiries, please contact
- <a href="mailto:covid19@healthdata.org">covid19@healthdata.org</a>.</p>
+<h2 id="background">Background</h2>
+<p><code>CurveFit</code> is a Python package for fitting curves using nonlinear mixed effects. It can be used to do only that if desired.
+However, due to its current usage for the <a href="https://covid19.healthdata.org/united-states-of-america">IHME COVID-19 project</a>,
+ it has modules specifically for evaluating model performance out beyond the range of time observed in the data.
+ Likewise, it has modules for creating uncertainty intervals based on out of sample performance.</p>
+<p>In our <a href="methods/">methods documentation</a> we discuss the statistical methods for <code>CurveFit</code>.
+In our <a href="code/">code documentation</a>, we explain the core model code and also the extensions that allow for 
+evaluating model performance and generating uncertainty intervals.</p>
+<p><em>NOTE: This documentation is currently under construction and being updated regularly.</em></p>
+<h2 id="ihme-covid-19-project">IHME COVID-19 Project</h2>
+<p><strong>For any IHME COVID-19 related inquiries, please contact
+ <a href="mailto:covid19@healthdata.org">covid19@healthdata.org</a></strong>.</p>
+<p>To see the IHME projections visualization, click <a href="https://covid19.healthdata.org/united-states-of-america">here</a>.
+To read the paper, click <a href="https://www.medrxiv.org/content/10.1101/2020.03.27.20043752v1">here</a>. For 
+FAQs, click <a href="http://www.healthdata.org/covid/faqs">here</a>.</p>
+<p>Please note that this code base makes up only one part of the IHME COVID-19 projection process, in particular the
+ COVID-19 deaths forecasting.</p>
+<h2 id="getting-started">Getting Started</h2>
+<p>To clone the repository and get
+started, you can either do</p>
+<div class="codehilite"><pre><span></span><code><span class="err">git clone https://github.com/ihmeuw-msca/CurveFit.git</span>
+<span class="err">cd CurveFit</span>
+<span class="err">python setup.py install</span>
+</code></pre></div>
+
+
+<p>or use <code>make install</code>.</p>
+<h2 id="maintainers">Maintainers</h2>
+<ul>
+<li><a href="https://uw-amo.github.io/saravkin/">Aleksandr Aravkin</a> (<a href="mailto:saravkin@uw.edu">saravkin@uw.edu</a>)</li>
+<li><a href="https://zhengp0.github.io/PengSite/">Peng Zheng</a> (<a href="mailto:zhengp@uw.edu">zhengp@uw.edu</a>)</li>
+<li><a href="http://www.healthdata.org/about/marlena-norwood">Marlena Bannick</a> (<a href="mailto:mbannick@uw.edu">mbannick@uw.edu</a>)</li>
+</ul>
                 
                   
                 
