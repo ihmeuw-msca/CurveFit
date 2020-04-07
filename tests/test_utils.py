@@ -205,6 +205,7 @@ def test_solve_p_from_dderf(alpha, beta, slopes, slope_at):
                                       beta,
                                       slopes,
                                       slope_at=slope_at)
+    np.random.seed(100)
 
     def fun(t, a, b, p, s):
         return dderf(t, [a, b, p]) - s
