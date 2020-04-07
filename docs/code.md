@@ -7,7 +7,9 @@ and how they fit together.
 However, due to its current usage for the IHME COVID-19 project, it has modules specifically for evaluating model 
 performance out beyond the range of time observed in the data. Likewise, it has modules for creating
 uncertainty intervals based on out of sample performance.
-First, we will walk through the core model, then discuss these extensions.
+First, we will walk through the [core model](#core-model), then discuss these extensions.
+
+*NOTE: This page is currently under construction and being updated with additional documentation.*
 
 ## Core Model
 
