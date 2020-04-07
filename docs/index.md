@@ -33,7 +33,7 @@ started, you can either do
 ```
 git clone https://github.com/ihmeuw-msca/CurveFit.git
 cd CurveFit
-python setup.py install
+pip install .
 ```
 
 or use `make install`.
