@@ -75,6 +75,10 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
     
+      <a href="#map-of-the-code" tabindex="0" class="md-skip">
+        Skip to content
+      </a>
+    
     
       <header class="md-header" data-md-component="header">
   <nav class="md-header-nav md-grid">
@@ -195,10 +199,109 @@
     
     <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        Code
+      </label>
     
     <a href="./" title="Code" class="md-nav__link md-nav__link--active">
       Code
     </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-model" class="md-nav__link">
+    Core Model
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-a-model" class="md-nav__link">
+    Setting Up a Model
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fitting-a-model" class="md-nav__link">
+    Fitting a Model
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gaussian-priors" class="md-nav__link">
+    Gaussian Priors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constraints" class="md-nav__link">
+    Constraints
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initialization" class="md-nav__link">
+    Initialization
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimization" class="md-nav__link">
+    Optimization
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#obtaining-predictions-from-a-model" class="md-nav__link">
+    Obtaining Predictions from a Model
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
     
   </li>
 
@@ -222,15 +325,270 @@
               </div>
             
             
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#core-model" class="md-nav__link">
+    Core Model
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#setting-up-a-model" class="md-nav__link">
+    Setting Up a Model
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functions" class="md-nav__link">
+    Functions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fitting-a-model" class="md-nav__link">
+    Fitting a Model
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#gaussian-priors" class="md-nav__link">
+    Gaussian Priors
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constraints" class="md-nav__link">
+    Constraints
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initialization" class="md-nav__link">
+    Initialization
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optimization" class="md-nav__link">
+    Optimization
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#obtaining-predictions-from-a-model" class="md-nav__link">
+    Obtaining Predictions from a Model
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
               
                 
                 
-                  <h1>Code</h1>
-                
-                
+                <h1 id="map-of-the-code">Map of the Code</h1>
+<p>In this documentation, we give a high-level overview of the purpose of different parts of the code base
+and how they fit together.</p>
+<p><code>CurveFit</code> is a package for fitting curves, and can be used to do only that if desired.
+However, due to its current usage for the IHME COVID-19 project, it has modules specifically for evaluating model 
+performance out beyond the range of time observed in the data. Likewise, it has modules for creating
+uncertainty intervals based on out of sample performance.
+First, we will walk through the <a href="#core-model">core model</a>, then discuss these extensions.</p>
+<p><em>NOTE: This page is currently under construction and being updated with additional documentation.</em></p>
+<h2 id="core-model">Core Model</h2>
+<h3 id="setting-up-a-model">Setting Up a Model</h3>
+<p>The code for the core curve fitting model is <code>curvefit.model.CurveModel</code>.
+To initialize a <code>CurveModel</code>, you need a <code>pandas</code> data frame and information
+about what type of model you want to fit. It needs to know which columns
+represent what and some model parameters.</p>
+<ul>
+<li><code>df (pd.DataFrame)</code>: data frame with all available information for the model</li>
+<li><code>col_t (str)</code>: the column that indicates the independent variable</li>
+<li><code>col_obs (str)</code>: the column that indicates the dependent variable</li>
+<li><code>col_covs (list{list{str}})</code>: list of lists of strings that indicate the covariates to use
+    for each covariate</li>
+<li><code>col_group (str)</code>: the column that indicates the group variable (even if you only have one group
+    you must pass a column that indicates group membership)</li>
+<li><code>param_names (list{str})</code>: names of the parameters for your specific functional form (more in <a href="#functions">functions</a>)</li>
+<li><code>link_fun (list{function})</code>: list of link functions for each of the parameters</li>
+<li><code>var_link_fun (list{function})</code>: list of functions for the variables including fixed and random effects</li>
+</ul>
+<p>Here is an example of creating a <code>CurveModel</code> with a data frame where <code>time</code> is the independent variable,
+<code>death_rate</code> is the dependent variable, and <code>group</code> is a variable indicating which group an observation belongs to.
+In this example, we want to fit to the log erf functional form (see <a href="#functions">functions</a>) with
+identity link functions for each parameter and identity variable link functions for each parameter.
+In this example, no parameters have covariates besides an intercept column of 1's.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">from</span> <span class="nn">curvefit.model</span> <span class="kn">import</span> <span class="n">CurveModel</span>
+<span class="kn">from</span> <span class="nn">curvefit.functions</span> <span class="kn">import</span> <span class="n">log_erf</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">CurveModel</span><span class="p">(</span>
+    <span class="n">df</span><span class="o">=</span><span class="n">df</span><span class="p">,</span>
+    <span class="n">col_t</span><span class="o">=</span><span class="s1">&#39;time&#39;</span><span class="p">,</span>
+    <span class="n">col_obs</span><span class="o">=</span><span class="s1">&#39;death_rate&#39;</span><span class="p">,</span>
+    <span class="n">group</span><span class="o">=</span><span class="s1">&#39;group&#39;</span><span class="p">,</span>
+    <span class="n">col_covs</span><span class="o">=</span><span class="p">[[</span><span class="s1">&#39;intercept&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;intercept&#39;</span><span class="p">],</span> <span class="p">[</span><span class="s1">&#39;intercept&#39;</span><span class="p">]],</span>
+    <span class="n">param_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;alpha&#39;</span><span class="p">,</span> <span class="s1">&#39;beta&#39;</span><span class="p">,</span> <span class="s1">&#39;p&#39;</span><span class="p">],</span>
+    <span class="n">link_fun</span><span class="o">=</span><span class="p">[</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">],</span>
+    <span class="n">var_link_fun</span><span class="o">=</span><span class="p">[</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="p">],</span>
+    <span class="n">fun</span><span class="o">=</span><span class="n">log_erf</span>
+<span class="p">)</span>
+</code></pre></div>
+
+
+<h3 id="functions">Functions</h3>
+<p>The <code>curvefit</code> package has some built-in functions for curves to fit. However, this list is not exhaustive,
+and you may pass any callable function that takes in <code>t</code> (an independent variable) and <code>params</code> (a list of parameters)
+to the function to the <code>CurveModel</code> class for the <code>fun</code> argument. What you pass in for <code>param_names</code> in the 
+<code>CurveModel</code> needs to match what the <code>fun</code> callable expects.</p>
+<p>The available built-in functions in <code>curvefit.functions</code> are:</p>
+<p><strong>The Error Function</strong>
+- <code>erf</code>: error function (Gauss error function)
+- <code>derf</code>: derivative of the error function
+- <code>log_erf</code>: log error function
+- <code>log_derf</code>: log derivative of the erf function</p>
+<p><strong>The Expit Function</strong> (inverse of the logit function)
+- <code>expit</code>: expit function
+- <code>log_expit</code>: log expit function</p>
+<p>Please see the <a href="../methods/#covid-19-functional-forms">functions</a> for information
+about the parametrization of these functions and how they relate to COVID-19 modeling.</p>
+<h3 id="fitting-a-model">Fitting a Model</h3>
+<p>Once you have a model defined, the method <code>fit_params</code> fits the model. At minimum,
+the only information that <code>model.fit_params</code> needs is initial values for the fixed effects.
+But there are many optional arguments that you can pass to <code>model.fit_params</code> to inform
+the optimization process. Below we describe each of these optional arguments.
+The result of <code>fit_params</code> is stored in <code>CurveModel.result</code> and the
+parameter estimates in <code>CurveModel.params</code>.</p>
+<h4 id="gaussian-priors">Gaussian Priors</h4>
+<p><code>fe_gprior</code> and <code>re_gprior</code></p>
+<p>Each parameter may have an associated Gaussian prior. This is optional and can be
+passed in as a list of lists. This specification, referring to <a href="#setting-up-a-model">our example</a>
+will put Gaussian priors with mean 0 and standard deviation 1. on the <code>alpha</code> parameter,
+mean 0 and standard deviation 1e-3 on the <code>beta</code> parameter and mean 5 and standard
+deviation 10. on the <code>p</code> parameter.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">model</span><span class="o">.</span><span class="n">fit_params</span><span class="p">(</span><span class="n">fe_gprior</span><span class="o">=</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">1e-3</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mf">10.</span><span class="p">]])</span>
+</code></pre></div>
+
+
+<p>Likewise, you may have random effects Gaussian priors using the argument <code>re_gprior</code>,
+which has the same shape as <code>fe_gprior</code>, but refers to the random effects. For the
+specifications of fixed and random effects, please see <a href="../methods/#statistical-model">the methods</a>.</p>
+<h4 id="constraints">Constraints</h4>
+<p><code>fe_bounds</code> and <code>re_bounds</code></p>
+<p>You can also include parameter constraints for each of the fixed effects and the
+random effects. They are included as a list of lists. This specification,
+referring to <a href="#setting-up-a-model">our example</a>, will bound all of the fixed effects
+between 0 and 100. and the random effects between -1 and 1.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">model</span><span class="o">.</span><span class="n">fit_params</span><span class="p">(</span>
+    <span class="n">fe_bounds</span><span class="o">=</span><span class="p">[[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">100.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">100.</span><span class="p">],</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">100.</span><span class="p">]],</span>
+    <span class="n">re_bounds</span><span class="o">=</span><span class="p">[[</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">],</span> <span class="p">[</span><span class="o">-</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]]</span>
+<span class="p">)</span>
+</code></pre></div>
+
+
+<p>If you do not want to include random effects, set the bounds to be exactly 0. Please
+see more information on constraints in <a href="../methods/#constraints">the methods</a>.</p>
+<h4 id="initialization">Initialization</h4>
+<p>The optimization routine will perform better with smart starting values for the
+parameters. Initial values for the fixed effects, <code>fe_init</code>, are required and is passed in as
+a <code>numpy</code> array of the same length as your parameters. The initial values for the random
+effects, <code>re_init</code>, are passed in as a <code>numpy</code> array ordered by the group name and parameters.</p>
+<p>For example, if you had two groups in the model, the following would initialize
+the fixed effects at 1., 1., 1., and the random effects at -0.5, -0.5, -0.5, for the first group and
+0.5, 0.5, 0.5, for the second group.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">fit_params</span><span class="p">(</span>
+    <span class="n">fe_init</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">]),</span>
+    <span class="n">re_init</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">])</span>
+<span class="p">)</span>
+</code></pre></div>
+
+
+<p>There is an optional flag, <code>smart_initialize</code> that if <code>True</code> will run a model
+individually for each group in the model and use their fixed effects estimates
+to inform the initial values for both fixed and random effects of the mixed
+model that you want to fit.</p>
+<h4 id="optimization">Optimization</h4>
+<p>The optimization uses <code>scipy.optimize.minimize</code> and the <code>"L-BFGS-B"</code> which has a list of options
+that you can pass to it. These keyword options can be passed to the <code>minimize</code> function
+using the <code>options</code> argument. For example, the following would perform a maximum
+of 500 iterations and require an objective function tolerance of 1e-10.</p>
+<div class="codehilite"><pre><span></span><code><span class="n">model</span><span class="o">.</span><span class="n">fit_params</span><span class="p">(</span>
+    <span class="n">options</span><span class="o">=</span><span class="p">{</span>
+        <span class="s1">&#39;ftol&#39;</span><span class="p">:</span> <span class="mf">1e-10</span><span class="p">,</span>
+        <span class="s1">&#39;maxiter&#39;</span><span class="p">:</span> <span class="mi">500</span>
+    <span class="p">}</span>
+<span class="p">)</span>
+</code></pre></div>
+
+
+<p>If you have indicated that you want the model to do smart initialization with
+<code>smart_initialize = True</code>, then you can optionally pass a dictionary of <code>smart_init_options</code>
+to override the <code>options</code> just for the group-specific initial fits. Otherwise
+it will use all of the <code>options</code> in both the group-specific and overall fits.</p>
+<p>Please see <a href="https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html"><code>scipy.optimize.minimize</code></a>
+for more options. Please see <a href="../methods/#optimization-procedure">the methods</a> for more
+information about the optimization procedure.</p>
+<h3 id="obtaining-predictions-from-a-model">Obtaining Predictions from a Model</h3>
+<p>To obtain predictions from a model that has been fit, use the method <code>CurveModel.predict</code>.
+The <code>predict</code> function needs to know which values of the independent variable you want
+to predict for, which group you want to predict for, and optionally, which space
+you want to predict in. For example, you might want to predict in <code>log_erf</code> space but
+make predictions in <code>log_derf</code> space. This is only possible for functions that are
+related to one another (see the <a href="#functions">functions</a> section).</p>
+<p>Continuing with <a href="#setting-up-a-model">our example</a>, the following call would
+make predictions at times 0, 1, and 2, for group <code>"A"</code>.</p>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="n">model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span>
+    <span class="n">t</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">2.</span><span class="p">]),</span>
+    <span class="n">group_name</span><span class="o">=</span><span class="s2">&quot;A&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
                 
                   
                 
