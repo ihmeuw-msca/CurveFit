@@ -1,3 +1,10 @@
+# pycharm and mac specific
+*.idea
+*.DS_Store
+# aleksei use
+data
+experiments
+*.egg-info
 # directories created by install procedure
 /dist/
 /build/
