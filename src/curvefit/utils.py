@@ -122,6 +122,75 @@ def across_group_mean_std(df,
     return pd.concat(df_list)
 
 
+# TODO: Test this function
+def local_smooth_df(df,
+                    col_val,
+                    col_group,
+                    col_axis,
+                    radius=None):
+    """Compute the neighbor mean and std of the residual matrix.
+
+    Args:
+        df (pd.DataFrame): Residual data frame.
+        col_val ('str'): Name for column that store the residual.
+        col_group ('str'): Name for column that store the group label.
+        col_axis (list{str}): List of two axis column names.
+        axis_offset (list{int} | None, optional):
+            List of offset for each axis to make it suitable as numpy array.
+        radius (list{int} | None, optional):
+            List of the neighbor radius for each dimension.
+        compute_mad (bool, optional):
+            If compute_mad, also compute median absolute deviation.
+
+    Returns:
+        pd.DataFrame:
+            Return the data frame with two extra columns contains neighbor
+            mean and std.
+    """
+    radius = [0, 0] if radius is None else radius
+    assert col_val in df
+    assert col_group in df
+    assert len(col_axis) == 2
+    assert len(radius) == 2
+    assert all([col in df for col in col_axis])
+    assert all([r >= 0 for r in radius])
+
+    col_mean = '_'.join([col_val, 'count'])
+    col_std = '_'.join([col_val, 'count'])
+
+    if np.allclose(radius, 0):
+        df[col_mean] = df[col_val]
+        df[col_std] = 0.0
+        return df
+
+    # group by the axis
+    df = df.groupby(col_axis).agg({
+        col_val: [np.sum, lambda x: np.sum(x**2), 'count']
+    })
+
+    col_sum = '_'.join([col_val, 'sum'])
+    col_sum2 = '_'.join([col_val, 'sum2'])
+    col_count = '_'.join([col_val, 'count'])
+
+    df.columns[-3:] = [col_sum, col_sum2, col_count]
+
+    sum_mat, indices, axis = df_to_mat(df, col_val=col_sum, col_axis=col_axis,
+                                       return_indices=True)
+    sum2_mat = df_to_mat(df, col_val=col_sum2, col_axis=col_axis)
+    count_mat = df_to_mat(df, col_val=col_count, col_axis=col_axis)
+
+    sum_mat = convolve_sum(sum_mat, radius)
+    sum2_mat = convolve_sum(sum2_mat, radius)
+    count_mat = convolve_sum(count_mat, radius)
+
+    df[col_mean] = (sum_mat/count_mat)[indices[:, 0], indices[:, 1]]
+    df[col_std] = np.sqrt((sum2_mat/count_mat)[indices[:, 0], indices[:, 1]] -
+                          df[col_mean]**2)
+
+    return df
+
+
+# TODO: need to change this a bit
 def neighbor_mean_std(df,
                       col_val,
                       col_group,
@@ -591,3 +660,70 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
         final_draws = final_draws.ravel()
 
     return final_draws
+
+
+def convolve_sum(mat, radius=None):
+    """Convolve sum a 2D matrix by given radius.
+
+    Args:
+        mat (numpy.ndarray):
+            Matrix of interest.
+        radius (arraylike{int} | None, optional):
+            Given radius, if None assume radius = (0, 0).
+
+    Returns:
+        numpy.ndarray:
+            The convolved sum, with the same shape with original matrix.
+    """
+    mat = np.array(mat).astype(float)
+    assert mat.ndim == 2
+    if radius is None:
+        return mat
+    assert hasattr(radius, '__iter__')
+    radius = np.array(radius).astype(int)
+    assert radius.size == 2
+    assert all([r >= 0 for r in radius])
+    # import pdb; pdb.set_trace()
+    shape = np.array(mat.shape)
+    window_shape = tuple(radius*2 + 1)
+
+    mat = np.pad(mat, ((radius[0],),
+                       (radius[1],)), 'constant', constant_values=np.nan)
+    view_shape = tuple(np.subtract(mat.shape, window_shape) + 1) + window_shape
+    strides = mat.strides*2
+    sub_mat = np.lib.stride_tricks.as_strided(mat, view_shape, strides)
+    sub_mat = sub_mat.reshape(*shape, np.prod(window_shape))
+
+    return np.nansum(sub_mat, axis=2)
+
+
+def df_to_mat(df, col_val, col_axis, return_indices=False):
+    """Convert columns in data frame to matrix.
+
+    Args:
+        df (pandas.DataFrame): Given data frame.
+        col_val (str): Value column.
+        col_axis (list{str}): Axis column.
+        return_indices (bool, optional):
+            If True, return indices of the original values and the corresponding
+            axis values in the data frame.
+
+    Returns:
+        numpy.ndarray: Converted matrix.
+    """
+    assert col_val in df
+    assert all([c in df for c in col_axis])
+
+    vals = df[col_val].values
+    axis = df[col_axis].values
+    indices = axis - axis.min(axis=0)
+    shape = tuple(indices.max(axis=0) + 1)
+
+    mat = np.empty(shape)
+    mat.fill(np.nan)
+    mat[indices[:, 0], indices[:, 1]] = vals
+
+    if return_indices:
+        return mat, indices, axis
+    else:
+        return mat

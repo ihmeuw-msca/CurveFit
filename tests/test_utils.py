@@ -137,3 +137,26 @@ def test_convex_combination(t, mat1, mat2, pred_fun, start_day, end_day,
 def test_model_average(mat1, mat2, w1, w2, pred_fun, result):
     my_result = utils.model_average(mat1, mat2, w1, w2, pred_fun)
     assert np.allclose(result, my_result)
+
+
+@pytest.mark.parametrize('mat', [np.arange(9).reshape(3, 3)])
+@pytest.mark.parametrize(('radius', 'result'),
+                         [((0, 0), np.arange(9).reshape(3, 3)),
+                          ((1, 1), np.array([[ 8, 15, 12],
+                                            [21, 36, 27],
+                                            [20, 33, 24]]))])
+def test_convolve_sum(mat, radius, result):
+    my_result = utils.convolve_sum(mat, radius=radius)
+    assert np.allclose(result, my_result)
+
+
+def test_df_to_mat():
+    df = pd.DataFrame({
+        'val': np.ones(5),
+        'axis0': np.arange(5, dtype=int),
+        'axis1': np.arange(5, dtype=int)
+    })
+
+    my_result, indices, axis = utils.df_to_mat(df, 'val', ['axis0', 'axis1'],
+                                               return_indices=True)
+    assert np.allclose(my_result[indices[:, 0], indices[:, 1]], 1.0)
