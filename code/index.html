@@ -485,14 +485,18 @@ and you may pass any callable function that takes in <code>t</code> (an independ
 to the function to the <code>CurveModel</code> class for the <code>fun</code> argument. What you pass in for <code>param_names</code> in the 
 <code>CurveModel</code> needs to match what the <code>fun</code> callable expects.</p>
 <p>The available built-in functions in <code>curvefit.functions</code> are:</p>
-<p><strong>The Error Function</strong>
-- <code>erf</code>: error function (Gauss error function)
-- <code>derf</code>: derivative of the error function
-- <code>log_erf</code>: log error function
-- <code>log_derf</code>: log derivative of the erf function</p>
-<p><strong>The Expit Function</strong> (inverse of the logit function)
-- <code>expit</code>: expit function
-- <code>log_expit</code>: log expit function</p>
+<p><strong>The Error Function</strong></p>
+<ul>
+<li><code>erf</code>: error function (Gauss error function)</li>
+<li><code>derf</code>: derivative of the error function</li>
+<li><code>log_erf</code>: log error function</li>
+<li><code>log_derf</code>: log derivative of the erf function</li>
+</ul>
+<p><strong>The Expit Function</strong> (inverse of the logit function)</p>
+<ul>
+<li><code>expit</code>: expit function</li>
+<li><code>log_expit</code>: log expit function</li>
+</ul>
 <p>Please see the <a href="../methods/#covid-19-functional-forms">functions</a> for information
 about the parametrization of these functions and how they relate to COVID-19 modeling.</p>
 <h3 id="fitting-a-model">Fitting a Model</h3>
