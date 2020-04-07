@@ -188,13 +188,14 @@ model.predict(
 )
 ```
 
-## Model Pipelines
-**`curvefit.pipelines`**
-
-*Documentation coming soon*
-
-
 ## Predictive Validity
 **`curvefit.pv`**
 
 *Documentation coming soon*
+
+## Model Pipelines
+**`curvefit.pipelines`**
+
+To customize the modeling process for a specific problem, and integrate the core model with predictive
+validity and uncertainty, there is a class `curvefit.pipelines._pipeline.ModelPipeline` that sets up the structure.
+Each file in `curvefit.piplelines` subclasses this `ModelPipeline` to have different types of modeling processes.
