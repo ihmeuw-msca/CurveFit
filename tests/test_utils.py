@@ -193,9 +193,9 @@ def test_data_translator_exp(data, input_space, output_space):
     assert np.allclose(data, result)
 
 
-@pytest.mark.parametrize('alpha', [np.exp(np.random.randn(5))])
-@pytest.mark.parametrize('beta', [np.random.rand(5) + 5.0])
-@pytest.mark.parametrize('slopes', [np.random.rand(5)*0.1 + 0.1])
+@pytest.mark.parametrize('alpha', [1.0])
+@pytest.mark.parametrize('beta', [5.0])
+@pytest.mark.parametrize('slopes', [0.5])
 @pytest.mark.parametrize('slope_at', [1, 2, 3])
 def test_solve_p_from_dderf(alpha, beta, slopes, slope_at):
     result = utils.solve_p_from_dderf(alpha,
@@ -205,6 +205,4 @@ def test_solve_p_from_dderf(alpha, beta, slopes, slope_at):
     def fun(t, a, b, p, s):
         return curvefit.dderf(t, [a, b, p]) - s
 
-    for i in range(alpha.size):
-        assert np.abs(fun(slope_at, alpha[i], beta[i], result[i],
-                          slopes[i])) < 1e-10
+    assert np.abs(fun(slope_at, alpha, beta, result, slopes)) < 1e-10
