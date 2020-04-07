@@ -28,18 +28,36 @@ rel_tol      = 1e-6  # relative tolerance used to check optimal solution
 ### Time Grid
 A grid of *n_data* points in time, \( t_i \), where
 \[
-    t_i = \mbox{beta_true} / ( \mbox{n_data} - 1 )
+    t_i = \beta_T / ( n_D - 1 )
 \]
+where the subscript \( T \) to denotes the true value
+of the currespondng parameter
+and \( n_D \) is the number of data points.
 The minimum value is zero for this grid is zero and its maximum is \( \beta \).
 
 ### Measurement values
 We simulate data, \( y_i \), with no noise at each of the time points.
-To be specific, for \( i = 0 , \ldots , \mbox{n_data} \)
+To be specific, for \( i = 0 , \ldots , n_D - 1 \)
 \[
-    y_i = f( t_i , \mbox{alpha_true}, \mbox{beta_true}, \mbox{p_true} )
+    y_i = f( t_i , \alpha_T , \beta_T , p_T )
 \]
 Note that when we do the fitting, we model each data point as having
 noise.
+
+## Fixed Effects
+We use the notation \( a \), \( b \) and \( \phi \)
+for the fixed effect corresponding to the parameters
+\( \alpha \), \( \beta \), \( p \) respectively.
+For this example, the link functions, that map from the fixed
+effects to the parameters, are
+\[
+\begin{aligned}
+    \alpha & = \exp( a ) \\
+    \beta  & =  b \\
+    p      & = \exp( \phi  )
+\end{aligned}
+\]
+
 
 ## Source Code
 ```python '''
