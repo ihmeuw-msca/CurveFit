@@ -5,7 +5,8 @@ and then the extensions that make
 it possible for `CurveFit` to be used for forecasting 
 over time including [pipelines](#pipelines) and [predictive validity](#predictive-validity).
 
-## Core Model (`curevefit.core`)
+## Core Model
+**`curevefit.core`**
 
 ### Setting Up a Model
 
@@ -187,6 +188,8 @@ model.predict(
 )
 ```
 
-## Model Pipelines (`curvefit.pipelines`)
+## Model Pipelines
+**`curvefit.pipelines`**
 
-## Predictive Validity (`curvefit.pv`)
+## Predictive Validity
+**`curvefit.pv`**
