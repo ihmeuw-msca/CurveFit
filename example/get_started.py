@@ -1,17 +1,58 @@
 #! /bin/python3
 # vim: set expandtab:
-# -------------------------------------------------------------------------
-n_data       = 21
-num_params   = 3
-alpha_true   = 2.0
+'''
+[begin_markdown get_started]
+
+# Getting Started Using CurveFit
+
+## Data Mean
+The model for the mean of the data for this example is:
+\[
+    f(t; \alpha, \beta, p)  = \frac{p}{1 + \exp [ -\alpha(t  - \beta) ]}
+\]
+where \( \alpha \), \( \beta \), and \( p \) are unknown parameters.
+
+## Problem Settings
+The following settings are used to simulate the data and check
+that the solution is correct:
+```python '''
+n_data       = 21    # number simulated measurements to generate
+alpha_true   = 2.0   # values of alpha, beta, p, used to simulate data
 beta_true    = 3.0
 p_true       = 4.0
-rel_tol      = 1e-6
+rel_tol      = 1e-6  # relative tolerance used to check optimal solution
+'''```
+
+## Simulated data
+
+### Time Grid
+A grid of *n_data* points in time, \( t_i \), where
+\[
+    t_i = \mbox{beta_true} / ( \mbox{n_data} - 1 )
+\]
+The minimum value is zero for this grid is zero and its maximum is \( \beta \).
+
+### Measurement values
+We simulate data, \( y_i \), with no noise at each of the time points.
+To be specific, for \( i = 0 , \ldots , \mbox{n_data} \)
+\[
+    y_i = f( t_i , \mbox{alpha_true}, \mbox{beta_true}, \mbox{p_true} )
+\]
+Note that when we do the fitting, we model each data point as having
+noise.
+
+## Source Code
+```python '''
 # -------------------------------------------------------------------------
 import sys
 import pandas
 import numpy
+import sandbox
+sandbox.path()
 import curvefit
+#
+# number of parameters in this model
+num_params   = 3
 #
 # model for the mean of the data
 def generalized_logistic(t, params) :
@@ -27,6 +68,10 @@ def identity_fun(x) :
 # link function used for alpha, p
 def exp_fun(x) :
     return numpy.exp(x)
+#
+# inverse of function used for alpha, p
+def log_fun(x) :
+    return numpy.log(x)
 #
 # params_true
 params_true       = numpy.array( [ alpha_true, beta_true, p_true ] )
@@ -71,7 +116,10 @@ curve_model = curvefit.CurveModel(
 )
 #
 # fit_params
-fe_init         = params_true / 3.0
+inv_link_fun = [ log_fun, identity_fun, log_fun ]
+fe_init      = numpy.zeros( num_params )
+for i in range(num_params) :
+    fe_init[i]   = inv_link_fun[i](params_true[i] / 3.0)
 curve_model.fit_params(fe_init)
 params_estimate = curve_model.params
 #
@@ -81,3 +129,6 @@ for i in range(num_params) :
 #
 print('get_started.py: OK')
 sys.exit(0)
+''' ```
+[end_markdown get_started]
+'''

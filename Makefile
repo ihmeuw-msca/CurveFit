@@ -1,6 +1,16 @@
 # makefile for easy manage package
 .PHONY: clean, tests
 
+doc_phony:
+
+gh-pages: doc_phony
+	python docs/extract_md.py
+	mkdocs build
+	rm site/extract_md.py
+	git checkout mkdocs.yml
+	git checkout gh-pages
+	cp -r site/* .
+
 build: setup.py
 	python setup.py build
 
