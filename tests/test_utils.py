@@ -9,14 +9,14 @@
 import numpy as np
 import pandas as pd
 import pytest
-import curvefit.core.functions import derf
+from curvefit.core.functions import derf, dderf
 import curvefit.core.utils as utils
 
 
 @pytest.fixture()
 def testing_problem(locations=("USA", "Europe", "Asia"),
-                             timelines=(10, 20, 30),
-                             seed=42):
+                    timelines=(10, 20, 30),
+                    seed=42):
     """ Generates sample problem for testing utils.neighbor_mean_std function.
     The columns are:
         - 'group': group parameter,
@@ -163,6 +163,7 @@ def test_local_smoother(radius):
                                  np.std([2.0, 3.0, 4.0]),
                                  np.std([3.0, 4.0])]))
 
+
 @pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
 @pytest.mark.parametrize(('input_space', 'output_space'),
                          [('erf', 'derf'),
@@ -174,6 +175,7 @@ def test_data_translator_diff(data, input_space, output_space):
     else:
         assert np.allclose(data, np.cumsum(result, axis=1))
 
+
 @pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
 @pytest.mark.parametrize(('input_space', 'output_space'),
                          [('erf', 'log_erf'),
@@ -181,6 +183,7 @@ def test_data_translator_diff(data, input_space, output_space):
 def test_data_translator_exp(data, input_space, output_space):
     result = utils.data_translator(data, input_space, output_space)
     assert np.allclose(data, np.exp(result))
+
 
 @pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
 @pytest.mark.parametrize(('input_space', 'output_space'),
@@ -202,8 +205,9 @@ def test_solve_p_from_dderf(alpha, beta, slopes, slope_at):
                                       beta,
                                       slopes,
                                       slope_at=slope_at)
+
     def fun(t, a, b, p, s):
-        return curvefit.dderf(t, [a, b, p]) - s
+        return dderf(t, [a, b, p]) - s
 
     for i in range(alpha.size):
         assert np.abs(fun(slope_at, alpha[i], beta[i], result[i],
