@@ -162,3 +162,49 @@ def test_local_smoother(radius):
                                  np.std([1.0, 2.0, 3.0]),
                                  np.std([2.0, 3.0, 4.0]),
                                  np.std([3.0, 4.0])]))
+
+@pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
+@pytest.mark.parametrize(('input_space', 'output_space'),
+                         [('erf', 'derf'),
+                          ('log_erf', 'log_derf')])
+def test_data_translator_diff(data, input_space, output_space):
+    result = utils.data_translator(data, input_space, output_space)
+    if 'log' in input_space:
+        assert np.allclose(np.exp(data), np.cumsum(np.exp(result), axis=1))
+    else:
+        assert np.allclose(data, np.cumsum(result, axis=1))
+
+@pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
+@pytest.mark.parametrize(('input_space', 'output_space'),
+                         [('erf', 'log_erf'),
+                          ('derf', 'log_derf')])
+def test_data_translator_exp(data, input_space, output_space):
+    result = utils.data_translator(data, input_space, output_space)
+    assert np.allclose(data, np.exp(result))
+
+@pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
+@pytest.mark.parametrize(('input_space', 'output_space'),
+                         [('erf', 'erf'),
+                          ('derf', 'derf'),
+                          ('log_erf', 'log_erf'),
+                          ('log_derf', 'log_derf')])
+def test_data_translator_exp(data, input_space, output_space):
+    result = utils.data_translator(data, input_space, output_space)
+    assert np.allclose(data, result)
+
+
+@pytest.mark.parametrize('alpha', [np.exp(np.random.randn(5))])
+@pytest.mark.parametrize('beta', [np.random.rand(5) + 5.0])
+@pytest.mark.parametrize('slopes', [np.random.rand(5)*0.1 + 0.1])
+@pytest.mark.parametrize('slope_at', [1, 2, 3])
+def test_solve_p_from_dderf(alpha, beta, slopes, slope_at):
+    result = utils.solve_p_from_dderf(alpha,
+                                      beta,
+                                      slopes,
+                                      slope_at=slope_at)
+    def fun(t, a, b, p, s):
+        return curvefit.dderf(t, [a, b, p]) - s
+
+    for i in range(alpha.size):
+        assert np.abs(fun(slope_at, alpha[i], beta[i], result[i],
+                          slopes[i])) < 1e-10

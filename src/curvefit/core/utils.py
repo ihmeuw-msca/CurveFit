@@ -137,7 +137,6 @@ def local_smoother(df,
     return df
 
 
-# TODO: need to change this a bit
 def neighbor_mean_std(df,
                       col_val,
                       col_group,
@@ -454,6 +453,9 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
 
     tmp = alpha*(slope_at - beta)
     p = np.sqrt(np.pi)*slopes/(2.0*alpha**2*np.abs(tmp)*np.exp(-tmp**2))
+
+    if is_scalar:
+        p = p[0]
 
     return p
 
