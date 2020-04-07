@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-    test new pipeline
+Alpha Prior Model Pipeline
 """
 import numpy as np
-from .model_generators import BasicModel
-from .model import CurveModel
-from .utils import *
-from .functions import *
+from curvefit.pipelines.basic_model import BasicModel
+from curvefit.core.model import CurveModel
+from curvefit.core.utils import *
+from curvefit.core.functions import *
 from copy import deepcopy
 import matplotlib.pyplot as plt
 
+
 class APModel(BasicModel):
-    """Alapha prior model.
+    """Alpha prior model.
     """
     def __init__(self, obs_bounds=None,
                  prior_modifier=None,
@@ -24,9 +25,7 @@ class APModel(BasicModel):
         self.models = {}
         self.prior_modifier = prior_modifier
         if self.prior_modifier is None:
-            self.prior_modifier = lambda x: 10**(min(0.0, max(-2.0,
-                0.3*x - 3.5
-            )))
+            self.prior_modifier = lambda x: 10**(min(0.0, max(-2.0, 0.3*x - 3.5)))
 
         self.peaked_groups = peaked_groups
         self.joint_model_fit_dict = {} if joint_model_fit_dict is None else \
@@ -66,8 +65,8 @@ class APModel(BasicModel):
                 'fe_gprior': deepcopy(fe_gprior)
             })
 
-
-    def get_log_alpha_beta_prior(self, models):
+    @staticmethod
+    def get_log_alpha_beta_prior(models):
         a = np.array([model.params[0, 0]
                       for group, model in models.items()])
         b = np.array([model.params[1, 0]
@@ -78,7 +77,8 @@ class APModel(BasicModel):
         return [lambda params: np.log(params[0]*params[1]),
                 [prior_mean, prior_std]]
 
-    def get_beta_fe_gprior(self, model):
+    @staticmethod
+    def get_beta_fe_gprior(model):
         fe, re = model.unzip_x(model.result.x)
         beta_fe_mean = fe[1]
         beta_fe_std = np.std(re[:, 1])
@@ -124,7 +124,6 @@ class APModel(BasicModel):
 
         return model
 
-
     def run_filtered_models(self, df, obs_bounds):
         """Run filtered models.
         """
@@ -142,8 +141,7 @@ class APModel(BasicModel):
     def fit(self, df, group=None):
         """Fit models by the alpha-beta prior.
         """
-        if ('fun_gprior' not in self.fit_dict or
-            self.fit_dict['fun_gprior'] is None):
+        if 'fun_gprior' not in self.fit_dict or self.fit_dict['fun_gprior'] is None:
             self.run_init_model()
 
         if group is None:
@@ -192,8 +190,6 @@ class APModel(BasicModel):
                 Time points for the draws.
             models (dict{str, CurveModel}):
                 Curve fit models.
-            params (list{str}):
-                Parameter names that we want samples for.
             covs (np.ndarray):
                 Covariates for the group want have the draws.
             alpha_times_beta (float | None, optional):
@@ -251,10 +247,7 @@ class APModel(BasicModel):
             slope_at=slope_at
         )[0]
 
-
         params = np.array([alpha, beta, p])
-
-        # print(params)
 
         # create mean curve
         mean_curve = self.predict_space(t, params)
@@ -264,11 +257,10 @@ class APModel(BasicModel):
             sample_size, t, 1, epsilon
         )
 
-        return mean_curve - (mean_curve**self.theta)*error - \
-               np.var(error, axis=0)*0.5
+        return mean_curve - (mean_curve**self.theta)*error - np.var(error, axis=0)*0.5
 
-
-    def create_param_samples(self, models, params,
+    @staticmethod
+    def create_param_samples(models, params,
                              sample_size=100,
                              slope_at=14):
         """Create parameter samples from given models.

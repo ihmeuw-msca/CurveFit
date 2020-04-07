@@ -9,7 +9,7 @@
 import numpy as np
 import pandas as pd
 from curvefit.legacy.utils import neighbor_mean_std as old_algorithm
-from curvefit.utils import neighbor_mean_std as new_algorithm
+from curvefit.core.utils import neighbor_mean_std as new_algorithm
 
 
 def generate_testing_problem(locations=("USA", "Europe", "Asia"),

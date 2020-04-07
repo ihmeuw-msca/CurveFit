@@ -7,8 +7,8 @@ forward with respect to how much data is currently in the model and how far out 
 import numpy as np
 import pandas as pd
 import itertools
-from curvefit.utils import data_translator
-from curvefit.utils import neighbor_mean_std
+from curvefit.core.utils import data_translator
+from curvefit.core.utils import neighbor_mean_std
 
 
 class ResidualModel:

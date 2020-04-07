@@ -5,10 +5,10 @@
 from copy import deepcopy
 import numpy as np
 from scipy.optimize import minimize
-from . import utils
+from curvefit.core import utils
 
-from curvefit.utils import get_initial_params
-from curvefit.utils import compute_starting_params
+from curvefit.core.utils import get_initial_params
+from curvefit.core.utils import compute_starting_params
 
 
 class CurveModel:
@@ -301,7 +301,6 @@ class CurveModel:
             assert fun_gprior[1][1] > 0.0
 
         self.fun_gprior = fun_gprior
-
 
         if fixed_params_initialize is not None:
             if not smart_initialize:

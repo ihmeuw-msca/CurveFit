@@ -4,8 +4,8 @@
     ~~~~~~~~
     `curvefit` package.
 """
-from .model import CurveModel
-from .functions import *
-from . import utils
-from .uncertainty import *
-from . import patch
+from curvefit.core.model import CurveModel
+from curvefit.core.functions import *
+from curvefit.core import utils
+from curvefit.legacy.uncertainty import *
+from curvefit.legacy import patch

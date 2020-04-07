@@ -2,25 +2,13 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 from collections import OrderedDict
-from scipy.optimize import bisect
-from .functions import *
-try :
-	from scipy.stats import median_absolute_deviation
-except ImportError :
-	# median_absolute_deviation is not in scipy before version 1.3.0
-	def median_absolute_deviation(vec, nan_policy='omit', scale=1.4826 ) :
-		assert nan_polisy == 'omit'
-		assert scale == 1.4826
-		assert len( vec.shape ) == 1
-		med = numpy.median( vec )
-		mad = numpy.median( abs(vec - med) )
-		return scale * mad
+from curvefit.core.functions import *
 
 
 def sizes_to_indices(sizes):
     """Converting sizes to corresponding indices.
     Args:
-        sizes (numpy.dnarray):
+        sizes (numpy.ndarray):
             An array consist of non-negative number.
     Returns:
         list{range}:
@@ -127,8 +115,7 @@ def neighbor_mean_std(df,
                       col_group,
                       col_axis,
                       axis_offset=None,
-                      radius=None,
-                      compute_mad=False):
+                      radius=None):
     """Compute the neighbor mean and std of the residual matrix.
 
     Args:
@@ -140,8 +127,6 @@ def neighbor_mean_std(df,
             List of offset for each axis to make it suitable as numpy array.
         radius (list{int} | None, optional):
             List of the neighbor radius for each dimension.
-        compute_mad (bool, optional):
-            If compute_mad, also compute median absolute deviation.
 
     Returns:
         pd.DataFrame:
@@ -499,13 +484,6 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
     assert all(slopes > 0.0)
     assert all(beta >= slope_at)
 
-    # p = np.zeros(alpha.size)
-    #
-    # for i in range(alpha.size):
-    #     x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
-    #                slopes[i], -15.0, 0.0)
-    #     p[i] = np.exp(x)
-
     tmp = alpha*(slope_at - beta)
     p = np.sqrt(np.pi)*slopes/(2.0*alpha**2*np.abs(tmp)*np.exp(-tmp**2))
 
@@ -574,7 +552,7 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
         last_obs = np.exp(last_obs)
 
     last_day = int(np.round(last_day))
-    assert last_day >= t.min() and last_day < t.max()
+    assert t.min() <= last_day < t.max()
 
     derf_draws = data_translator(draws, draw_space, 'derf')
     derf_draws = derf_draws[:, last_day + 1:]
