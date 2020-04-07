@@ -64,12 +64,14 @@ to the function to the `CurveModel` class for the `fun` argument. What you pass 
 The available built-in functions in `curvefit.functions` are:
 
 **The Error Function**
+
 - `erf`: error function (Gauss error function)
 - `derf`: derivative of the error function
 - `log_erf`: log error function
 - `log_derf`: log derivative of the erf function
 
 **The Expit Function** (inverse of the logit function)
+
 - `expit`: expit function
 - `log_expit`: log expit function
 
