@@ -9,14 +9,14 @@
 import numpy as np
 import pandas as pd
 import pytest
-import curvefit
+from curvefit.core.functions import derf, dderf
 import curvefit.core.utils as utils
 
 
 @pytest.fixture()
 def testing_problem(locations=("USA", "Europe", "Asia"),
-                             timelines=(10, 20, 30),
-                             seed=42):
+                    timelines=(10, 20, 30),
+                    seed=42):
     """ Generates sample problem for testing utils.neighbor_mean_std function.
     The columns are:
         - 'group': group parameter,
@@ -98,7 +98,7 @@ def test_get_obs_se(func):
 
 @pytest.mark.parametrize('t', [np.arange(5)])
 @pytest.mark.parametrize(('start_day', 'end_day', 'pred_fun'),
-                         [(1, 3, curvefit.derf)])
+                         [(1, 3, derf)])
 @pytest.mark.parametrize(('mat1', 'mat2', 'result'),
                          [(np.ones(5), np.ones(5), np.ones(5)),
                           (np.arange(5), np.ones(5),
@@ -112,7 +112,7 @@ def test_convex_combination(t, mat1, mat2, pred_fun, start_day, end_day,
     assert np.allclose(result, my_result)
 
 @pytest.mark.parametrize(('w1', 'w2', 'pred_fun'),
-                         [(0.3, 0.7, curvefit.derf)])
+                         [(0.3, 0.7, derf)])
 @pytest.mark.parametrize(('mat1', 'mat2', 'result'),
                          [(np.ones(5), np.ones(5), np.ones(5)),
                           (np.ones(5), np.zeros(5), np.ones(5)*0.3),
@@ -163,6 +163,7 @@ def test_local_smoother(radius):
                                  np.std([2.0, 3.0, 4.0]),
                                  np.std([3.0, 4.0])]))
 
+
 @pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
 @pytest.mark.parametrize(('input_space', 'output_space'),
                          [('erf', 'derf'),
@@ -174,6 +175,7 @@ def test_data_translator_diff(data, input_space, output_space):
     else:
         assert np.allclose(data, np.cumsum(result, axis=1))
 
+
 @pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
 @pytest.mark.parametrize(('input_space', 'output_space'),
                          [('erf', 'log_erf'),
@@ -181,6 +183,7 @@ def test_data_translator_diff(data, input_space, output_space):
 def test_data_translator_exp(data, input_space, output_space):
     result = utils.data_translator(data, input_space, output_space)
     assert np.allclose(data, np.exp(result))
+
 
 @pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
 @pytest.mark.parametrize(('input_space', 'output_space'),
@@ -193,18 +196,18 @@ def test_data_translator_exp(data, input_space, output_space):
     assert np.allclose(data, result)
 
 
-@pytest.mark.parametrize('alpha', [np.exp(np.random.randn(5))])
-@pytest.mark.parametrize('beta', [np.random.rand(5) + 5.0])
-@pytest.mark.parametrize('slopes', [np.random.rand(5)*0.1 + 0.1])
+@pytest.mark.parametrize('alpha', [1.0])
+@pytest.mark.parametrize('beta', [5.0])
+@pytest.mark.parametrize('slopes', [0.5])
 @pytest.mark.parametrize('slope_at', [1, 2, 3])
 def test_solve_p_from_dderf(alpha, beta, slopes, slope_at):
     result = utils.solve_p_from_dderf(alpha,
                                       beta,
                                       slopes,
                                       slope_at=slope_at)
-    def fun(t, a, b, p, s):
-        return curvefit.dderf(t, [a, b, p]) - s
+    np.random.seed(100)
 
-    for i in range(alpha.size):
-        assert np.abs(fun(slope_at, alpha[i], beta[i], result[i],
-                          slopes[i])) < 1e-10
+    def fun(t, a, b, p, s):
+        return dderf(t, [a, b, p]) - s
+
+    assert np.abs(fun(slope_at, alpha, beta, result, slopes)) < 1e-10

@@ -50,6 +50,7 @@ import numpy
 import sandbox
 sandbox.path()
 import curvefit
+from curvefit.core.model import CurveModel
 #
 # number of parameters in this model
 num_params   = 3
@@ -102,7 +103,7 @@ var_link_fun = link_fun
 fun          = generalized_logistic
 col_obs_se   = 'measurement_std'
 #
-curve_model = curvefit.CurveModel(
+curve_model = CurveModel(
     data_frame,
     col_t,
     col_obs,
