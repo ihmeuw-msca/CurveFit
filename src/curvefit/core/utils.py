@@ -2,25 +2,13 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 from collections import OrderedDict
-from scipy.optimize import bisect
-from .functions import *
-try :
-	from scipy.stats import median_absolute_deviation
-except ImportError :
-	# median_absolute_deviation is not in scipy before version 1.3.0
-	def median_absolute_deviation(vec, nan_policy='omit', scale=1.4826 ) :
-		assert nan_polisy == 'omit'
-		assert scale == 1.4826
-		assert len( vec.shape ) == 1
-		med = numpy.median( vec )
-		mad = numpy.median( abs(vec - med) )
-		return scale * mad
+from curvefit.core.functions import *
 
 
 def sizes_to_indices(sizes):
     """Converting sizes to corresponding indices.
     Args:
-        sizes (numpy.dnarray):
+        sizes (numpy.ndarray):
             An array consist of non-negative number.
     Returns:
         list{range}:
@@ -84,7 +72,7 @@ def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
         obs_pre = np.insert(obs_now[:-1], 0, 0.0)
         t_now = df_g[col_t].values
         t_pre = np.insert(t_now[:-1], 0, -1.0)
-        ln_slope = np.log(np.maximum(1e-10, (obs_now - obs_pre)/(t_now - t_pre)))
+        ln_slope = np.log(np.maximum(1e-10, (obs_now - obs_pre) / (t_now - t_pre)))
         df_g[new_col] = ln_slope
         df_all[g] = df_g
     # combine all the data frames
@@ -127,8 +115,7 @@ def neighbor_mean_std(df,
                       col_group,
                       col_axis,
                       axis_offset=None,
-                      radius=None,
-                      compute_mad=False):
+                      radius=None):
     """Compute the neighbor mean and std of the residual matrix.
 
     Args:
@@ -140,8 +127,6 @@ def neighbor_mean_std(df,
             List of offset for each axis to make it suitable as numpy array.
         radius (list{int} | None, optional):
             List of the neighbor radius for each dimension.
-        compute_mad (bool, optional):
-            If compute_mad, also compute median absolute deviation.
 
     Returns:
         pd.DataFrame:
@@ -162,8 +147,8 @@ def neighbor_mean_std(df,
     df_list = [
         df[df[col_group] == group].reset_index()
         for group in df[col_group].unique()
-    ]
-    # TODO: Make this faster
+    ]  # separate dataset by groups
+
     for i, df_sub in enumerate(df_list):
         index = np.unique(np.asarray(df_sub[col_axis].values), axis=0).astype(int)
         new_df = pd.DataFrame({
@@ -173,18 +158,47 @@ def neighbor_mean_std(df,
             'residual_mean': np.nan,
             'residual_std': np.nan
         })
-        for j in index:
-            print(j, end='\r')
-            df_filter = df_sub.copy()
-            for k, ax in enumerate(col_axis):
-                rad = radius[k]
-                ax_filter = np.abs(df_sub[col_axis[k]] - j[k]) <= rad
-                df_filter = df_filter.loc[ax_filter]
-            mean = df_filter[col_val].mean()
-            std = df_filter[col_val].std()
-            subset = np.all(new_df[col_axis] == j, axis=1).values
-            new_df.loc[subset, 'residual_mean'] = mean
-            new_df.loc[subset, 'residual_std'] = std
+        # Group rows by indices. It's like a 2d matrix, but each cell can have multiple entries (one per Location)
+        df_grouped_by_idx = df_sub.reset_index().fillna(0).groupby(by=[col_axis[0], col_axis[1]])
+        max_idx = np.max(index)
+        groups_locations = np.zeros((max_idx, max_idx)) - 1
+        groups = []
+        # Since the number of entities for any col_axis is undetermined, we have to keep it in a long list.
+        for idx, (name, group) in enumerate(df_grouped_by_idx):
+            s = int(name[0]) - 1
+            j = int(name[1]) - 1
+            groups.append(np.array(group[col_val].to_list()))
+            groups_locations[s, j] = idx
+
+        # Iterate over all combination of indices, calculate mean and variance around it.
+        for idx, row in new_df.iterrows():
+            s = int(row[col_axis[0]]) - 1
+            j = int(row[col_axis[1]]) - 1
+            total_sum = 0
+            total_count = 0
+            total_deviations_squared = 0
+
+            for k in range(max(s - radius[0], 0), min(s + radius[0] + 1, groups_locations.shape[0])):
+                for t in range(max(j - radius[1], 0), min(j + radius[1] + 1, groups_locations.shape[1])):
+                    location = int(groups_locations[k, t])
+                    if location == -1:
+                        continue
+                    residuals = groups[location]
+                    total_sum += residuals.sum()
+                    total_count += len(residuals)
+            if total_count == 0:
+                continue
+            mean = total_sum / total_count
+            new_df.at[idx, 'residual_mean'] = mean
+            for k in range(max(s - radius[0], 0), min(s + radius[0] + 1, groups_locations.shape[0])):
+                for t in range(max(j - radius[1], 0), min(j + radius[1] + 1, groups_locations.shape[1])):
+                    location = int(groups_locations[k, t])
+                    if location == -1:
+                        continue
+                    residuals = groups[location]
+                    total_deviations_squared += ((residuals - mean) ** 2).sum()
+            std = np.sqrt(total_deviations_squared / (total_count - 1))
+            new_df.at[idx, 'residual_std'] = std
 
         df_list[i] = new_df
 
@@ -222,29 +236,29 @@ def convex_combination(t, pred1, pred2, pred_fun,
     assert callable(pred_fun)
     assert start_day < end_day
 
-    a = 1.0/(end_day - start_day)
-    b = -start_day*a
-    lam = np.maximum(0.0, np.minimum(1.0, a*t + b))
+    a = 1.0 / (end_day - start_day)
+    b = -start_day * a
+    lam = np.maximum(0.0, np.minimum(1.0, a * t + b))
 
     if pred_fun.__name__ == 'log_erf':
         pred1 = np.exp(pred1)
         pred2 = np.exp(pred2)
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
+        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.log(np.cumsum(pred_tmp, axis=1))
     elif pred_fun.__name__ == 'erf':
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
+        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.cumsum(pred_tmp, axis=1)
     elif pred_fun.__name__ == 'log_derf':
         pred1_tmp = np.exp(pred1)
         pred2_tmp = np.exp(pred2)
-        pred_tmp = lam*pred1_tmp + (1.0 - lam)*pred2_tmp
+        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.log(pred_tmp)
     elif pred_fun.__name__ == 'derf':
-        pred = lam*pred1 + (1.0 - lam)*pred2
+        pred = lam * pred1 + (1.0 - lam) * pred2
     else:
         pred = None
         RuntimeError('Unknown prediction functional form')
@@ -467,13 +481,11 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
         slopes = np.repeat(slopes, alpha.size)
 
     assert alpha.size == slopes.size
+    assert all(slopes > 0.0)
+    assert all(beta >= slope_at)
 
-    p = np.zeros(alpha.size)
-
-    for i in range(alpha.size):
-        x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
-                   slopes[i], -15.0, 0.0)
-        p[i] = np.exp(x)
+    tmp = alpha*(slope_at - beta)
+    p = np.sqrt(np.pi)*slopes/(2.0*alpha**2*np.abs(tmp)*np.exp(-tmp**2))
 
     return p
 
@@ -494,7 +506,7 @@ def sample_from_samples(samples, sample_size):
     mean = np.mean(samples)
     std = np.std(samples)
 
-    new_samples = mean + np.random.randn(sample_size)*std
+    new_samples = mean + np.random.randn(sample_size) * std
 
     return new_samples
 
@@ -532,7 +544,7 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
         last_obs_space = last_obs_space.__name__
 
     assert draw_space in ['erf', 'derf', 'log_erf', 'log_derf']
-    assert last_obs_space in ['erf', 'log_erf']
+    assert last_obs_space in ['erf', 'derf', 'log_erf', 'log_derf']
 
     if last_obs_space == 'erf':
         assert last_obs >= 0.0
@@ -540,17 +552,101 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
         last_obs = np.exp(last_obs)
 
     last_day = int(np.round(last_day))
-    assert last_day >= t.min() and last_day < t.max()
+    assert t.min() <= last_day < t.max()
 
     derf_draws = data_translator(draws, draw_space, 'derf')
+    derf_draws = derf_draws[:, last_day + 1:]
 
-    erf_draws = data_translator(
-        np.insert(derf_draws[:, last_day + 1:], 0, 0.0, axis=1),
-        'derf', 'erf') + last_obs
+    if draw_space == 'derf':
+        final_draws = derf_draws
+    elif draw_space == 'log_derf':
+        final_draws = data_translator(derf_draws, 'derf', 'log_derf')
+    elif draw_space == 'erf':
+        assert last_obs_space in ['erf', 'log_erf']
+        last_obs = last_obs if last_obs_space == 'erf' else np.exp(last_obs)
+        final_draws = data_translator(derf_draws, 'derf', 'erf') + last_obs
+    else:
+        assert last_obs_space in ['erf', 'log_erf']
+        last_obs = last_obs if last_obs_space == 'erf' else np.exp(last_obs)
+        final_draws = data_translator(derf_draws, 'derf', 'erf') + last_obs
+        final_draws = np.log(final_draws)
 
-
-    truncated_draws = data_translator(erf_draws, 'erf', draw_space)
     if draw_ndim == 1:
-        truncated_draws = truncated_draws.ravel()
+        final_draws = final_draws.ravel()
 
-    return truncated_draws
+    return final_draws
+
+
+def smooth_draws(mat, radius=0, sort=False):
+    """Smooth the draw matrix in the column direction.
+
+    Args:
+        mat (np.ndarray):
+            Input matrix, either 1d or 2d array.
+        radius (int, optional):
+            Smoothing radius.
+        sort (bool, optional):
+            If `sort`, we sorting the matrix along the first dimension before
+            smoothing.
+
+    Returns:
+        np.ndarray:
+            Smoothed matrix.
+    """
+    mat = np.array(mat).copy()
+    if radius == 0:
+        return mat
+
+    radius = radius if mat.ndim == 1 else (0, radius)
+
+    if sort and mat.ndim == 2:
+        mat.sort(axis=0)
+
+    return smooth_mat(mat, radius=radius)
+
+
+def smooth_mat(mat, radius=None):
+    """Smooth the draw matrix in the column direction.
+
+        Args:
+            mat (np.ndarray):
+                Input matrix, either 1d or 2d array.
+            radius (int | tuple{int} | None, optional):
+                Smoothing radius.
+
+        Returns:
+            np.ndarray:
+                Smoothed matrix.
+    """
+    mat = np.array(mat).copy()
+
+    is_vector = mat.ndim == 1
+    if is_vector:
+        if isinstance(radius, int):
+            radius = (0, radius)
+        elif isinstance(radius, tuple):
+            assert len(radius) == 1
+            radius = (0, radius[0])
+        else:
+            RuntimeError('Wrong input of radius.')
+        mat = mat[None, :]
+
+    assert len(radius) == mat.ndim
+
+    shape = mat.shape
+
+    window_shape = tuple(np.array(radius)*2 + 1)
+    mat = np.pad(mat, ((radius[0],), (radius[1],)), 'constant',
+                 constant_values=np.nan)
+    view_shape = tuple(
+        np.subtract(mat.shape, window_shape) + 1) + window_shape
+    strides = mat.strides + mat.strides
+    sub_mat = np.lib.stride_tricks.as_strided(mat, view_shape, strides)
+    sub_mat = sub_mat.reshape(*shape, np.prod(window_shape))
+
+    mean = np.nanmean(sub_mat, axis=2)
+
+    if is_vector:
+        mean = mean.ravel()
+
+    return mean

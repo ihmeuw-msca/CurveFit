@@ -1,6 +1,6 @@
 # Overview
 
-CurveFit is an extendable nonlinear mixed effects model or fitting curves.
+CurveFit is an extendable nonlinear mixed effects model for fitting curves.
 The main application in this development is COVID-19 forecasting, so that
 the curves we consider are variants of logistic models. However the interface
 allows any user-specified parametrized family.
@@ -11,8 +11,6 @@ Parametrized curves have several key features that make them useful for forecati
 - Parameters are interpretable, and can be modeled using covariates in a transparent way.
 - Parametric forms allow for more stable inversion approaches, for current and future work.
 - Parametric functions impose rigid assumptions that make forecasting more stable.
-
-
 
 ## COVID-19 functional forms
 
@@ -134,6 +132,10 @@ This is very useful given the flexibility on functional forms.
 ## Uncertainty
 
 Currently CurveFit uses model-based uncertainty, with out-of-sample approaches under development.
+
+### Predictive Validity-Based Uncertainty
+
+*Documentation coming soon*
 
 ### Model-Based Uncertainty
 
