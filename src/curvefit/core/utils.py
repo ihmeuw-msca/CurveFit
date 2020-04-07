@@ -2,25 +2,13 @@ import numpy as np
 import pandas as pd
 from copy import deepcopy
 from collections import OrderedDict
-from .functions import *
-
-try:
-    from scipy.stats import median_absolute_deviation
-except ImportError:
-    # median_absolute_deviation is not in scipy before version 1.3.0
-    def median_absolute_deviation(vec, nan_policy='omit', scale=1.4826):
-        assert nan_policy == 'omit'
-        assert scale == 1.4826
-        assert len(vec.shape) == 1
-        med = np.median(vec)
-        mad = np.median(abs(vec - med))
-        return scale * mad
+from curvefit.core.functions import *
 
 
 def sizes_to_indices(sizes):
     """Converting sizes to corresponding indices.
     Args:
-        sizes (numpy.dnarray):
+        sizes (numpy.ndarray):
             An array consist of non-negative number.
     Returns:
         list{numpy.ndarray}:
@@ -532,7 +520,7 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
         last_obs = np.exp(last_obs)
 
     last_day = int(np.round(last_day))
-    assert last_day >= t.min() and last_day < t.max()
+    assert t.min() <= last_day < t.max()
 
     derf_draws = data_translator(draws, draw_space, 'derf')
     derf_draws = derf_draws[:, last_day + 1:]
@@ -622,3 +610,78 @@ def df_to_mat(df, col_val, col_axis, return_indices=False):
         return mat, indices, axis
     else:
         return mat
+
+
+def smooth_draws(mat, radius=0, sort=False):
+    """Smooth the draw matrix in the column direction.
+
+    Args:
+        mat (np.ndarray):
+            Input matrix, either 1d or 2d array.
+        radius (int, optional):
+            Smoothing radius.
+        sort (bool, optional):
+            If `sort`, we sorting the matrix along the first dimension before
+            smoothing.
+
+    Returns:
+        np.ndarray:
+            Smoothed matrix.
+    """
+    mat = np.array(mat).copy()
+    if radius == 0:
+        return mat
+
+    radius = radius if mat.ndim == 1 else (0, radius)
+
+    if sort and mat.ndim == 2:
+        mat.sort(axis=0)
+
+    return smooth_mat(mat, radius=radius)
+
+
+def smooth_mat(mat, radius=None):
+    """Smooth the draw matrix in the column direction.
+
+        Args:
+            mat (np.ndarray):
+                Input matrix, either 1d or 2d array.
+            radius (int | tuple{int} | None, optional):
+                Smoothing radius.
+
+        Returns:
+            np.ndarray:
+                Smoothed matrix.
+    """
+    mat = np.array(mat).copy()
+
+    is_vector = mat.ndim == 1
+    if is_vector:
+        if isinstance(radius, int):
+            radius = (0, radius)
+        elif isinstance(radius, tuple):
+            assert len(radius) == 1
+            radius = (0, radius[0])
+        else:
+            RuntimeError('Wrong input of radius.')
+        mat = mat[None, :]
+
+    assert len(radius) == mat.ndim
+
+    shape = mat.shape
+
+    window_shape = tuple(np.array(radius)*2 + 1)
+    mat = np.pad(mat, ((radius[0],), (radius[1],)), 'constant',
+                 constant_values=np.nan)
+    view_shape = tuple(
+        np.subtract(mat.shape, window_shape) + 1) + window_shape
+    strides = mat.strides + mat.strides
+    sub_mat = np.lib.stride_tricks.as_strided(mat, view_shape, strides)
+    sub_mat = sub_mat.reshape(*shape, np.prod(window_shape))
+
+    mean = np.nanmean(sub_mat, axis=2)
+
+    if is_vector:
+        mean = mean.ravel()
+
+    return mean

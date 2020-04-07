@@ -1,10 +1,10 @@
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import numpy as np
-from curvefit.utils import data_translator
+from curvefit.core.utils import data_translator
 
 
-def plot_uncertainty(generator, prediction_times, sharex, sharey, draw_space, plot_obs, plot_draws=False):
+def plot_uncertainty(generator, prediction_times, sharex, sharey, draw_space, plot_obs):
     """
     Plot the draws from a model generator at some prediction times.
 
@@ -15,7 +15,6 @@ def plot_uncertainty(generator, prediction_times, sharex, sharey, draw_space, pl
         sharey: (bool) fix the y axes
         draw_space: (callable) which curvefit.functions space to plot the draws in
         plot_obs: (str) column of observations to plot,
-        plot_draws: (bool) whether to plot all of the draws or just the summaries
     """
     fig, ax = plt.subplots(len(generator.groups), 1, figsize=(8, 4 * len(generator.groups)),
                            sharex=sharex, sharey=sharey)
@@ -100,6 +99,8 @@ def plot_residuals(residual_array, group_name, x_label, y_label, absolute=False,
         x_label: (str) the label for x axis
         y_label: (str) the label for y axis
         absolute: (bool) plot absolute value of the residuals
+        fig: existing figure from matplotlib.pyplot.subplots to add the plots to
+        axis: existing axis from matplotlib.pyplot.subplots to add the plots to
     """
     mat = np.copy(residual_array)
 

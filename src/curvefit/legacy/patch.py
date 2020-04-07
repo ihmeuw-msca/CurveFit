@@ -6,8 +6,8 @@
     Some patch script here for temporary use.
 """
 import numpy as np
-from .utils import *
-from .model import CurveModel
+from curvefit.core.utils import *
+from curvefit.core.model import CurveModel
 
 
 class ModelRunner:

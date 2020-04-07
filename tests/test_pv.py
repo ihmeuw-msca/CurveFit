@@ -7,8 +7,8 @@
 """
 import numpy as np
 import pytest
-from curvefit.pv import PVGroup
-from curvefit.utils import condense_residual_matrix
+from curvefit.pv.pv import PVGroup
+from curvefit.core.utils import condense_residual_matrix
 
 
 @pytest.mark.parametrize('mat', [np.arange(16).reshape(4, 4)])

@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import curvefit
-import curvefit.utils as utils
+import curvefit.core.utils as utils
 
 
 @pytest.fixture()
