@@ -1,21 +1,15 @@
 # Map of the Code
 
-In this documentation, we give a high-level overview of the purpose of different parts of the code base
-and how they fit together.
+We first start by walking through the [core curve fitting model](#core-model), 
+and then the extensions that make
+it possible for `CurveFit` to be used for forecasting 
+over time including [pipelines](#pipelines) and [predictive validity](#predictive-validity).
 
-`CurveFit` is a package for fitting curves, and can be used to do only that if desired.
-However, due to its current usage for the IHME COVID-19 project, it has modules specifically for evaluating model 
-performance out beyond the range of time observed in the data. Likewise, it has modules for creating
-uncertainty intervals based on out of sample performance.
-First, we will walk through the [core model](#core-model), then discuss these extensions.
-
-*NOTE: This page is currently under construction and being updated with additional documentation.*
-
-## Core Model
+## Core Model (`curevefit.core`)
 
 ### Setting Up a Model
 
-The code for the core curve fitting model is `curvefit.model.CurveModel`.
+The code for the core curve fitting model is `curvefit.core.model.CurveModel`.
 To initialize a `CurveModel`, you need a `pandas` data frame and information
 about what type of model you want to fit. It needs to know which columns
 represent what and some model parameters.
@@ -38,8 +32,8 @@ identity link functions for each parameter and identity variable link functions 
 In this example, no parameters have covariates besides an intercept column of 1's.
 
 ```python
-from curvefit.model import CurveModel
-from curvefit.functions import log_erf
+from curvefit.core.model import CurveModel
+from curvefit.core.functions import log_erf
 
 model = CurveModel(
     df=df,
@@ -192,3 +186,7 @@ model.predict(
     group_name="A"
 )
 ```
+
+## Model Pipelines (`curvefit.pipelines`)
+
+## Predictive Validity (`curvefit.pv`)
