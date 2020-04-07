@@ -9,7 +9,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-import curvefit
+import curvefit.core.functions import derf
 import curvefit.core.utils as utils
 
 
@@ -98,7 +98,7 @@ def test_get_obs_se(func):
 
 @pytest.mark.parametrize('t', [np.arange(5)])
 @pytest.mark.parametrize(('start_day', 'end_day', 'pred_fun'),
-                         [(1, 3, curvefit.derf)])
+                         [(1, 3, derf)])
 @pytest.mark.parametrize(('mat1', 'mat2', 'result'),
                          [(np.ones(5), np.ones(5), np.ones(5)),
                           (np.arange(5), np.ones(5),
@@ -112,7 +112,7 @@ def test_convex_combination(t, mat1, mat2, pred_fun, start_day, end_day,
     assert np.allclose(result, my_result)
 
 @pytest.mark.parametrize(('w1', 'w2', 'pred_fun'),
-                         [(0.3, 0.7, curvefit.derf)])
+                         [(0.3, 0.7, derf)])
 @pytest.mark.parametrize(('mat1', 'mat2', 'result'),
                          [(np.ones(5), np.ones(5), np.ones(5)),
                           (np.ones(5), np.zeros(5), np.ones(5)*0.3),
