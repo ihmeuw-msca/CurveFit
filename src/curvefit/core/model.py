@@ -6,6 +6,7 @@ from copy import deepcopy
 import numpy as np
 from scipy.optimize import minimize
 from curvefit.core import utils
+from curvefit.core.functions import *
 
 from curvefit.core.utils import get_initial_params
 from curvefit.core.utils import compute_starting_params
@@ -23,7 +24,8 @@ class CurveModel:
                  link_fun,
                  var_link_fun,
                  fun,
-                 col_obs_se=None):
+                 col_obs_se=None,
+                 loss_fun=None):
         """Constructor function of LogisticCurveModel.
 
         Args:
@@ -48,11 +50,13 @@ class CurveModel:
             var_link_fun (list{function}):
                 List of link functions for the variables including fixed effects
                 and random effects.
-            fun (function):
+            fun (callable):
                 Specific functional form that the curve will fit to.
             col_obs_se (str | None, optional):
                 Column name of the observation standard error. When `None`,
                 assume all the observation standard error to be all one.
+            loss_fun(callable | None, optional):
+                Loss function, if None, use Gaussian distribution.
         """
         # input data
         self.df = df.copy()
@@ -64,6 +68,7 @@ class CurveModel:
         self.link_fun = link_fun
         self.var_link_fun = var_link_fun
         self.fun = fun
+        self.loss_fun = normal_loss if loss_fun is None else loss_fun
         self.col_obs_se = col_obs_se
 
         self.group_names = np.sort(self.df[self.col_group].unique())
@@ -110,10 +115,10 @@ class CurveModel:
             for name in self.group_names
         ])
         self.order_group_idx = np.cumsum(self.order_group_sizes) - 1
-        group_idx = utils.sizes_to_indices([
+        group_idx = utils.sizes_to_indices(np.array([
             self.group_sizes[name]
             for name in self.group_names
-        ])
+        ]))
         self.group_idx = {
             name: group_idx[i]
             for i, name in enumerate(self.group_names)
@@ -193,7 +198,8 @@ class CurveModel:
         fe, re = self.unzip_x(x)
         params = self.compute_params(x)
         residual = (self.obs - self.fun(self.t, params))/self.obs_se
-        val = 0.5*np.sum(residual**2)
+        # val = 0.5*np.sum(residual**2)
+        val = self.loss_fun(residual)
         # gprior from fixed effects
         val += 0.5*np.sum(
             (fe - self.fe_gprior.T[0])**2/self.fe_gprior.T[1]**2
