@@ -28,6 +28,7 @@ sdist: setup.py
 tests:
 	pytest tests
 	python example/get_started.py
+	python example/sizes_to_indices.py
 
 clean:
 	find . -name "*.so*" | xargs rm -rf

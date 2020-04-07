@@ -1,7 +1,7 @@
 #! /bin/python3
 # vim: set expandtab:
 '''
-[begin_markdown get_started]
+[begin_markdown get_started_xam]
 
 # Getting Started Using CurveFit
 
@@ -120,7 +120,7 @@ var_link_fun = link_fun
 fun          = generalized_logistic
 col_obs_se   = 'measurement_std'
 #
-curve_model = curvefit.CurveModel(
+curve_model = curvefit.core.model.CurveModel(
     data_frame,
     col_t,
     col_obs,
@@ -148,5 +148,5 @@ for i in range(num_params) :
 print('get_started.py: OK')
 sys.exit(0)
 ''' ```
-[end_markdown get_started]
+[end_markdown get_started_xam]
 '''

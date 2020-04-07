@@ -6,14 +6,24 @@ from curvefit.core.functions import *
 
 
 def sizes_to_indices(sizes):
-    """Converting sizes to corresponding indices.
-    Args:
-        sizes (numpy.ndarray):
-            An array consist of non-negative number.
-    Returns:
-        list{range}:
-            List the indices.
-    """
+    """[begin_markdown sizes_to_indices]
+    # Converting sizes to corresponding indices.
+
+    ## Syntax
+    `indices = sizes_to_indices(sizes)`
+
+    ## sizes
+    The argument `sizes`
+    is a one dimensional `numpy.array` of integers sizes.
+    The value `sizes[i]` is the number of elements in the i-th subvector
+    of a larger vector.
+
+    ## indices
+    The return value `indices`
+    is a `list` with `range` elements. The i-th element of the list is
+    the indices in the larger vector that correspond to the i-th subvector.
+
+    [end_markdown sizes_to_indices]"""
     indices = []
     a = 0
     b = 0

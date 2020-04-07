@@ -5,8 +5,11 @@
 output_dir = 'docs/extract_md'
 # list of files that contain markdown sections in them
 file_list = [
-    'docs/extract_md.py',
     'example/get_started.py',
+    'example/sizes_to_indices.py',
+
+    'src/curvefit/core/utils.py',
+    'docs/extract_md.py',
 ]
 # ----------------------------------------------------------------------------
 '''[begin_markdown extract_md]
@@ -53,6 +56,12 @@ There is one exception to this rule: if a language name directly follows
 the three bakc quotes that start a code block, the language name is included
 in the output.
 
+## Indentation
+If all of the extracted markdown documentation for a section is indented
+by the same number of space characters, that may space characters
+are not included in the markdown output. This enables one to indent the
+markdown so it is grouped with the proper code block in the soruce.
+
 [end_markdown extract_md]'''
 # ----------------------------------------------------------------------------
 import sys
@@ -88,6 +97,7 @@ pattern_begin_markdown = re.compile( '\\[begin_markdown\\s*(\\w*)\\]' )
 pattern_end_markdown   = re.compile( '\\[end_markdown\\s*(\\w*)\\]' )
 pattern_begin_3quote   = re.compile( '[^\\n]*(```\\s*\\w*)[^\\n]*' )
 pattern_end_3quote     = re.compile( '[^\\n]*(```)[^\\n]*' )
+pattern_newline        = re.compile( '\\n')
 # -----------------------------------------------------------------------------
 # process each file in the list
 for file_in in file_list :
@@ -159,8 +169,8 @@ for file_in in file_list :
                     msg  = 'number of triple backquotes is not even in '
                     msg += file_in + '\n'
                     sys_exit(msg)
-                end_start = match_end.start() + begin_end + data_index
-                end_end   = match_end.end()   + begin_end + data_index
+                end_start = match_end.start() + begin_end
+                end_end   = match_end.end()   + begin_end
                 #
                 data_left   = output_data[: begin_start ]
                 data_left  += match_begin.group(1)
@@ -172,10 +182,38 @@ for file_in in file_list :
                 data_index  = len(data_left)
                 match_begin = pattern_begin_3quote.search(data_right)
             #
+            # num_remove
+            len_output   = len(output_data)
+            num_remove   = len(output_data)
+            newline_itr  = pattern_newline.finditer(output_data)
+            newline_list = list()
+            for itr in newline_itr :
+                start = itr.start()
+                newline_list.append( start )
+                next_ = start + 1
+                if next_ < len_output and num_remove != 0 :
+                    ch = output_data[next_]
+                    while ch == ' ' and next_ + 1 < len_output :
+                        next_ += 1
+                        ch = output_data[next_]
+                    if ch == '\t' :
+                        msg  = 'tab in white space at begining of a line\n'
+                        msg += 'in ' + file_in
+                        msg +=+ ', section ' + section_name + '\n'
+                        sys_exit(msg)
+                    if ch != '\n' and ch != ' ' :
+                        num_remove = min(num_remove, next_ - start - 1)
+            #
             # write file for this section
-            file_out = output_dir + '/' + section_name + '.md'
-            file_ptr = open(file_out, 'w')
-            file_ptr.write( output_data )
+            file_out   = output_dir + '/' + section_name + '.md'
+            file_ptr   = open(file_out, 'w')
+            start_line = num_remove
+            for newline in newline_list :
+                if start_line <= newline :
+                    file_ptr.write( output_data[start_line : newline + 1] )
+                else :
+                    file_ptr.write( "\n" )
+                start_line = newline + 1 + num_remove
             file_ptr.close()
             #
             # data_index
