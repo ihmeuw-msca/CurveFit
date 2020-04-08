@@ -136,8 +136,8 @@ def test_convolve_sum(mat, radius, result):
 def test_df_to_mat():
     df = pd.DataFrame({
         'val': np.ones(5),
-        'axis0': np.arange(5, dtype=int),
-        'axis1': np.arange(5, dtype=int)
+        'axis0': np.arange(5, dtype=float),
+        'axis1': np.arange(5, dtype=float)
     })
 
     my_result, indices, axis = utils.df_to_mat(df, 'val', ['axis0', 'axis1'],
