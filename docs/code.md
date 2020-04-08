@@ -188,3 +188,32 @@ model.predict(
     group_name="A"
 )
 ```
+
+## Model Pipelines
+**`curvefit.pipelines`**
+
+To customize the modeling process for a specific problem, and integrate the core model with predictive
+validity and uncertainty, there is a class `curvefit.pipelines._pipeline.ModelPipeline` that sets up the structure.
+Each file in `curvefit.piplelines` subclasses this `ModelPipeline` to have different types of modeling processes.
+
+A `ModelPipeline` needs to get much of the same information that is passed to `CurveModel`. The additional
+arguments that it needs are
+
+- `predict_space (callable)`: a `curvefit.core.functions` function that matches what space
+    you want to do predictive validity in
+- `all_cov_names (list{str})`: a list of all the covariate names that will be used
+- `obs_se_func (callable)`: in place of `col_obs_se` we now need to define a function that
+    produces the standard error as a function of the independent variable
+
+The overall `run()` method that will be used in `ModelPipeline` does the following things:
+
+- `ModelPipeline.run_init_model()`: runs aspects of the model that will not be re-run during
+    predictive validity and/or stores information for use later
+- `ModelPipeline.run_predictive_validity()`: runs predictive validity, described [here](#predictive-validity)
+- `ModelPipeline.fit_residuals()`: fits residuals from predictive validity
+    
+Each subclass of `ModelPipeline` has different requirements, each of which are described in their
+respective docstrings. 
+
+## Predictive Validity
+**`curvefit.pv`**
