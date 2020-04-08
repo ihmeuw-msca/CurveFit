@@ -6,10 +6,10 @@ from copy import deepcopy
 import numpy as np
 from scipy.optimize import minimize
 from curvefit.core import utils
-from curvefit.core.functions import *
 
 from curvefit.core.utils import get_initial_params
 from curvefit.core.utils import compute_starting_params
+from curvefit.core.functions import normal_loss
 
 
 class CurveModel:
