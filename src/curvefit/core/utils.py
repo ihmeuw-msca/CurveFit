@@ -13,17 +13,19 @@ def sizes_to_indices(sizes):
     `indices = sizes_to_indices(sizes)`
 
     ## sizes
-    The argument `sizes`
-    is a one dimensional `numpy.array` of integers sizes.
+    The argument `sizes` is a one dimensional `numpy.array` of integers sizes.
     The value `sizes[i]` is the number of elements in the i-th subvector
-    of a larger vector.
+    of a larger total vector that contains the subvectors in order.
 
     ## indices
-    The return value `indices`
-    is a `list` with `numpy.array` elements. The i-th element of the list is
-    a vector indices with length equal to `sizes[i]'. Each vector starts (ends) 
-    with the index in the total vector of the first (last) element of the
-    i-th subvector. The elements of each vector are monotone increasing by one.
+    The return value `indices` is a `list` with `numpy.array` elements.
+    The value `indices[i]` is a vector with length equal to `sizes[i]`.
+    This vector `indices[i]` starts (ends) with the index in the total vector
+    of the first (last) element of the i-th subvector.  The elements of
+    `list[i]` are monotone and increase by one between elements.
+
+    ## Example
+    [sizes_to_indices_xam](sizes_to_indices_xam.md)
 
     [end_markdown sizes_to_indices]"""
     indices = []
