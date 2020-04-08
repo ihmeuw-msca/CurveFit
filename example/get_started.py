@@ -57,6 +57,11 @@ effects to the parameters, are
     p      & = \exp( \phi  )
 \end{aligned}
 \]
+The fixed effects are initialized so that the correspond parameters
+are the true values dividec by three.
+
+## Random effects
+For this example the random effects are constrained to be zero.
 
 
 ## Source Code
@@ -94,7 +99,7 @@ def log_fun(x) :
 #
 # params_true
 params_true       = numpy.array( [ alpha_true, beta_true, p_true ] )
-#
+# -----------------------------------------------------------------------
 # data_frame
 independent_var   = numpy.array(range(n_data)) * beta_true / (n_data-1)
 measurement_value = generalized_logistic(independent_var, params_true)
@@ -109,7 +114,7 @@ data_dict         = {
     'data_group'        : data_group        ,
 }
 data_frame        = pandas.DataFrame(data_dict)
-#
+# ------------------------------------------------------------------------
 # curve_model
 col_t        = 'independent_var'
 col_obs      = 'measurement_value'
@@ -133,15 +138,23 @@ curve_model = curvefit.core.model.CurveModel(
     fun,
     col_obs_se
 )
-#
+# -------------------------------------------------------------------------
 # fit_params
+#
+# initialize fixed effects so correpsond to true parameters divided by three
 inv_link_fun = [ log_fun, identity_fun, log_fun ]
 fe_init      = numpy.zeros( num_params )
 for i in range(num_params) :
     fe_init[i]   = inv_link_fun[i](params_true[i] / 3.0)
-curve_model.fit_params(fe_init)
-params_estimate = curve_model.params
 #
+re_init   = numpy.zeros( num_params )
+fe_bounds = [ [-numpy.inf, numpy.inf] ] * num_params
+re_bounds = [ [0.0, 0.0] ] * num_params
+#
+curve_model.fit_params(fe_init, re_init, fe_bounds, re_bounds)
+params_estimate = curve_model.params
+# -------------------------------------------------------------------------
+# check result
 for i in range(num_params) :
     rel_error = params_estimate[i] / params_true[i] - 1.0
     assert abs(rel_error) < rel_tol
