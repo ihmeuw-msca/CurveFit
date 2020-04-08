@@ -9,6 +9,7 @@ gh-pages: doc_phony
 	rm site/extract_md.py
 	git checkout mkdocs.yml
 	git checkout gh-pages
+	rm -r extract_md
 	cp -r site/* .
 
 build: setup.py
