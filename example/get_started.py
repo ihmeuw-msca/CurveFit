@@ -68,6 +68,7 @@ import numpy
 import sandbox
 sandbox.path()
 import curvefit
+from curvefit.core.model import CurveModel
 #
 # number of parameters in this model
 num_params   = 3
