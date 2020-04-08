@@ -11,7 +11,7 @@ def sizes_to_indices(sizes):
         sizes (numpy.ndarray):
             An array consist of non-negative number.
     Returns:
-        list{range}:
+        list{numpy.ndarray}:
             List the indices.
     """
     indices = []
@@ -19,7 +19,7 @@ def sizes_to_indices(sizes):
     b = 0
     for i, size in enumerate(sizes):
         b += size
-        indices.append(range(a, b))
+        indices.append(np.arange(a, b))
         a += size
 
     return indices
@@ -40,7 +40,7 @@ def get_obs_se(df, col_t, func=lambda x: 1 / (1 + x)):
     data['obs_se'] = data[col_t].apply(func)
     return data
 
-
+# TODO: replace with the data translator?
 def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
     """
     Adds a new column for the derivative of col_obs.
@@ -80,51 +80,16 @@ def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
     return df_result
 
 
-def across_group_mean_std(df,
-                          col_val,
-                          col_group,
-                          col_axis):
-    """Compute the mean and std of the residual matrix across locations.
-
-    Args:
-        df (pd.DataFrame): Residual data frame.
-        col_val ('str'): Name for column that store the residual.
-        col_group ('str'): Name for column that store the group label.
-        col_axis (list{str}): List of two axis column names.
-
-    Returns:
-        pd.DataFrame:
-            Averaged residual mean and std data frame.
-    """
-    df_list = [
-        df[df[col_group] == group].copy()
-        for group in df[col_group].unique()
-    ]
-    for i, df_sub in enumerate(df_list):
-        df_sub_result = df_sub.groupby(col_axis, as_index=False).agg(
-            {col_val: [np.nanmean, np.nanstd]}
-        )
-        df_sub_result.columns = [*col_axis, 'mean', 'std']
-        df_list[i] = df_sub_result
-
-    return pd.concat(df_list)
-
-
-def neighbor_mean_std(df,
-                      col_val,
-                      col_group,
-                      col_axis,
-                      axis_offset=None,
-                      radius=None):
+def local_smoother(df,
+                   col_val,
+                   col_axis,
+                   radius=None):
     """Compute the neighbor mean and std of the residual matrix.
 
     Args:
         df (pd.DataFrame): Residual data frame.
         col_val ('str'): Name for column that store the residual.
-        col_group ('str'): Name for column that store the group label.
         col_axis (list{str}): List of two axis column names.
-        axis_offset (list{int} | None, optional):
-            List of offset for each axis to make it suitable as numpy array.
         radius (list{int} | None, optional):
             List of the neighbor radius for each dimension.
 
@@ -133,83 +98,85 @@ def neighbor_mean_std(df,
             Return the data frame with two extra columns contains neighbor
             mean and std.
     """
-    axis_offset = [0, 0] if axis_offset is None else axis_offset
-    radius = [1, 1] if radius is None else radius
+    radius = [0, 0] if radius is None else radius
     assert col_val in df
-    assert col_group in df
     assert len(col_axis) == 2
-    assert len(axis_offset) == 2
     assert len(radius) == 2
     assert all([col in df for col in col_axis])
-    assert all([isinstance(offset, int) for offset in axis_offset])
-    assert all([isinstance(r, int) for r in radius])
+    assert all([r >= 0 for r in radius])
 
-    df_list = [
-        df[df[col_group] == group].reset_index()
-        for group in df[col_group].unique()
-    ]  # separate dataset by groups
+    col_mean = '_'.join([col_val, 'mean'])
+    col_std = '_'.join([col_val, 'std'])
 
-    for i, df_sub in enumerate(df_list):
-        index = np.unique(np.asarray(df_sub[col_axis].values), axis=0).astype(int)
-        new_df = pd.DataFrame({
-            'group': df_sub[col_group].iloc[0],
-            col_axis[0]: index[:, 0],
-            col_axis[1]: index[:, 1],
-            'residual_mean': np.nan,
-            'residual_std': np.nan
-        })
-        # Group rows by indices. It's like a 2d matrix, but each cell can have multiple entries (one per Location)
-        df_grouped_by_idx = df_sub.reset_index().fillna(0).groupby(by=[col_axis[0], col_axis[1]])
-        max_idx = np.max(index)
-        groups_locations = np.zeros((max_idx, max_idx)) - 1
-        groups = []
-        # Since the number of entities for any col_axis is undetermined, we have to keep it in a long list.
-        for idx, (name, group) in enumerate(df_grouped_by_idx):
-            s = int(name[0]) - 1
-            j = int(name[1]) - 1
-            groups.append(np.array(group[col_val].to_list()))
-            groups_locations[s, j] = idx
 
-        # Iterate over all combination of indices, calculate mean and variance around it.
-        for idx, row in new_df.iterrows():
-            s = int(row[col_axis[0]]) - 1
-            j = int(row[col_axis[1]]) - 1
-            total_sum = 0
-            total_count = 0
-            total_deviations_squared = 0
+    # group by the axis
+    df = df.groupby(col_axis, as_index=False).agg({
+        col_val: [np.sum, lambda x: np.sum(x**2), 'count']
+    })
 
-            for k in range(max(s - radius[0], 0), min(s + radius[0] + 1, groups_locations.shape[0])):
-                for t in range(max(j - radius[1], 0), min(j + radius[1] + 1, groups_locations.shape[1])):
-                    location = int(groups_locations[k, t])
-                    if location == -1:
-                        continue
-                    residuals = groups[location]
-                    total_sum += residuals.sum()
-                    total_count += len(residuals)
-            if total_count == 0:
-                continue
-            mean = total_sum / total_count
-            new_df.at[idx, 'residual_mean'] = mean
-            for k in range(max(s - radius[0], 0), min(s + radius[0] + 1, groups_locations.shape[0])):
-                for t in range(max(j - radius[1], 0), min(j + radius[1] + 1, groups_locations.shape[1])):
-                    location = int(groups_locations[k, t])
-                    if location == -1:
-                        continue
-                    residuals = groups[location]
-                    total_deviations_squared += ((residuals - mean) ** 2).sum()
-            std = np.sqrt(total_deviations_squared / (total_count - 1))
-            new_df.at[idx, 'residual_std'] = std
+    col_sum = '_'.join([col_val, 'sum'])
+    col_sum2 = '_'.join([col_val, 'sum2'])
+    col_count = '_'.join([col_val, 'count'])
 
-        df_list[i] = new_df
+    df.columns = df.columns.droplevel(1)
+    df.columns = list(df.columns[:-3]) + [col_sum, col_sum2, col_count]
+
+    sum_mat, indices, axis = df_to_mat(df, col_val=col_sum, col_axis=col_axis,
+                                       return_indices=True)
+    sum2_mat = df_to_mat(df, col_val=col_sum2, col_axis=col_axis)
+    count_mat = df_to_mat(df, col_val=col_count, col_axis=col_axis)
+
+    sum_vec = convolve_sum(sum_mat, radius)[indices[:, 0], indices[:, 1]]
+    sum2_vec = convolve_sum(sum2_mat, radius)[indices[:, 0], indices[:, 1]]
+    count_vec = convolve_sum(count_mat, radius)[indices[:, 0], indices[:, 1]]
+
+    df[col_mean] = sum_vec/count_vec
+    df[col_std] = np.sqrt(sum2_vec/count_vec - df[col_mean]**2)
+    df.drop(columns=[col_sum, col_sum2, col_count], inplace=True)
+
+    return df
+
+
+def neighbor_mean_std(df,
+                      col_val,
+                      col_group,
+                      col_axis,
+                      radius=None):
+    """Compute the neighbor mean and std of the residual matrix.
+
+    Args:
+        df (pd.DataFrame): Residual data frame.
+        col_val ('str'): Name for column that store the residual.
+        col_group ('str'): Name for column that store the group label.
+        col_axis (list{str}): List of two axis column names.
+        radius (list{int} | None, optional):
+            List of the neighbor radius for each dimension.
+
+    Returns:
+        pd.DataFrame:
+            Return the data frame with two extra columns contains neighbor
+            mean and std.
+    """
+    assert col_group in df
+    groups = df[col_group].unique()
+
+    df_list = []
+    for i, group in enumerate(groups):
+        df_sub = df[df[col_group] == group].reset_index(drop=True)
+        df_result = local_smoother(df_sub, col_val, col_axis,
+                                   radius=radius)
+        df_result[col_group] = group
+        df_list.append(df_result)
 
     return pd.concat(df_list)
 
 
+# TODO: replace by the data translator?
 def cumulative_derivative(array):
     arr = array.copy()
     return arr - np.insert(arr[:, :-1], 0, 0.0, axis=1)
 
-
+# TODO: change to use the data translator
 def convex_combination(t, pred1, pred2, pred_fun,
                        start_day=2, end_day=20):
     """Combine the prediction.
@@ -268,7 +235,7 @@ def convex_combination(t, pred1, pred2, pred_fun,
 
     return pred
 
-
+# TODO: use data_translator
 def model_average(pred1, pred2, w1, w2, pred_fun):
     """
     Average two models together in linear space.
@@ -308,7 +275,7 @@ def model_average(pred1, pred2, w1, w2, pred_fun):
 
     return pred
 
-
+# TODO: move the test from pv to here and test it not use the old code.
 def condense_residual_matrix(matrix, sequential_diffs, data_density):
     """
     Condense the residuals from a residual matrix to three columns
@@ -487,6 +454,9 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
     tmp = alpha*(slope_at - beta)
     p = np.sqrt(np.pi)*slopes/(2.0*alpha**2*np.abs(tmp)*np.exp(-tmp**2))
 
+    if is_scalar:
+        p = p[0]
+
     return p
 
 
@@ -575,6 +545,73 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
         final_draws = final_draws.ravel()
 
     return final_draws
+
+
+def convolve_sum(mat, radius=None):
+    """Convolve sum a 2D matrix by given radius.
+
+    Args:
+        mat (numpy.ndarray):
+            Matrix of interest.
+        radius (arraylike{int} | None, optional):
+            Given radius, if None assume radius = (0, 0).
+
+    Returns:
+        numpy.ndarray:
+            The convolved sum, with the same shape with original matrix.
+    """
+    mat = np.array(mat).astype(float)
+    assert mat.ndim == 2
+    if radius is None:
+        return mat
+    assert hasattr(radius, '__iter__')
+    radius = np.array(radius).astype(int)
+    assert radius.size == 2
+    assert all([r >= 0 for r in radius])
+    # import pdb; pdb.set_trace()
+    shape = np.array(mat.shape)
+    window_shape = tuple(radius*2 + 1)
+
+    mat = np.pad(mat, ((radius[0],),
+                       (radius[1],)), 'constant', constant_values=np.nan)
+    view_shape = tuple(np.subtract(mat.shape, window_shape) + 1) + window_shape
+    strides = mat.strides*2
+    sub_mat = np.lib.stride_tricks.as_strided(mat, view_shape, strides)
+    sub_mat = sub_mat.reshape(*shape, np.prod(window_shape))
+
+    return np.nansum(sub_mat, axis=2)
+
+
+def df_to_mat(df, col_val, col_axis, return_indices=False):
+    """Convert columns in data frame to matrix.
+
+    Args:
+        df (pandas.DataFrame): Given data frame.
+        col_val (str): Value column.
+        col_axis (list{str}): Axis column.
+        return_indices (bool, optional):
+            If True, return indices of the original values and the corresponding
+            axis values in the data frame.
+
+    Returns:
+        numpy.ndarray: Converted matrix.
+    """
+    assert col_val in df
+    assert all([c in df for c in col_axis])
+
+    vals = df[col_val].values
+    axis = df[col_axis].values
+    indices = axis - axis.min(axis=0)
+    shape = tuple(indices.max(axis=0) + 1)
+
+    mat = np.empty(shape)
+    mat.fill(np.nan)
+    mat[indices[:, 0], indices[:, 1]] = vals
+
+    if return_indices:
+        return mat, indices, axis
+    else:
+        return mat
 
 
 def smooth_draws(mat, radius=0, sort=False):

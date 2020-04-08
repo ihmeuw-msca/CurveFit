@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.com/ihmeuw-msca/CurveFit.svg?branch=master)](https://travis-ci.com/ihmeuw-msca/CurveFit)
+
 # Curve Fitting for the COVID-19 Project
 ## Institute for Health Metrics and Evaluation
 

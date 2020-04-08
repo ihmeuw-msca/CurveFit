@@ -27,7 +27,6 @@ sdist: setup.py
 
 tests:
 	pytest tests
-	python example/get_started.py
 
 clean:
 	find . -name "*.so*" | xargs rm -rf
