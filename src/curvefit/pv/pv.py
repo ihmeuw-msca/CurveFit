@@ -134,8 +134,8 @@ class PVGroup:
                     predict_group=self.predict_group
                 )
             )
-            self.prediction_matrix = np.vstack([predictions])
-            self.compute_residuals(theta=theta)
+        self.prediction_matrix = np.vstack([predictions])
+        self.compute_residuals(theta=theta)
 
         return self
 
