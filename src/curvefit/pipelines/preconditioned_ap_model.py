@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 from copy import deepcopy
 from curvefit.pipelines.ap_model import APModel
 from curvefit.diagnostics.preconditioners import BetaBoundsPreConditioner
@@ -102,6 +103,14 @@ class PreConditionedAPModel(APModel):
         print('{:<25s} {:>10s} {:>10s} {:>10s}'.format("Location", "RMSE ERF",
                                                        "RMSE DERF", "RMSE LNR"))
         summary = []
+        df_summary = pd.DataFrame({}, columns=['Location',
+                                               'RMSE ERF',
+                                               'RMSE DERF',
+                                               'RMSE LNR'])
+        location_list = []
+        rmse_erf_list = []
+        rmse_derf_list = []
+        rmse_derf_linear_list = []
         for i, (location, model) in enumerate(models.items()):
             erf_pred = model.fun(model.t, model.params[:, 0])
             rmse_erf = np.linalg.norm(erf_pred - model.obs) ** 2
@@ -111,10 +120,20 @@ class PreConditionedAPModel(APModel):
             rmse_derf_linear = self.preconditioner._statistics["linear_rmse"].get(location, 1e10)
             summary.append([location, rmse_erf, rmse_derf, rmse_derf_linear])
 
+            location_list.append(location)
+            rmse_erf_list.append(rmse_erf)
+            rmse_derf_list.append(rmse_derf)
+            rmse_derf_linear_list.append(rmse_derf_linear)
+
+        df_summary['Location'] = location_list
+        df_summary['RMSE ERF'] = rmse_derf_list
+        df_summary['RMSE DERF'] = rmse_derf_list
+        df_summary['RMSE LNR'] = rmse_derf_linear_list
+
         for v in sorted(summary, key=lambda x: (-np.log(x[2]) + np.log(x[3]))):
             if v[3] == 1e10:
                 print('{:<25s} {:>10.2e} {:>10.2e} {:>10s}'.format(v[0][:23], v[1], v[2], "NO INFO"))
             else:
                 print('{:<25s} {:>10.2e} {:>10.2e} {:>10.2e}'.format(v[0][:23], v[1], v[2], v[3]))
 
-        return None
+        return df_summary
