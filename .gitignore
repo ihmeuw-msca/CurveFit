@@ -15,6 +15,7 @@ experiments
 /site/
 # directory used by Brad to stash files
 /new/
+/new.[0-9]/
 # vim editor swap files in any directory
 *.swp
 # python compiled files in any directory

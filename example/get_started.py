@@ -6,9 +6,14 @@
 # Getting Started Using CurveFit
 
 ## Data Mean
-The model for the mean of the data for this example is:
+The model for the mean of the data for this example is one of the following:
 \[
     f(t; \alpha, \beta, p)  = \frac{p}{1 + \exp [ -\alpha(t  - \beta) ]}
+\]
+\[
+    g(t; \alpha, \beta, p) =
+        \frac{p}{2} \left( 1 + \frac{2}{pi} \ing_0^{\alpha ( t - \beta )}
+            \exp( - \tau^2 ) d \tau
 \]
 where \( \alpha \), \( \beta \), and \( p \) are unknown parameters.
 
@@ -16,11 +21,12 @@ where \( \alpha \), \( \beta \), and \( p \) are unknown parameters.
 The following settings are used to simulate the data and check
 that the solution is correct:
 ```python '''
+data_model   = 'g'   # must be the function f or g above
 n_data       = 21    # number simulated measurements to generate
 alpha_true   = 2.0   # values of alpha, beta, p, used to simulate data
 beta_true    = 3.0
-p_true       = 4.0
-rel_tol      = 1e-6  # relative tolerance used to check optimal solution
+p_true       = 5.0
+rel_tol      = 1e-5  # relative tolerance used to check optimal solution
 '''```
 
 ## Simulated data
@@ -30,10 +36,9 @@ A grid of *n_data* points in time, \( t_i \), where
 \[
     t_i = \beta_T / ( n_D - 1 )
 \]
-where the subscript \( T \) to denotes the true value
-of the currespondng parameter
-and \( n_D \) is the number of data points.
-The minimum value is zero for this grid is zero and its maximum is \( \beta \).
+where the subscript \( T \) denotes the true value
+of the currespondng parameter and \( n_D \) is the number of data points.
+The minimum value for this grid is zero and its maximum is \( \beta \).
 
 ### Measurement values
 We simulate data, \( y_i \), with no noise at each of the time points.
@@ -57,8 +62,8 @@ effects to the parameters, are
     p      & = \exp( \phi  )
 \end{aligned}
 \]
-The fixed effects are initialized so that the correspond parameters
-are the true values dividec by three.
+The fixed effects are initialized so they correspond to the
+true parameters values divided by three.
 
 ## Random effects
 For this example the random effects are constrained to be zero.
@@ -67,6 +72,7 @@ For this example the random effects are constrained to be zero.
 ## Source Code
 ```python '''
 # -------------------------------------------------------------------------
+import scipy
 import sys
 import pandas
 import numpy
@@ -75,17 +81,31 @@ sandbox.path()
 import curvefit
 from curvefit.core.model import CurveModel
 #
-# number of parameters in this model
+# for this model number of parameters is same as number of fixed effects
 num_params   = 3
+num_fe       = 3
 #
-# model for the mean of the data
+# f(t, alpha, beta, p)
 def generalized_logistic(t, params) :
     alpha = params[0]
     beta  = params[1]
     p     = params[2]
     return p / ( 1.0 + numpy.exp( - alpha * ( t - beta ) ) )
 #
-# link function used for beta
+# g(t, alpha, beta, p)
+def generalized_error_function(t, params) :
+    alpha = params[0]
+    beta  = params[1]
+    p     = params[2]
+    return 0.5 * p * ( 1.0 + scipy.special.erf( alpha * ( t - beta ) ) )
+#
+assert data_model in [ 'f' , 'g' ]
+if data_model == 'f' :
+    data_model_fun = generalized_logistic
+else :
+    data_model_fun = generalized_error_function
+#
+# identity function
 def identity_fun(x) :
     return x
 #
@@ -102,7 +122,7 @@ params_true       = numpy.array( [ alpha_true, beta_true, p_true ] )
 # -----------------------------------------------------------------------
 # data_frame
 independent_var   = numpy.array(range(n_data)) * beta_true / (n_data-1)
-measurement_value = generalized_logistic(independent_var, params_true)
+measurement_value = data_model_fun(independent_var, params_true)
 measurement_std   = n_data * [ 0.1 ]
 constant_one      = n_data * [ 1.0 ]
 data_group        = n_data * [ 'world' ]
@@ -122,8 +142,8 @@ col_covs     = num_params *[ [ 'constant_one' ] ]
 col_group    = 'data_group'
 param_names  = [ 'alpha', 'beta',       'p'     ]
 link_fun     = [ exp_fun, identity_fun, exp_fun ]
-var_link_fun = link_fun
-fun          = generalized_logistic
+var_link_fun = num_fe * [ identity_fun ]
+fun          = data_model_fun
 col_obs_se   = 'measurement_std'
 #
 curve_model = curvefit.core.model.CurveModel(
@@ -143,18 +163,24 @@ curve_model = curvefit.core.model.CurveModel(
 #
 # initialize fixed effects so correpsond to true parameters divided by three
 inv_link_fun = [ log_fun, identity_fun, log_fun ]
-fe_init      = numpy.zeros( num_params )
-for i in range(num_params) :
+fe_init      = numpy.zeros( num_fe )
+for i in range(num_fe) :
     fe_init[i]   = inv_link_fun[i](params_true[i] / 3.0)
 #
-re_init   = numpy.zeros( num_params )
-fe_bounds = [ [-numpy.inf, numpy.inf] ] * num_params
-re_bounds = [ [0.0, 0.0] ] * num_params
+re_init   = numpy.zeros( num_fe )
+fe_bounds = [ [-numpy.inf, numpy.inf] ] * num_fe
+re_bounds = [ [0.0, 0.0] ] * num_fe
 #
 curve_model.fit_params(fe_init, re_init, fe_bounds, re_bounds)
 params_estimate = curve_model.params
+fe_estimate     = curve_model.result.x[: num_fe]
 # -------------------------------------------------------------------------
-# check result
+# check relation between fixed effects and parameters
+for i in range(num_fe ) :
+    rel_error = params_estimate[i] / link_fun[i]( fe_estimate[i] ) - 1.0
+    assert abs(rel_error) < 10.0 * numpy.finfo(float).eps
+#
+# check optimal parameters
 for i in range(num_params) :
     rel_error = params_estimate[i] / params_true[i] - 1.0
     assert abs(rel_error) < rel_tol
