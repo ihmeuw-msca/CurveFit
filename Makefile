@@ -31,6 +31,7 @@ tests:
 
 examples:
 	python example/get_started.py
+	python example/covariate.py
 	python example/sizes_to_indices.py
 
 clean:

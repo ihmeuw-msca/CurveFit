@@ -10,22 +10,16 @@ The model for the mean of the data for this example is one of the following:
 \[
     f(t; \alpha, \beta, p)  = \frac{p}{1 + \exp [ -\alpha(t  - \beta) ]}
 \]
-\[
-    g(t; \alpha, \beta, p) =
-        \frac{p}{2} \left( 1 + \frac{2}{pi} \ing_0^{\alpha ( t - \beta )}
-            \exp( - \tau^2 ) d \tau
-\]
 where \( \alpha \), \( \beta \), and \( p \) are unknown parameters.
 
 ## Problem Settings
 The following settings are used to simulate the data and check
 that the solution is correct:
 ```python '''
-data_model   = 'g'   # must be the function f or g above
 n_data       = 21    # number simulated measurements to generate
-alpha_true   = 2.0   # values of alpha, beta, p, used to simulate data
-beta_true    = 3.0
-p_true       = 5.0
+beta_true    = 20.0             # max death rate at 20 days
+alpha_true   = 2.0 / beta_true  # alpha_true * beta_true = 2.0
+p_true       = 0.1              # maximum cumulaitve death fraction
 rel_tol      = 1e-5  # relative tolerance used to check optimal solution
 '''```
 
@@ -62,11 +56,15 @@ effects to the parameters, are
     p      & = \exp( \phi  )
 \end{aligned}
 \]
-The fixed effects are initialized so they correspond to the
-true parameters values divided by three.
+The fixed effects are initialized to be thier true values divided by three.
 
 ## Random effects
 For this example the random effects are constrained to be zero.
+
+## Covariates
+This example data set has two covariates,
+the constant one and a social distance measure.
+While the social distance is in the data set, it is not used.
 
 
 ## Source Code
@@ -92,19 +90,6 @@ def generalized_logistic(t, params) :
     p     = params[2]
     return p / ( 1.0 + numpy.exp( - alpha * ( t - beta ) ) )
 #
-# g(t, alpha, beta, p)
-def generalized_error_function(t, params) :
-    alpha = params[0]
-    beta  = params[1]
-    p     = params[2]
-    return 0.5 * p * ( 1.0 + scipy.special.erf( alpha * ( t - beta ) ) )
-#
-assert data_model in [ 'f' , 'g' ]
-if data_model == 'f' :
-    data_model_fun = generalized_logistic
-else :
-    data_model_fun = generalized_error_function
-#
 # identity function
 def identity_fun(x) :
     return x
@@ -122,15 +107,17 @@ params_true       = numpy.array( [ alpha_true, beta_true, p_true ] )
 # -----------------------------------------------------------------------
 # data_frame
 independent_var   = numpy.array(range(n_data)) * beta_true / (n_data-1)
-measurement_value = data_model_fun(independent_var, params_true)
+measurement_value = generalized_logistic(independent_var, params_true)
 measurement_std   = n_data * [ 0.1 ]
 constant_one      = n_data * [ 1.0 ]
+social_distance   = [ 0.0 if i < n_data / 2 else 1.0 for i in range(n_data) ]
 data_group        = n_data * [ 'world' ]
 data_dict         = {
     'independent_var'   : independent_var   ,
     'measurement_value' : measurement_value ,
     'measurement_std'   : measurement_std   ,
     'constant_one'      : constant_one      ,
+    'social_distance'   : social_distance   ,
     'data_group'        : data_group        ,
 }
 data_frame        = pandas.DataFrame(data_dict)
@@ -143,7 +130,7 @@ col_group    = 'data_group'
 param_names  = [ 'alpha', 'beta',       'p'     ]
 link_fun     = [ exp_fun, identity_fun, exp_fun ]
 var_link_fun = num_fe * [ identity_fun ]
-fun          = data_model_fun
+fun          = generalized_logistic
 col_obs_se   = 'measurement_std'
 #
 curve_model = curvefit.core.model.CurveModel(
@@ -165,7 +152,7 @@ curve_model = curvefit.core.model.CurveModel(
 inv_link_fun = [ log_fun, identity_fun, log_fun ]
 fe_init      = numpy.zeros( num_fe )
 for i in range(num_fe) :
-    fe_init[i]   = inv_link_fun[i](params_true[i] / 3.0)
+    fe_init[i]   = inv_link_fun[i](params_true[i]) / 3.0
 #
 re_init   = numpy.zeros( num_fe )
 fe_bounds = [ [-numpy.inf, numpy.inf] ] * num_fe

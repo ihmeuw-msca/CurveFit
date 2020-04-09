@@ -6,6 +6,7 @@ output_dir = 'docs/extract_md'
 # list of files that contain markdown sections in them
 file_list = [
     'example/get_started.py',
+    'example/covariate.py',
     'example/sizes_to_indices.py',
 
     'src/curvefit/core/utils.py',
