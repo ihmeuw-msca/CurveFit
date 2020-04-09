@@ -1,7 +1,7 @@
 #! /bin/python3
 # vim: set expandtab:
 '''
-[begin_markdown covariate_xam]
+{begin_markdown covariate_xam}
 
 # Using Covariates
 
@@ -202,5 +202,5 @@ for i in range(num_fe) :
 print('covariate.py: OK')
 sys.exit(0)
 ''' ```
-[end_markdown covariate_xam]
+{end_markdown covariate_xam}
 '''

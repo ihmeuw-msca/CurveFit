@@ -1,7 +1,7 @@
 #! /bin/python3
 # vim: set expandtab:
 '''
-[begin_markdown get_started_xam]
+{begin_markdown get_started_xam}
 
 # Getting Started Using CurveFit
 
@@ -175,5 +175,5 @@ for i in range(num_params) :
 print('get_started.py: OK')
 sys.exit(0)
 ''' ```
-[end_markdown get_started_xam]
+{end_markdown get_started_xam}
 '''

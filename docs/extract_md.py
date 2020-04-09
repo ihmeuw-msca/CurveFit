@@ -13,7 +13,7 @@ file_list = [
     'docs/extract_md.py',
 ]
 # ----------------------------------------------------------------------------
-'''[begin_markdown extract_md]
+'''{begin_markdown extract_md}
 # Extracting Markdown Documentation From Soure Code
 
 ## Syntax
@@ -34,7 +34,7 @@ that the markdown files will be extracted from.
 The start of a markdown section of the input file is indicated by the following
 text:
 <p style="margin-left:10%">
-[begin_markdown <i>section_name</i>]
+{begin_markdown <i>section_name</i>}
 <p/>
 Here *section_name* is the name of output file corresponding to this section.
 This name does not inlucde the *output_dir* or the .md extension.
@@ -43,7 +43,7 @@ This name does not inlucde the *output_dir* or the .md extension.
 The end of a markdown section of the input file is indicated by the following
 text:
 <p style="margin-left:10%">
-[end_markdown <i>section_name</i>]
+{end_markdown <i>section_name</i>}
 <p/>
 Here *section_name* must be the same as in the start of this markdown section.
 
@@ -63,7 +63,7 @@ by the same number of space characters, that may space characters
 are not included in the markdown output. This enables one to indent the
 markdown so it is grouped with the proper code block in the soruce.
 
-[end_markdown extract_md]'''
+{end_markdown extract_md}'''
 # ----------------------------------------------------------------------------
 import sys
 import re
@@ -94,8 +94,8 @@ section_list       = list()
 corresponding_file = list()
 #
 # pattern for start of markdown section
-pattern_begin_markdown = re.compile( '\\[begin_markdown\\s*(\\w*)\\]' )
-pattern_end_markdown   = re.compile( '\\[end_markdown\\s*(\\w*)\\]' )
+pattern_begin_markdown = re.compile( '\\{begin_markdown \\s*(\\w*)\\}' )
+pattern_end_markdown   = re.compile( '\\{end_markdown \\s*(\\w*)\\}' )
 pattern_begin_3quote   = re.compile( '[^\\n]*(```\\s*\\w*)[^\\n]*' )
 pattern_end_3quote     = re.compile( '[^\\n]*(```)[^\\n]*' )
 pattern_newline        = re.compile( '\\n')
@@ -119,7 +119,7 @@ for file_in in file_list :
         if match_begin == None :
             if data_index == 0 :
                 # There is no match for pattern_begin_markdown in this file.
-                msg  = 'can not find: [begin_markdown section_name\]\n'
+                msg  = 'can not find: {begin_markdown section_name\}\n'
                 msg += 'in ' + file_in + '\n'
                 sys_exit(msg)
             data_index = len(file_data)

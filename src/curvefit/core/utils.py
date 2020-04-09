@@ -7,7 +7,7 @@ from curvefit.core.functions import *
 
 
 def sizes_to_indices(sizes):
-    """[begin_markdown sizes_to_indices]
+    """{begin_markdown sizes_to_indices}
     # Converting sizes to corresponding indices.
 
     ## Syntax
@@ -28,7 +28,7 @@ def sizes_to_indices(sizes):
     ## Example
     [sizes_to_indices_xam](sizes_to_indices_xam.md)
 
-    [end_markdown sizes_to_indices]"""
+    {end_markdown sizes_to_indices}"""
     indices = []
     a = 0
     b = 0

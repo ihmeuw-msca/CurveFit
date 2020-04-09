@@ -1,4 +1,4 @@
-'''[begin_markdown sizes_to_indices_xam]
+'''{begin_markdown sizes_to_indices_xam}
 
 # Example and Test of sizes_to_indices
 
@@ -17,4 +17,4 @@ assert all( indices[2] == numpy.array([6, 7, 8]) )
 print('sizes_to_indices.py: OK')
 sys.exit(0)
 '''```
-[end_markdown sizes_to_indices_xam]'''
+{end_markdown sizes_to_indices_xam}'''
