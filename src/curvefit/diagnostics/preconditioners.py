@@ -100,6 +100,11 @@ class BetaBoundsPreConditioner(BasicPreConditioner):
                                    ]
         self._peaked_groups = peaked_groups
         self._not_peaked_groups = not_peaked_groups
+        self._statistics = {
+            "linear_rmse": {},
+            "linear_r2": {},
+            "linear_slope": {}
+        }
         # This set of coefficients defines a LinearSVC(random_state=42) classifier
         # which was trained to use features above for determining whether the peak
         # has been reached. This is not a permanent solution, rather an urgent
@@ -246,6 +251,11 @@ class BetaBoundsPreConditioner(BasicPreConditioner):
             features.at[idx, "slope_full"] = slope_full
             features.at[idx, "slope_head"] = slope_head
             features.at[idx, "slope_tail"] = slope_tail
+
+            y_pred_full = model_full.predict(x_full)
+            self._statistics["linear_r2"][group] = r2_full_score
+            self._statistics["linear_rmse"][group] = np.linalg.norm(np.exp(y_full) - np.exp(y_pred_full))**2
+            self._statistics["linear_slope"][group] = slope_full
 
             fraction_below_score = np.mean(model_full.predict(x_tail) > y_tail)
             weights = np.array([1 / (1 + i) ** 2 for i in range(1, tail_len + 1)][::-1])
