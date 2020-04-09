@@ -230,12 +230,14 @@ class CurveModel:
             numpy.ndarray:
                 Gradient w.r.t. the model parameters.
         """
+        finfo = np.finfo(float)
+        step  = finfo.tiny / finfo.eps
         x_c = x + 0j
         grad = np.zeros(x.size)
         for i in range(x.size):
-            x_c[i] += eps*1j
-            grad[i] = self.objective(x_c).imag/eps
-            x_c[i] -= eps*1j
+            x_c[i] += step*1j
+            grad[i] = self.objective(x_c).imag/step
+            x_c[i] -= step*1j
 
         return grad
 
@@ -365,6 +367,7 @@ class CurveModel:
             jac=self.gradient,
             method='L-BFGS-B',
             bounds=bounds,
+            tol=1e-12,
             options=options
         )
 

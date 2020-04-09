@@ -6,14 +6,28 @@ from curvefit.core.functions import *
 
 
 def sizes_to_indices(sizes):
-    """Converting sizes to corresponding indices.
-    Args:
-        sizes (numpy.ndarray):
-            An array consist of non-negative number.
-    Returns:
-        list{numpy.ndarray}:
-            List the indices.
-    """
+    """[begin_markdown sizes_to_indices]
+    # Converting sizes to corresponding indices.
+
+    ## Syntax
+    `indices = sizes_to_indices(sizes)`
+
+    ## sizes
+    The argument `sizes` is a one dimensional `numpy.array` of integers sizes.
+    The value `sizes[i]` is the number of elements in the i-th subvector
+    of a larger total vector that contains the subvectors in order.
+
+    ## indices
+    The return value `indices` is a `list` with `numpy.array` elements.
+    The value `indices[i]` is a vector with length equal to `sizes[i]`.
+    This vector `indices[i]` starts (ends) with the index in the total vector
+    of the first (last) element of the i-th subvector.  The elements of
+    `list[i]` are monotone and increase by one between elements.
+
+    ## Example
+    [sizes_to_indices_xam](sizes_to_indices_xam.md)
+
+    [end_markdown sizes_to_indices]"""
     indices = []
     a = 0
     b = 0

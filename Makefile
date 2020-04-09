@@ -9,6 +9,7 @@ gh-pages: doc_phony
 	rm site/extract_md.py
 	git checkout mkdocs.yml
 	git checkout gh-pages
+	rm -r extract_md
 	cp -r site/* .
 
 build: setup.py
@@ -27,6 +28,11 @@ sdist: setup.py
 
 tests:
 	pytest tests
+
+examples:
+	python example/get_started.py
+	python example/covariate.py
+	python example/sizes_to_indices.py
 
 clean:
 	find . -name "*.so*" | xargs rm -rf
