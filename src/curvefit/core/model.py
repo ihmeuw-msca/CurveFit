@@ -83,8 +83,10 @@ class CurveModel:
 
         # extracting information
         self.obs = self.df[self.col_obs].values
-        self.obs_se = np.ones(self.num_obs) if self.col_obs_se is None else \
-            self.df[self.col_obs_se].values
+        if self.col_obs_se is None:
+            self.obs_se = np.ones(self.num_obs)*self.obs.mean()
+        else:
+            self.obs_se = self.df[self.col_obs_se]
         self.t = self.df[self.col_t].values
         self.group = self.df[self.col_group].values
         self.covs = [

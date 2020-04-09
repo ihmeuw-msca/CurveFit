@@ -47,6 +47,25 @@ def test_loss_fun(test_data, param_names,
     assert np.abs(val - my_val) < 1e-10
 
 
+@pytest.mark.parametrize('param_names', [['alpha', 'beta', 'p']])
+@pytest.mark.parametrize('fun', [log_erf])
+@pytest.mark.parametrize('link_fun', [[np.exp, lambda x: x, np.exp]])
+@pytest.mark.parametrize('var_link_fun', [[lambda x: x]*3])
+@pytest.mark.parametrize('loss_fun', [normal_loss, st_loss])
+def test_loss_fun(test_data, param_names,
+                  fun, link_fun, var_link_fun, loss_fun):
+    model = CurveModel(test_data, 't', 'obs',
+                       [['intercept']]*3,
+                       'group',
+                       param_names,
+                       link_fun,
+                       var_link_fun,
+                       fun,
+                       loss_fun=loss_fun)
+
+    assert np.allclose(model.obs_se, model.obs.mean())
+
+
 # model for the mean of the data
 def generalized_logistic(t, params):
     alpha = params[0]
