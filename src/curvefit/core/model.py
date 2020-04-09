@@ -6,10 +6,10 @@ from copy import deepcopy
 import numpy as np
 from scipy.optimize import minimize
 from curvefit.core import utils
-from curvefit.core.functions import *
 
 from curvefit.core.utils import get_initial_params
 from curvefit.core.utils import compute_starting_params
+from curvefit.core.functions import normal_loss
 
 
 class CurveModel:
@@ -83,8 +83,10 @@ class CurveModel:
 
         # extracting information
         self.obs = self.df[self.col_obs].values
-        self.obs_se = np.ones(self.num_obs) if self.col_obs_se is None else \
-            self.df[self.col_obs_se].values
+        if self.col_obs_se is None:
+            self.obs_se = np.ones(self.num_obs)*self.obs.mean()
+        else:
+            self.obs_se = self.df[self.col_obs_se]
         self.t = self.df[self.col_t].values
         self.group = self.df[self.col_group].values
         self.covs = [
@@ -230,12 +232,14 @@ class CurveModel:
             numpy.ndarray:
                 Gradient w.r.t. the model parameters.
         """
+        finfo = np.finfo(float)
+        step  = finfo.tiny / finfo.eps
         x_c = x + 0j
         grad = np.zeros(x.size)
         for i in range(x.size):
-            x_c[i] += eps*1j
-            grad[i] = self.objective(x_c).imag/eps
-            x_c[i] -= eps*1j
+            x_c[i] += step*1j
+            grad[i] = self.objective(x_c).imag/step
+            x_c[i] -= step*1j
 
         return grad
 
@@ -365,11 +369,38 @@ class CurveModel:
             jac=self.gradient,
             method='L-BFGS-B',
             bounds=bounds,
+            tol=1e-12,
             options=options
         )
 
         self.result = result
         self.params = self.compute_params(self.result.x, expand=False)
+
+    def compute_rmse(self, x=None, use_obs_se=True):
+        """Compute the Root Mean Squre Error.
+
+        Args:
+            x (numpy.ndarray | None, optional):
+                Provided solution array, if None use the object solution.
+            use_obs_se (bool, optional):
+                If True include the observation standard deviation into the
+                calculation.
+
+        Returns:
+            float: root mean square error.
+        """
+        if x is None:
+            assert self.result is not None
+            x = self.result.x
+
+        params = self.compute_params(x)
+        residual = self.obs - self.fun(self.t, params)
+
+        if use_obs_se:
+            return np.sqrt(np.sum(residual**2/self.obs_se**2)/
+                           np.sum(1.0/self.obs_se**2))
+        else:
+            return np.sqrt(np.mean(residual**2))
 
     def predict(self, t, group_name='all', prediction_functional_form=None):
         """Predict the observation by given independent variable and group name.
