@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from curvefit.diagnostics import plot_residuals, plot_predictions, plot_residuals_1d
-from curvefit.utils import neighbor_mean_std
+from curvefit.diagnostics.plot_diagnostics import plot_residuals, plot_predictions, plot_residuals_1d, plot_es
+from curvefit.core.utils import neighbor_mean_std
 
 
 class PVGroup:
@@ -134,8 +134,8 @@ class PVGroup:
                     predict_group=self.predict_group
                 )
             )
-            self.prediction_matrix = np.vstack([predictions])
-            self.compute_residuals(theta=theta)
+        self.prediction_matrix = np.vstack([predictions])
+        self.compute_residuals(theta=theta)
 
         return self
 
@@ -162,6 +162,74 @@ class PVGroup:
             'data_index': self.residuals[:, 0] + self.residuals[:, 1],
             'residual': self.residuals[:, 2]
         })
+
+    def get_exponential_weights(self, exp_smoothing, max_last):
+        """
+        Get what the exponential weighting function result is based on the parameter.
+
+        Args:
+            exp_smoothing: (float) exponential smoothing parameter -->
+                larger value will give more weight to more "recent" models
+            max_last: (optional int) number of previous times to consider
+
+        Returns:
+
+        """
+        times = self.times[-max_last:]
+
+        weights = np.exp(-exp_smoothing * (np.max(times) - times))
+        weights = weights / sum(weights)
+        return weights
+
+    def exp_smooth_preds(self, exp_smoothing, prediction_times, max_last=None):
+        """
+        Create a smoothed set of predictions with exponentially decreasing weights to further back
+        forecasts.
+
+        Args:
+            exp_smoothing: (float) exponential smoothing parameter -->
+                larger value will give more weight to more "recent" models
+            prediction_times: (np.array) times to predict at
+            max_last: (optional int) number of previous models to consider
+
+        Returns:
+            (np.array) of length prediction times
+        """
+        if max_last is None:
+            max_last = len(self.times)
+
+        weights = self.get_exponential_weights(
+            exp_smoothing=exp_smoothing,
+            max_last=max_last
+        )
+        weights = weights.reshape((len(weights), 1))
+        predictions = []
+        for i, t in enumerate(self.times[-max_last:]):
+            predictions.append(self.models[-max_last:][i].predict(
+                times=prediction_times,
+                predict_space=self.predict_space,
+                predict_group=self.predict_group
+            ))
+
+        weighted_predictions = np.vstack(predictions) * weights
+        smooth_predictions = weighted_predictions.sum(axis=0)
+
+        return smooth_predictions
+
+    def plot_exponential_smoothing(self, exp_smoothing, prediction_times, max_last=None):
+        """
+        Plot exponential smoothing results.
+
+        Args:
+            exp_smoothing: (np.array) exponential smoothing parameter
+            prediction_times: (np.array) prediction times
+            max_last: (int) number of previous models to consider
+
+        Returns:
+
+        """
+        plot_es(pv_group=self, exp_smoothing=exp_smoothing,
+                prediction_times=prediction_times, max_last=max_last)
 
 
 class PVModel:

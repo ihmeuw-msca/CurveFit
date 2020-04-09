@@ -1,19 +1,16 @@
 # Map of the Code
 
-In this documentation, we give a high-level overview of the purpose of different parts of the code base
-and how they fit together.
-
-`CurveFit` is a package for fitting curves, and can be used to do only that if desired.
-However, due to its current usage for the IHME COVID-19 project, it has modules specifically for evaluating model 
-performance out beyond the range of time observed in the data. Likewise, it has modules for creating
-uncertainty intervals based on out of sample performance.
-First, we will walk through the core model, then discuss these extensions.
+We first start by walking through the [core curve fitting model](#core-model), 
+and then the extensions that make
+it possible for `CurveFit` to be used for forecasting 
+over time including [pipelines](#pipelines) and [predictive validity](#predictive-validity).
 
 ## Core Model
+**`curevefit.core`**
 
 ### Setting Up a Model
 
-The code for the core curve fitting model is `curvefit.model.CurveModel`.
+The code for the core curve fitting model is `curvefit.core.model.CurveModel`.
 To initialize a `CurveModel`, you need a `pandas` data frame and information
 about what type of model you want to fit. It needs to know which columns
 represent what and some model parameters.
@@ -36,8 +33,8 @@ identity link functions for each parameter and identity variable link functions 
 In this example, no parameters have covariates besides an intercept column of 1's.
 
 ```python
-from curvefit.model import CurveModel
-from curvefit.functions import log_erf
+from curvefit.core.model import CurveModel
+from curvefit.core.functions import log_erf
 
 model = CurveModel(
     df=df,
@@ -62,12 +59,14 @@ to the function to the `CurveModel` class for the `fun` argument. What you pass 
 The available built-in functions in `curvefit.functions` are:
 
 **The Error Function**
+
 - `erf`: error function (Gauss error function)
 - `derf`: derivative of the error function
 - `log_erf`: log error function
 - `log_derf`: log derivative of the erf function
 
 **The Expit Function** (inverse of the logit function)
+
 - `expit`: expit function
 - `log_expit`: log expit function
 
@@ -211,9 +210,27 @@ The overall `run()` method that will be used in `ModelPipeline` does the followi
     predictive validity and/or stores information for use later
 - `ModelPipeline.run_predictive_validity()`: runs predictive validity, described [here](#predictive-validity)
 - `ModelPipeline.fit_residuals()`: fits residuals from predictive validity
+- `ModelPipeline.create_draws()`: creates random realizations of the mean function that for the uncertainty intervals
     
 Each subclass of `ModelPipeline` has different requirements, each of which are described in their
-respective docstrings. 
+respective docstrings. Available classes and a brief description of what they do are below:
+
+- `BasicModel`: Runs one model jointly with all groups.
+- `BasicModelWithInit`: Runs all models separately to do a [smart initialization](#optimization) of the
+    fixed and random effects, and then runs a joint model with all groups.
+- `TightLooseModel`: Runs four models with different combinations of settings (one setting should be "tight",
+    meaning that it follows the prior closely and one "loose" meaning that it follows the prior less closely)
+    and covariate models (can place the covariates on different parameters across models -- by default one is called
+    the "beta" model and one is called the "p" model referring to which parameter has covariates). The "tight"
+    and "loose" model predictions are blended within each covariate covariate model by using a convex combination
+    of the predictions over time. Then the two covariate models are averaged together with pre-specified weights.
+- `APModel`: Runs group-specific models and introduces a functional prior on the log of the alpha and beta parameters
+    for the `erf` family of functions.
+- `PreConditionedAPModel`: Runs like an `APModel` with the `erf` family but dynamically adjusts the bounds
+    for the fixed effects of group-specific models based on preconditioning that flags groups that 
+    still have an exponential rise in the dependent variable with respect to the independent variable.
+
 
 ## Predictive Validity
 **`curvefit.pv`**
+

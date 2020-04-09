@@ -1,12 +1,12 @@
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import numpy as np
-from curvefit.utils import data_translator
+from curvefit.core.utils import data_translator
 
 
-def plot_uncertainty(generator, prediction_times, sharex, sharey, draw_space, plot_obs, plot_draws=False):
+def plot_fits(generator, prediction_times, sharex, sharey, draw_space, plot_obs=None, plot_uncertainty=False):
     """
-    Plot the draws from a model generator at some prediction times.
+    Plot the result and draws from a model generator at some prediction times.
 
     Args:
         generator: (curvefit.model_generator.ModelPipeline) that has some draws
@@ -14,11 +14,13 @@ def plot_uncertainty(generator, prediction_times, sharex, sharey, draw_space, pl
         sharex: (bool) fix the x axes
         sharey: (bool) fix the y axes
         draw_space: (callable) which curvefit.functions space to plot the draws in
-        plot_obs: (str) column of observations to plot,
-        plot_draws: (bool) whether to plot all of the draws or just the summaries
+        plot_obs: (optional str) column of observations to plot
+        plot_uncertainty: (optional bool) plot the uncertainty intervals
     """
     fig, ax = plt.subplots(len(generator.groups), 1, figsize=(8, 4 * len(generator.groups)),
                            sharex=sharex, sharey=sharey)
+    if len(generator.groups) == 1:
+        ax = [ax]
     for i, group in enumerate(generator.groups):
         draws = generator.draws[group].copy()
         draws = data_translator(
@@ -33,17 +35,56 @@ def plot_uncertainty(generator, prediction_times, sharex, sharey, draw_space, pl
             output_space=draw_space
         )
         mean = draws.mean(axis=0)
-        lower = np.quantile(draws, axis=0, q=0.025)
-        upper = np.quantile(draws, axis=0, q=0.975)
-
         ax[i].plot(prediction_times, mean, c='red', linestyle=':')
-        ax[i].plot(prediction_times, lower, c='red', linestyle=':')
-        ax[i].plot(prediction_times, upper, c='red', linestyle=':')
-
         ax[i].plot(prediction_times, mean_fit, c='black')
-        df_data = generator.all_data.loc[generator.all_data[generator.col_group] == group].copy()
-        ax[i].scatter(df_data[generator.col_t], df_data[plot_obs])
+
+        if plot_uncertainty:
+            lower = np.quantile(draws, axis=0, q=0.025)
+            upper = np.quantile(draws, axis=0, q=0.975)
+            ax[i].plot(prediction_times, lower, c='red', linestyle=':')
+            ax[i].plot(prediction_times, upper, c='red', linestyle=':')
+
+        if plot_obs is not None:
+            df_data = generator.all_data.loc[generator.all_data[generator.col_group] == group].copy()
+            ax[i].scatter(df_data[generator.col_t], df_data[plot_obs])
+
         ax[i].set_title(f"{group} predictions")
+
+
+def plot_es(pv_group, exp_smoothing, prediction_times, max_last):
+    """
+    Plot results with different levels of exponential smoothing.
+
+    Args:
+        pv_group: (curvefit.pv.pv.PVGroup)
+        exp_smoothing: (np.array) exponential smoothing parameter
+        prediction_times: (np.array) prediction times
+        max_last: (int) number of last times to consider
+
+    Returns:
+
+    """
+    fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+
+    times = pv_group.times
+    observations = pv_group.compare_observations
+
+    for i, exp in enumerate(exp_smoothing):
+        p = ax.plot(
+            prediction_times,
+            pv_group.exp_smooth_preds(
+                exp_smoothing=exp,
+                prediction_times=prediction_times,
+                max_last=max_last
+            ),
+            label=str(exp),
+        )
+        leg = ax.legend([p], [str(exp)])
+        ax.add_artist(leg)
+
+    ax.scatter(times, observations, zorder=len(exp_smoothing), color='black')
+    ax.set_title(f"{pv_group.predict_group}")
+    ax.legend()
 
 
 def plot_residuals_1d(residual_df, group_col, x_axis,
@@ -100,6 +141,8 @@ def plot_residuals(residual_array, group_name, x_label, y_label, absolute=False,
         x_label: (str) the label for x axis
         y_label: (str) the label for y axis
         absolute: (bool) plot absolute value of the residuals
+        fig: existing figure from matplotlib.pyplot.subplots to add the plots to
+        axis: existing axis from matplotlib.pyplot.subplots to add the plots to
     """
     mat = np.copy(residual_array)
 

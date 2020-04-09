@@ -80,3 +80,13 @@ def dderf(t, params):
     p = params[2]
     tmp = a*(t - b)
     return -2.0*a**2*p*tmp*np.exp(-tmp**2)/np.sqrt(np.pi)
+
+
+# Student's T loss function
+def st_loss(x, nu=1.0):
+    return np.sum(np.log(1.0 + x**2/nu))
+
+
+# Gaussian loss function
+def normal_loss(x):
+    return 0.5*sum(x**2)
