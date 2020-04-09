@@ -15,7 +15,7 @@ setup(
         'pandas',
         'pytest',
         'matplotlib',
-        'xpsline'
+        'xspline'
     ],
     zip_safe=False
 )
