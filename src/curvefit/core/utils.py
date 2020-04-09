@@ -614,9 +614,9 @@ def df_to_mat(df, col_val, col_axis, return_indices=False):
     assert all([c in df for c in col_axis])
 
     vals = df[col_val].values
-    axis = df[col_axis].values
-    indices = axis - axis.min(axis=0)
-    shape = tuple(indices.max(axis=0) + 1)
+    axis = df[col_axis].values.astype(int)
+    indices = (axis - axis.min(axis=0)).astype(int)
+    shape = tuple(indices.max(axis=0).astype(int) + 1)
 
     mat = np.empty(shape)
     mat.fill(np.nan)
