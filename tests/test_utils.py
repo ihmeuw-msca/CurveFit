@@ -211,3 +211,37 @@ def test_solve_p_from_dderf(alpha, beta, slopes, slope_at):
         return dderf(t, [a, b, p]) - s
 
     assert np.abs(fun(slope_at, alpha, beta, result, slopes)) < 1e-10
+
+
+def test_split_by_group():
+    df = pd.DataFrame({
+        'group': ['a', 'a', 'b', 'b'],
+        'val': [1.0, 1.0, 2.0, 2.0]
+    })
+
+    data = utils.split_by_group(df, 'group')
+    assert np.allclose(data['a']['val'].values, 1.0)
+    assert np.allclose(data['b']['val'].values, 2.0)
+
+
+def test_filter_death_rate():
+    df = pd.DataFrame({
+        't': [0, 1, 2, 3, 4],
+        'rate': [0.0, 0.1, 0.0, 0.1, 0.4]
+    })
+
+    df_result = utils.filter_death_rate(df, 't', 'rate')
+    assert np.allclose(df_result['t'], [0, 1, 4])
+    assert np.allclose(df_result['rate'], [0.0, 0.1, 0.4])
+
+
+def test_filter_death_rate_by_group():
+    df = pd.DataFrame({
+        'group': ['a', 'a', 'a', 'b', 'b', 'b'],
+        't': [0, 1, 2, 0, 1, 2],
+        'rate': [0.0, 0.1, 0.2, 0.0, 0.0, 0.2]
+    })
+
+    df_result = utils.filter_death_rate_by_group(df, 'group', 't', 'rate')
+    assert np.allclose(df_result['t'], [0, 1, 2, 0, 2])
+    assert np.allclose(df_result['rate'], [0.0, 0.1, 0.2, 0.0, 0.2])

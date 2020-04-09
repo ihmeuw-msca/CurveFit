@@ -701,3 +701,62 @@ def smooth_mat(mat, radius=None):
         mean = mean.ravel()
 
     return mean
+
+
+def split_by_group(df, col_group):
+    """Split the data frame by the group definition.
+
+    Args:
+        df (pd.DataFrame): Provided data frame.
+        col_group (str): Column name of group definition.
+
+    Returns:
+        dict{str, pd.DataFrame}:
+            Dictionary with key as the group definition and value as the
+            corresponding data frame.
+    """
+    assert col_group in df
+    data = {
+        group: df[df[col_group] == group].reset_index(drop=True)
+        for group in df[col_group].unique()
+    }
+
+    return data
+
+
+def filter_death_rate(df, col_t, col_death_rate):
+    """Filter cumulative death rate. Remove non-monotonically increasing points.
+
+    Args:
+        df (pd.DataFrame): Provided data frame.
+        col_t (str): Column name of the independent variable.
+        col_death_rate (str): Name for column that contains the death rate.
+
+    Returns:
+        pd.DataFrame: Filtered data frame.
+    """
+    df = df.sort_values(col_t).reset_index(drop=True)
+    t = df[col_t]
+    death_rate = df[col_death_rate]
+    drop_idx = [i for i in range(1, t.size)
+                if np.any(death_rate[i] <= death_rate[:i])]
+    df = df.drop(drop_idx).reset_index(drop=True)
+    return df
+
+def filter_death_rate_by_group(df, col_group, col_t, col_death_rate):
+    """Filter cumulative death rate within each group.
+
+    Args:
+        df (pd.DataFrame): Provided data frame.
+        col_group (str): Column name of group definition.
+        col_t (str): Column name of the independent variable.
+        col_death_rate (str): Name for column that contains the death rate.
+
+    Returns:
+        pd.DataFrame: Filtered data frame.
+    """
+    df_split = list(split_by_group(df, col_group).values())
+    for i, df_sub in enumerate(df_split):
+        df_split[i] = filter_death_rate(df_sub, col_t, col_death_rate)
+
+    return pd.concat(df_split)
