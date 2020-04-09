@@ -190,7 +190,7 @@ class PVGroup:
             exp_smoothing: (float) exponential smoothing parameter -->
                 larger value will give more weight to more "recent" models
             prediction_times: (np.array) times to predict at
-            max_last: (optional int) number of previous times to consider
+            max_last: (optional int) number of previous models to consider
 
         Returns:
             (np.array) of length prediction times
@@ -223,7 +223,7 @@ class PVGroup:
         Args:
             exp_smoothing: (np.array) exponential smoothing parameter
             prediction_times: (np.array) prediction times
-            max_last: (int) number of last times to consider
+            max_last: (int) number of previous models to consider
 
         Returns:
 
