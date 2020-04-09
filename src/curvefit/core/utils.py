@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from xspline import XSpline
 from copy import deepcopy
 from collections import OrderedDict
 from curvefit.core.functions import *
@@ -760,3 +761,76 @@ def filter_death_rate_by_group(df, col_group, col_t, col_death_rate):
         df_split[i] = filter_death_rate(df_sub, col_t, col_death_rate)
 
     return pd.concat(df_split)
+
+
+def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
+                                   spline_knots=np.array([0.0, 100.0]),
+                                   spline_degree=2,
+                                   tol_der=1e-2,
+                                   tol_num_obs=20,
+                                   return_spline_fit=False):
+    """Create potential peaked groups.
+
+    Args:
+        df (pd.DataFrame): Provided data frame.
+        col_group (str): Column name of group definition.
+        col_t (str): Column name of the independent variable.
+        col_death_rate (str): Name for column that contains the death rate.
+        spline_konts (np.array, optional):
+            Knots for the spline fits.
+        spline_degree (int, optional):
+            Degree for the spline fits.
+        tol_der (float, optional):
+            Only the ones with minimum derivative below this threshold will be
+            considered as the potential peaked group.
+        tol_num_obs (int, optional):
+            Only the ones with number of observation above or equal to this
+            threshold will be considered as the potential peaked group.
+        return_spline_fit (bool, optional):
+            If True, return the spline fits as well.
+
+    Returns:
+        list | tuple(list, dict):
+            List of potential peaked groups or with the spline fit as well.
+    """
+    data = split_by_group(
+        filter_death_rate_by_group(df, col_group, col_t, col_death_rate),
+        col_group)
+
+    for location in data.keys():
+        df_sub = data[location]
+        df_sub['daily death rate'] = df_sub['death rate'].values - \
+            np.insert(df_sub['death rate'].values[:-1], 0, 0.0)
+        df_sub['ln daily death rate'] = np.log(df_sub['daily death rate'])
+
+    spline_fit = {}
+    for location in data.keys():
+        df = data[location]
+        t = df['days']
+        y = df['ln daily death rate']
+
+        spline = XSpline(spline_knots, spline_degree)
+        X = spline.design_mat(t)
+        c, *_ = np.linalg.lstsq(X.T.dot(X), X.T.dot(y), rcond=None)
+        spline_fit.update({
+            location: (deepcopy(spline), deepcopy(c))
+        })
+
+    potential_groups = []
+    for i, (location, df) in enumerate(data.items()):
+        spline, c = spline_fit[location]
+        t = np.linspace(df['days'].min(), df['days'].max(), 100)
+        dX = spline.design_dmat(t, 1)
+        ddX = spline.design_dmat(t, 2)
+
+        dy = dX.dot(c)
+        ddy = ddX.dot(c)
+        if np.abs(dy).min() < tol_der and \
+                np.all(ddy <= 0.0) and \
+                df.shape[0] >= tol_num_obs:
+            potential_groups.append(location)
+
+    if return_spline_fit:
+        return potential_groups, spline_fit
+    else:
+        return potential_groups
