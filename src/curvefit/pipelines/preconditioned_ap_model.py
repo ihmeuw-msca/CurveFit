@@ -84,7 +84,7 @@ class PreConditionedAPModel(APModel):
             })
         return model
 
-    def summarize_result(self):
+    def summarize_result(self, print_summary=True):
         """
         Prints a table which characterizes fit quality. It has four columns:
         Location, RMSE ERF, RMSE DERF, RMSE LNR
@@ -96,12 +96,9 @@ class PreConditionedAPModel(APModel):
         model works better than the CurveFit (which means the fit went badly) will go first.
 
         Returns:
-            None, just prints the table with statistics.
+            Dataframe with the data.
         """
         models = self.models
-        print("Fit Summary (from worst to best to no assessment)")
-        print('{:<25s} {:>10s} {:>10s} {:>10s}'.format("Location", "RMSE ERF",
-                                                       "RMSE DERF", "RMSE LNR"))
         summary = []
         df_summary = pd.DataFrame({}, columns=['Location',
                                                'RMSE ERF',
@@ -129,11 +126,5 @@ class PreConditionedAPModel(APModel):
         df_summary['RMSE ERF'] = rmse_derf_list
         df_summary['RMSE DERF'] = rmse_derf_list
         df_summary['RMSE LNR'] = rmse_derf_linear_list
-
-        for v in sorted(summary, key=lambda x: (-np.log(x[2]) + np.log(x[3]))):
-            if v[3] == 1e10:
-                print('{:<25s} {:>10.2e} {:>10.2e} {:>10s}'.format(v[0][:23], v[1], v[2], "NO INFO"))
-            else:
-                print('{:<25s} {:>10.2e} {:>10.2e} {:>10.2e}'.format(v[0][:23], v[1], v[2], v[3]))
 
         return df_summary
