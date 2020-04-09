@@ -14,7 +14,8 @@ setup(
         'scipy',
         'pandas',
         'pytest',
-        'matplotlib'
+        'matplotlib',
+        'xspline'
     ],
     zip_safe=False
 )
