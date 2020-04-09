@@ -135,7 +135,15 @@ Currently CurveFit uses model-based uncertainty, with out-of-sample approaches u
 
 ### Predictive Validity-Based Uncertainty
 
-*Documentation coming soon*
+We have a tool that evaluates predictive validity out of sample for the model
+forecasts. It iteratively holds out data points starting with only one
+data point used for fitting and adding them back in one by one,
+comparing the predictions with the observed data. The standard deviation
+observed for these residuals -- along the dimensions of how much data
+the model sees and how far out the model needs to predict into the future
+-- are then used to simulate draws (random realizations of the mean function)
+that can be used to construct uncertainty intervals. This approach is orthogonal
+to model-based uncertainty described below.
 
 ### Model-Based Uncertainty
 
