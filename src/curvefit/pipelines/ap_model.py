@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 class APModel(BasicModel):
     """Alpha prior model.
     """
+
     def __init__(self, obs_bounds=None,
                  prior_modifier=None,
                  peaked_groups=None,
@@ -25,7 +26,7 @@ class APModel(BasicModel):
         self.models = {}
         self.prior_modifier = prior_modifier
         if self.prior_modifier is None:
-            self.prior_modifier = lambda x: 10**(min(0.0, max(-2.0, 0.3*x - 3.5)))
+            self.prior_modifier = lambda x: 10 ** (min(0.0, max(-2.0, 0.3 * x - 3.5)))
 
         self.peaked_groups = peaked_groups
         self.joint_model_fit_dict = {} if joint_model_fit_dict is None else \
@@ -59,7 +60,7 @@ class APModel(BasicModel):
             if 'fe_gprior' in self.fit_dict:
                 fe_gprior = self.fit_dict['fe_gprior']
             else:
-                fe_gprior = [[0.0, np.inf]]*model.num_fe
+                fe_gprior = [[0.0, np.inf]] * model.num_fe
             fe_gprior[1] = beta_fe_gprior
             self.fit_dict.update({
                 'fe_gprior': deepcopy(fe_gprior)
@@ -71,10 +72,10 @@ class APModel(BasicModel):
                       for group, model in models.items()])
         b = np.array([model.params[1, 0]
                       for group, model in models.items()])
-        prior_mean = np.log(a*b).mean()
-        prior_std = np.log(a*b).std()
+        prior_mean = np.log(a * b).mean()
+        prior_std = np.log(a * b).std()
 
-        return [lambda params: np.log(params[0]*params[1]),
+        return [lambda params: np.log(params[0] * params[1]),
                 [prior_mean, prior_std]]
 
     @staticmethod
@@ -163,7 +164,7 @@ class APModel(BasicModel):
 
     def plot_result(self, t):
         models = self.models
-        fig, ax = plt.subplots(len(models), 2, figsize=(8*2, 4*len(models)))
+        fig, ax = plt.subplots(len(models), 2, figsize=(8 * 2, 4 * len(models)))
         for i, (location, model) in enumerate(models.items()):
             y = model.fun(t, model.params[:, 0])
             ax[i, 0].scatter(model.t, model.obs)
@@ -176,7 +177,33 @@ class APModel(BasicModel):
             ax[i, 1].scatter(model.t, derf_obs)
             ax[i, 1].plot(t, dy)
             ax[i, 1].set_title(location)
-            ax[i, 1].set_ylim(0.0, max(dy.max(), derf_obs.max())*1.1)
+            ax[i, 1].set_ylim(0.0, max(dy.max(), derf_obs.max()) * 1.1)
+
+    def summarize_result(self):
+        models = self.models
+        df_summary = pd.DataFrame({}, columns=['Location',
+                                               'RMSE ERF',
+                                               'RMSE DERF',
+                                               ])
+        location_list = []
+        rmse_erf_list = []
+        rmse_derf_list = []
+        for i, (location, model) in enumerate(models.items()):
+            erf_pred = model.fun(model.t, model.params[:, 0])
+            rmse_erf = np.linalg.norm(erf_pred - model.obs) ** 2
+            derf_obs = data_translator(model.obs, self.basic_model_dict['fun'], 'derf')
+            derf_pred = derf(model.t, model.params[:, 0])
+            rmse_derf = np.linalg.norm(derf_obs - derf_pred) ** 2
+
+            location_list.append(location)
+            rmse_erf_list.append(rmse_erf)
+            rmse_derf_list.append(rmse_derf)
+
+        df_summary['Location'] = location_list
+        df_summary['RMSE ERF'] = rmse_derf_list
+        df_summary['RMSE DERF'] = rmse_derf_list
+
+        return df_summary
 
     def create_overall_draws(self, t, models, covs,
                              alpha_times_beta=None,
@@ -228,12 +255,12 @@ class APModel(BasicModel):
             param_samples = np.zeros(fe_samples.shape)
             for i in range(2):
                 param_samples[i] = link_fun[i](
-                    fe_samples[i]*covs[i]
+                    fe_samples[i] * covs[i]
                 )
         else:
             beta_samples = link_fun[1](
-                var_link_fun[1](samples['beta_fe'])*covs[1])
-            alpha_samples = alpha_times_beta/beta_samples
+                var_link_fun[1](samples['beta_fe']) * covs[1])
+            alpha_samples = alpha_times_beta / beta_samples
             param_samples = np.vstack([alpha_samples, beta_samples])
 
         # print(param_samples)
@@ -257,7 +284,7 @@ class APModel(BasicModel):
             sample_size, t, 1, epsilon
         )
 
-        return mean_curve - (mean_curve**self.theta)*error - np.var(error, axis=0)*0.5
+        return mean_curve - (mean_curve ** self.theta) * error - np.var(error, axis=0) * 0.5
 
     @staticmethod
     def create_param_samples(models, params,
