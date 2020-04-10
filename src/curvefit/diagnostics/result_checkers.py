@@ -22,6 +22,9 @@ class LogDerfLinearRegressionChecker(ResultChecker):
         self.col_t = col_t
 
     def check_result(self, groups=None): 
+        if groups is not None:
+            self.df = self.df[self.df[self.col_group].isin(groups)]
+        
         df_by_group = split_by_group(self.df, self.col_group)
         log_derf_rmses = {}
 
