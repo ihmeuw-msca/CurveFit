@@ -30,25 +30,6 @@ The model for the mean of the data for this example is:
 where \( \alpha \), \( \beta \), and \( p \) are unknown parameters.
 In addition, the value of \( \beta \) depends on covariate.
 
-## Simulated data
-
-### Time Grid
-A grid of *n_data* points in time, \( t_i \), where
-\[
-    t_i = \beta_T / ( n_D - 1 )
-\]
-where the subscript \( T \) denotes the true value
-of the corresponding parameter and \( n_D \) is the number of data points.
-The minimum value for this grid is zero and its maximum is \( \beta \).
-
-### Measurement values
-We simulate data, \( y_i \), with no noise at each of the time points.
-To be specific, for \( i = 0 , \ldots , n_D - 1 \)
-\[
-    y_i = f( t_i , \alpha_T , \beta_T , p_T )
-\]
-Note that when we do the fitting, we model each data point as having
-noise.
 
 ## Fixed Effects
 We use the notation \( a \), \( b \), \( c \) and \( \phi \)
@@ -72,7 +53,18 @@ the true fixed effects divided by three.
 ## Random effects
 For this example the random effects are constrained to be zero.
 
-## Problem Settings
+## Social Distance
+For this simulation, the social distance covariate has two values:
+\[
+    s_i = \left\{ \begin{array}{ll}
+        0 & \mbox{if} \; i < n_D / 2 \\
+        1 & \mbox{otherwise}
+    \end{array} \right.
+\]
+
+## Simulated data
+
+### Problem Settings
 The following settings are used to simulate the data and check
 that the solution is correct:
 ```python '''
@@ -85,8 +77,6 @@ phi_true  = math.log(0.1)        # phi used to simulate data
 rel_tol   = 1e-5          # relative tolerance used to check optimal solution
 '''```
 
-## Simulated data
-
 ### Time Grid
 A grid of *n_data* points in time, \( t_i \), where
 \[
@@ -95,15 +85,6 @@ A grid of *n_data* points in time, \( t_i \), where
 where the subscript \( T \) denotes the true value
 of the corresponding parameter and \( n_D \) is the number of data points.
 The minimum value for this grid is zero and its maximum is \( b_T \).
-
-### Social Distance
-For this simulation, the social distance covariate has two values:
-\[
-    s_i = \left\{ \begin{array}{ll}
-        0 & \mbox{if} \; i < n_D / 2 \\
-        1 & \mbox{otherwise}
-    \end{array} \right.
-\]
 
 ### Measurement Values
 We simulate data, \( y_i \), with no noise at each of the time points.

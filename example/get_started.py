@@ -25,36 +25,6 @@ The model for the mean of the data for this example is one of the following:
 \]
 where \( \alpha \), \( \beta \), and \( p \) are unknown parameters.
 
-## Problem Settings
-The following settings are used to simulate the data and check
-that the solution is correct:
-```python '''
-n_data       = 21    # number simulated measurements to generate
-beta_true    = 20.0             # max death rate at 20 days
-alpha_true   = 2.0 / beta_true  # alpha_true * beta_true = 2.0
-p_true       = 0.1              # maximum cumulative death fraction
-rel_tol      = 1e-5  # relative tolerance used to check optimal solution
-'''```
-
-## Simulated data
-
-### Time Grid
-A grid of *n_data* points in time, \( t_i \), where
-\[
-    t_i = \beta_T / ( n_D - 1 )
-\]
-where the subscript \( T \) denotes the true value
-of the corresponding parameter and \( n_D \) is the number of data points.
-The minimum value for this grid is zero and its maximum is \( \beta \).
-
-### Measurement values
-We simulate data, \( y_i \), with no noise at each of the time points.
-To be specific, for \( i = 0 , \ldots , n_D - 1 \)
-\[
-    y_i = f( t_i , \alpha_T , \beta_T , p_T )
-\]
-Note that when we do the fitting, we model each data point as having
-noise.
 
 ## Fixed Effects
 We use the notation \( a \), \( b \) and \( \phi \)
@@ -79,6 +49,36 @@ This example data set has two covariates,
 the constant one and a social distance measure.
 While the social distance is in the data set, it is not used.
 
+## Simulated data
+
+## Problem Settings
+The following settings are used to simulate the data and check
+that the solution is correct:
+```python '''
+n_data       = 21    # number simulated measurements to generate
+beta_true    = 20.0             # max death rate at 20 days
+alpha_true   = 2.0 / beta_true  # alpha_true * beta_true = 2.0
+p_true       = 0.1              # maximum cumulative death fraction
+rel_tol      = 1e-5  # relative tolerance used to check optimal solution
+'''```
+
+### Time Grid
+A grid of *n_data* points in time, \( t_i \), where
+\[
+    t_i = \beta_T / ( n_D - 1 )
+\]
+where the subscript \( T \) denotes the true value
+of the corresponding parameter and \( n_D \) is the number of data points.
+The minimum value for this grid is zero and its maximum is \( \beta \).
+
+### Measurement values
+We simulate data, \( y_i \), with no noise at each of the time points.
+To be specific, for \( i = 0 , \ldots , n_D - 1 \)
+\[
+    y_i = f( t_i , \alpha_T , \beta_T , p_T )
+\]
+Note that when we do the fitting, we model each data point as having
+noise.
 
 ## Source Code
 ```python '''
