@@ -14,6 +14,8 @@
     dtype
     covs
     init
+    ftol
+    gtol
 }
 
 # Using Covariates
@@ -203,8 +205,18 @@ fe_init   = fe_true / 3.0
 re_init   = numpy.zeros( num_fe )
 fe_bounds = [ [-numpy.inf, numpy.inf] ] * num_fe
 re_bounds = [ [0.0, 0.0] ] * num_fe
+options   = {
+    'ftol' : 1e-12,
+    'gtol' : 1e-12,
+}
 #
-curve_model.fit_params(fe_init, re_init, fe_bounds, re_bounds)
+curve_model.fit_params(
+    fe_init,
+    re_init,
+    fe_bounds,
+    re_bounds,
+    options=options
+)
 fe_estimate = curve_model.result.x[:num_fe]
 # -------------------------------------------------------------------------
 # check result

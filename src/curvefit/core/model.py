@@ -369,7 +369,6 @@ class CurveModel:
             jac=self.gradient,
             method='L-BFGS-B',
             bounds=bounds,
-            tol=1e-12,
             options=options
         )
 
