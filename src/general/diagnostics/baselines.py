@@ -39,7 +39,6 @@ class LinearRegressionBaseline(Baseline):
             self.add_group(obs, grp, ft)
     
     def compare(self, estimations, groups, metric_fun):
-        # have two metric functions in case baseline and passed-in estimates are not in the same space
         if len(estimations) != len(groups):
             raise ValueError()
         metric_fun_values = {}

@@ -23,9 +23,10 @@ class LogDerfLinearRegressionChecker(ResultChecker):
 
     def check_result(self, groups=None): 
         if groups is not None:
-            self.df = self.df[self.df[self.col_group].isin(groups)]
-        
-        df_by_group = split_by_group(self.df, self.col_group)
+            df_filtered = self.df[self.df[self.col_group].isin(groups)]
+        else:
+            df_filtered = self.df
+        df_by_group = split_by_group(df_filtered, self.col_group)
         log_derf_rmses = {}
 
         log_derf_obs = []
@@ -38,9 +39,9 @@ class LogDerfLinearRegressionChecker(ResultChecker):
             estimates.append(df[self.col_est])
             grps.append(grp)
             
-        lr_log_derf = LinearRegressionBaseline([log_derf_obs], [grps], [times])
+        lr_log_derf = LinearRegressionBaseline(log_derf_obs, grps, times)
         lr_log_derf.fit()
-        metric_fun = lambda est, obs: np.mean((est - obs)**2)
+        metric_fun = lambda est, obs: np.sqrt(np.mean((est - obs)**2))
         log_derf_rmses = lr_log_derf.compare([estimates], [grps], metric_fun)
         
         result_df = pd.from_dict(log_derf_rmses, orient='index', columns=['baseline', 'curr model'])
