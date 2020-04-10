@@ -123,7 +123,7 @@ class PreConditionedAPModel(APModel):
             rmse_derf_linear_list.append(rmse_derf_linear)
 
         df_summary['Location'] = location_list
-        df_summary['RMSE ERF'] = rmse_derf_list
+        df_summary['RMSE ERF'] = rmse_erf_list
         df_summary['RMSE DERF'] = rmse_derf_list
         df_summary['RMSE LNR'] = rmse_derf_linear_list
 

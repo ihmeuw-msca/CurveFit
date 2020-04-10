@@ -200,7 +200,7 @@ class APModel(BasicModel):
             rmse_derf_list.append(rmse_derf)
 
         df_summary['Location'] = location_list
-        df_summary['RMSE ERF'] = rmse_derf_list
+        df_summary['RMSE ERF'] = rmse_erf_list
         df_summary['RMSE DERF'] = rmse_derf_list
 
         return df_summary
