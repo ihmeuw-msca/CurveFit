@@ -2,6 +2,19 @@
 # vim: set expandtab:
 '''
 {begin_markdown covariate_xam}
+{spell_markdown
+    frac
+    ldots
+    cdot
+    cdots
+    erf
+    mbox
+    params
+    param
+    dtype
+    covs
+    init
+}
 
 # Using Covariates
 
@@ -23,7 +36,7 @@ A grid of *n_data* points in time, \( t_i \), where
     t_i = \beta_T / ( n_D - 1 )
 \]
 where the subscript \( T \) denotes the true value
-of the currespondng parameter and \( n_D \) is the number of data points.
+of the corresponding parameter and \( n_D \) is the number of data points.
 The minimum value for this grid is zero and its maximum is \( \beta \).
 
 ### Measurement values
@@ -78,7 +91,7 @@ A grid of *n_data* points in time, \( t_i \), where
     t_i = b_T / ( n_D - 1 )
 \]
 where the subscript \( T \) denotes the true value
-of the currespondng parameter and \( n_D \) is the number of data points.
+of the corresponding parameter and \( n_D \) is the number of data points.
 The minimum value for this grid is zero and its maximum is \( b_T \).
 
 ### Social Distance

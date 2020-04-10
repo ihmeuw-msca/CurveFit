@@ -12,9 +12,28 @@ file_list = [
     'src/curvefit/core/utils.py',
     'docs/extract_md.py',
 ]
+# list of extra words to add to the pyspellchecker dictionary
+extra_spellchecker_words = [
+    'covariates',
+    'covariate',
+    'curvefit',
+    'curvemodel',
+    'dict',
+    'initialized',
+    'initialize',
+    'numpy',
+    'py',
+    'sandbox',
+    'scipy',
+]
 # ----------------------------------------------------------------------------
 '''{begin_markdown extract_md}
-# Extracting Markdown Documentation From Soure Code
+{spell_markdown
+    markdown
+    md
+}
+
+# Extracting Markdown Documentation From Source Code
 
 ## Syntax
 `python docs/extract_md.py`
@@ -23,7 +42,7 @@ file_list = [
 The variable *output_dir* at top of `docs/extract_md.py`
 determines the directory where the markdown files will be written.
 Any files names that end in `.md` in that directory will be
-removed at the beginning (so that the extracted files can be easily reconized).
+removed at the beginning (so that the extracted files can be easily recognized).
 
 ## file_list
 The variable *file_list* at top of `docs/extract_md.py`
@@ -37,7 +56,7 @@ text:
 {begin_markdown <i>section_name</i>}
 <p/>
 Here *section_name* is the name of output file corresponding to this section.
-This name does not inlucde the *output_dir* or the .md extension.
+This name does not include the *output_dir* or the .md extension.
 
 ## End Section
 The end of a markdown section of the input file is indicated by the following
@@ -47,21 +66,38 @@ text:
 <p/>
 Here *section_name* must be the same as in the start of this markdown section.
 
+## Spell Checking
+Special words can be added to the correct spelling list for a particular
+section as follows:
+<p style="margin-left:10%">
+{spell_markdown
+    <i>special_1 ...  special_n
+}
+<p/>
+Here *special_1*, ..., *special_n* are special words (a sequence of letters)
+that are to be considered valid for this section.
+In the syntax above they are all on the same line,
+but they could be on different lines.
+Words are an Upper or lower case letter followed by a sequence of
+lower case letters. The case of the first letter does not matter
+when checking for special words; e.g., if `abcd` is *special_1* then
+`Abcd` will be considered a valid word.
+
 ## Code Blocks
 A code block within a markdown section begins and ends with three back quotes.
-Thuse there must be an even number of occurances of three back quotes.
+Thus there must be an even number of occurrences of three back quotes.
 The other characters on the same line as the three back quotes are not
 included in the markdown output. (This enables one to begin or end a comment
 block without having those characters in the markdown output.)
 There is one exception to this rule: if a language name directly follows
-the three bakc quotes that start a code block, the language name is included
+the three back quotes that start a code block, the language name is included
 in the output.
 
 ## Indentation
 If all of the extracted markdown documentation for a section is indented
 by the same number of space characters, that may space characters
 are not included in the markdown output. This enables one to indent the
-markdown so it is grouped with the proper code block in the soruce.
+markdown so it is grouped with the proper code block in the source.
 
 {end_markdown extract_md}'''
 # ----------------------------------------------------------------------------
@@ -69,6 +105,10 @@ import sys
 import re
 import os
 import pdb
+import spellchecker
+#
+spell_checker = spellchecker.SpellChecker(distance=1)
+spell_checker.word_frequency.load_words(extra_spellchecker_words)
 #
 # add program name to system error call
 def sys_exit(msg) :
@@ -96,9 +136,11 @@ corresponding_file = list()
 # pattern for start of markdown section
 pattern_begin_markdown = re.compile( '\\{begin_markdown \\s*(\\w*)\\}' )
 pattern_end_markdown   = re.compile( '\\{end_markdown \\s*(\\w*)\\}' )
+pattern_spell_markdown = re.compile( '\\{spell_markdown([^}]*)\\}' )
 pattern_begin_3quote   = re.compile( '[^\\n]*(```\\s*\\w*)[^\\n]*' )
 pattern_end_3quote     = re.compile( '[^\\n]*(```)[^\\n]*' )
 pattern_newline        = re.compile( '\\n')
+pattern_word           = re.compile( '[A-Za-z][a-z]*' )
 # -----------------------------------------------------------------------------
 # process each file in the list
 for file_in in file_list :
@@ -158,6 +200,16 @@ for file_in in file_list :
             output_end   = data_index + match_end.start()
             output_data  = file_data[ output_start : output_end ]
             #
+            # process spell command
+            match_spell = pattern_spell_markdown.search(output_data)
+            spell_list  = list()
+            if match_spell != None :
+                for itr in pattern_word.finditer( match_spell.group(1) ) :
+                    spell_list.append( itr.group(0).lower() )
+                start       = match_spell.start()
+                end         = match_spell.end()
+                output_data = output_data[: start] + output_data[end :]
+            #
             # remove characters on same line as triple back quote
             data_index  = 0
             match_begin = pattern_begin_3quote.search(output_data)
@@ -206,12 +258,33 @@ for file_in in file_list :
                         num_remove = min(num_remove, next_ - start - 1)
             #
             # write file for this section
-            file_out   = output_dir + '/' + section_name + '.md'
-            file_ptr   = open(file_out, 'w')
-            start_line = num_remove
+            file_out          = output_dir + '/' + section_name + '.md'
+            file_ptr          = open(file_out, 'w')
+            start_line        = num_remove
+            first_spell_error = True
             for newline in newline_list :
                 if start_line <= newline :
-                    file_ptr.write( output_data[start_line : newline + 1] )
+                    line = output_data[start_line : newline + 1]
+                    # ------------------------------------------------------
+                    # check spelling
+                    word_list = list()
+                    for itr in pattern_word.finditer( line ) :
+                        word = itr.group(0)
+                        if len( spell_checker.unknown( [word] ) ) > 0 :
+                            if not word.lower() in spell_list :
+                                if first_spell_error :
+                                    msg  = 'warning: file = ' + file_in
+                                    msg += ', section = ' + section_name
+                                    print(msg)
+                                    first_spell_error = False
+                                msg  = 'spelling = ' + word
+                                suggest = spell_checker.correction(word)
+                                if suggest != word :
+                                    msg += ', suggest = ' + suggest
+                                print(msg)
+                                spell_list.append(word.lower())
+                    # ------------------------------------------------------
+                    file_ptr.write( line )
                 else :
                     file_ptr.write( "\n" )
                 start_line = newline + 1 + num_remove

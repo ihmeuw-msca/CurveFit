@@ -8,6 +8,7 @@ from curvefit.core.functions import *
 
 def sizes_to_indices(sizes):
     """{begin_markdown sizes_to_indices}
+    {spell_markdown subvector subvectors xam}
     # Converting sizes to corresponding indices.
 
     ## Syntax

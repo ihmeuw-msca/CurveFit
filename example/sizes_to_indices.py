@@ -1,4 +1,5 @@
 '''{begin_markdown sizes_to_indices_xam}
+{spell_markdown utils}
 
 # Example and Test of sizes_to_indices
 
