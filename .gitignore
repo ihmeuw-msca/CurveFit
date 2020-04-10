@@ -20,3 +20,6 @@ experiments
 *.swp
 # python compiled files in any directory
 *.pyc
+# temporary file names in any directory
+junk
+junk.*

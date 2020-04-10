@@ -1,7 +1,20 @@
 #! /bin/python3
 # vim: set expandtab:
 '''
-[begin_markdown get_started_xam]
+{begin_markdown get_started_xam}
+{spell_markdown
+    frac
+    ldots
+    params
+    covs
+    param
+    inv
+    init
+    finfo
+    py
+    ftol
+    gtol
+}
 
 # Getting Started Using CurveFit
 
@@ -19,7 +32,7 @@ that the solution is correct:
 n_data       = 21    # number simulated measurements to generate
 beta_true    = 20.0             # max death rate at 20 days
 alpha_true   = 2.0 / beta_true  # alpha_true * beta_true = 2.0
-p_true       = 0.1              # maximum cumulaitve death fraction
+p_true       = 0.1              # maximum cumulative death fraction
 rel_tol      = 1e-5  # relative tolerance used to check optimal solution
 '''```
 
@@ -31,7 +44,7 @@ A grid of *n_data* points in time, \( t_i \), where
     t_i = \beta_T / ( n_D - 1 )
 \]
 where the subscript \( T \) denotes the true value
-of the currespondng parameter and \( n_D \) is the number of data points.
+of the corresponding parameter and \( n_D \) is the number of data points.
 The minimum value for this grid is zero and its maximum is \( \beta \).
 
 ### Measurement values
@@ -77,7 +90,6 @@ import numpy
 import sandbox
 sandbox.path()
 import curvefit
-from curvefit.core.model import CurveModel
 #
 # for this model number of parameters is same as number of fixed effects
 num_params   = 3
@@ -148,7 +160,7 @@ curve_model = curvefit.core.model.CurveModel(
 # -------------------------------------------------------------------------
 # fit_params
 #
-# initialize fixed effects so correpsond to true parameters divided by three
+# initialize fixed effects so correspond to true parameters divided by three
 inv_link_fun = [ log_fun, identity_fun, log_fun ]
 fe_init      = numpy.zeros( num_fe )
 for i in range(num_fe) :
@@ -157,8 +169,18 @@ for i in range(num_fe) :
 re_init   = numpy.zeros( num_fe )
 fe_bounds = [ [-numpy.inf, numpy.inf] ] * num_fe
 re_bounds = [ [0.0, 0.0] ] * num_fe
+options={
+    'ftol' : 1e-12,
+    'gtol' : 1e-12,
+}
 #
-curve_model.fit_params(fe_init, re_init, fe_bounds, re_bounds)
+curve_model.fit_params(
+    fe_init,
+    re_init,
+    fe_bounds,
+    re_bounds,
+    options=options
+)
 params_estimate = curve_model.params
 fe_estimate     = curve_model.result.x[: num_fe]
 # -------------------------------------------------------------------------
@@ -175,5 +197,5 @@ for i in range(num_params) :
 print('get_started.py: OK')
 sys.exit(0)
 ''' ```
-[end_markdown get_started_xam]
+{end_markdown get_started_xam}
 '''
