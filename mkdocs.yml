@@ -4,12 +4,6 @@ nav:
   - Methods: 'methods.md'
   - Code: 'code.md'
   - Release Notes: 'updates.md'
-  - Extracted Doc:
-    - get_started_xam: 'extract_md/get_started_xam.md'
-    - covariate_xam: 'extract_md/covariate_xam.md'
-    - sizes_to_indices_xam: 'extract_md/sizes_to_indices_xam.md'
-    - sizes_to_indices: 'extract_md/sizes_to_indices.md'
-    - extract_md: 'extract_md/extract_md.md'
 theme:
     name: 'material'
     palette:
