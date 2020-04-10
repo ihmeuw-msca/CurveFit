@@ -794,21 +794,13 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
         list | tuple(list, dict):
             List of potential peaked groups or with the spline fit as well.
     """
-    data = split_by_group(
-        filter_death_rate_by_group(df, col_group, col_t, col_death_rate),
-        col_group)
-
-    for location in data.keys():
-        df_sub = data[location]
-        df_sub['daily death rate'] = df_sub['death rate'].values - \
-            np.insert(df_sub['death rate'].values[:-1], 0, 0.0)
-        df_sub['ln daily death rate'] = np.log(df_sub['daily death rate'])
+    data = process_input(df, col_group, col_t, col_death_rate, return_df=False)
 
     spline_fit = {}
     for location in data.keys():
         df = data[location]
         t = df['days']
-        y = df['ln daily death rate']
+        y = df['ln asddr']
 
         spline = XSpline(spline_knots, spline_degree)
         X = spline.design_mat(t)
@@ -835,3 +827,49 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
         return potential_groups, spline_fit
     else:
         return potential_groups
+
+
+def process_input(df, col_group, col_t, col_death_rate, return_df=True):
+    """Trim filter and adding extra information to the data frame.
+
+    Args:
+        df (pd.DataFrame): Provided data frame.
+        col_group (str): Column name of group definition.
+        col_t (str): Column name of the independent variable.
+        col_death_rate (str): Name for column that contains the death rate.
+        return_df (bool, optional):
+            If True return the combined data frame, otherwise return the
+            splitted dictionary.
+
+    Returns:
+        pd.DataFrame: processed data frame.
+    """
+    assert col_group in df
+    assert col_t in df
+    assert col_death_rate in df
+
+    # trim down the data frame
+    df = df[[col_group, col_t, col_death_rate]].reset_index(drop=True)
+    df.sort_values([col_group, col_t], inplace=True)
+    df.columns = ['location', 'days', 'ascdr']
+
+    # check and filter and add more information
+    data = split_by_group(df, col_group='location')
+    for location, df_location in data.items():
+        assert df_location.shape[0] == df_location['days'].unique().size
+        df_location = filter_death_rate(df_location,
+                                        col_t='days',
+                                        col_death_rate='ascdr')
+        df_location['ln ascdr'] = np.log(df_location['ascdr'])
+        df_location['asddr'] = df_location['ascdr'].values - \
+            np.insert(df_location['ascdr'].values[:-1], 0, 0.0)
+        df_location['ln asddr'] = np.log(df_location['asddr'])
+
+        data.update({
+            location: df_location.copy()
+        })
+
+    if return_df:
+        return pd.concat(list(data.values()))
+    else:
+        return data
