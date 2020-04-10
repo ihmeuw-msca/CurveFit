@@ -37,7 +37,7 @@ effects to the parameters, are
     p      & = \exp( \phi  )
 \end{aligned}
 \]
-The fixed effects are initialized to be thier true values divided by three.
+The fixed effects are initialized to be their true values divided by three.
 
 ## Random effects
 For this example the random effects are constrained to be zero.
