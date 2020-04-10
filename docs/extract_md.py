@@ -119,7 +119,7 @@ in the output.
 
 ## Indentation
 If all of the extracted markdown documentation for a section is indented
-by the same number of space characters, that may space characters
+by the same number of space characters, those space characters
 are not included in the markdown output. This enables one to indent the
 markdown so it is grouped with the proper code block in the source.
 
