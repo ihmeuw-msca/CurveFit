@@ -28,14 +28,20 @@ class LogDerfLinearRegressionChecker(ResultChecker):
         df_by_group = split_by_group(self.df, self.col_group)
         log_derf_rmses = {}
 
+        log_derf_obs = []
+        times = []
+        estimates = []
+        grps = []
         for grp, df in df_by_group.items():
-            log_derf_obs = df[self.col_obs].to_numpy()
-            times = df[self.col_t].to_numpy()
-            estimates = df[self.col_est]
-            lr_log_derf = LinearRegressionBaseline([log_derf_obs], [grp], [times])
-            lr_log_derf.fit()
-            metric_fun = lambda est: np.mean((est - log_derf_obs)**2)
-            log_derf_rmses.update(lr_log_derf.compare([estimates], [grp], metric_fun))
+            log_derf_obs.append(df[self.col_obs].to_numpy())
+            times.append(df[self.col_t].to_numpy())
+            estimates.append(df[self.col_est])
+            grps.append(grp)
+            
+        lr_log_derf = LinearRegressionBaseline([log_derf_obs], [grps], [times])
+        lr_log_derf.fit()
+        metric_fun = lambda est, obs: np.mean((est - obs)**2)
+        log_derf_rmses = lr_log_derf.compare([estimates], [grps], metric_fun)
         
         result_df = pd.from_dict(log_derf_rmses, orient='index', columns=['baseline', 'curr model'])
         return result_df

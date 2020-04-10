@@ -9,6 +9,10 @@ class Baseline:
         self.groups = groups
         self.features = features
 
+        self.grp_to_obs = {}
+        for grp, obs in zip(grp, observations):
+            self.grp_to_obs[grp] = obs
+
     def fit(self):
         raise NotImplementedError()
 
@@ -40,7 +44,10 @@ class LinearRegressionBaseline(Baseline):
             raise ValueError()
         metric_fun_values = {}
         for grp, est in zip(groups, estimations):
-            metric_fun_values[grp] = (metric_fun(self.baseline_est[grp]), metric_fun(est))
+            metric_fun_values[grp] = (
+                metric_fun(self.baseline_est[grp], self.grp_to_obs[grp]), 
+                metric_fun(est, self.grp_to_obs[grp]),
+            )
         return metric_fun_values
 
     def add_group(self, observation, group, feature):
