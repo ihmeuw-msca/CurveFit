@@ -12,8 +12,8 @@ file_list = [
     'src/curvefit/core/utils.py',
     'docs/extract_md.py',
 ]
-# list of extra words to add to the pyspellchecker dictionary
-extra_spellchecker_words = [
+# list of extra words that the spell checker will consider correct
+extra_special_words = [
     'covariates',
     'covariate',
     'curvefit',
@@ -25,6 +25,17 @@ extra_spellchecker_words = [
     'py',
     'sandbox',
     'scipy',
+
+    r'\begin',
+    r'\cdot',
+    r'\end',
+    r'\exp',
+    r'\frac',
+    r'\int',
+    r'\ldots',
+    r'\left',
+    r'\mbox',
+    r'\right',
 ]
 # ----------------------------------------------------------------------------
 '''{begin_markdown extract_md}
@@ -48,6 +59,11 @@ removed at the beginning (so that the extracted files can be easily recognized).
 The variable *file_list* at top of `docs/extract_md.py`
 is a list of file names, relative to the top git repository directory,
 that the markdown files will be extracted from.
+
+## extra_special_words
+The variable *extra_special_words* is a list of extra words that
+the spell checker will consider correct; see
+[spell checking](#spell-checking) below.
 
 ## Start Section
 The start of a markdown section of the input file is indicated by the following
@@ -74,14 +90,22 @@ section as follows:
     <i>special_1 ...  special_n
 }
 <p/>
-Here *special_1*, ..., *special_n* are special words (a sequence of letters)
+Here *special_1*, ..., *special_n* are special words
 that are to be considered valid for this section.
 In the syntax above they are all on the same line,
 but they could be on different lines.
-Words are an Upper or lower case letter followed by a sequence of
-lower case letters. The case of the first letter does not matter
-when checking for special words; e.g., if `abcd` is *special_1* then
-`Abcd` will be considered a valid word.
+Each word starts with an upper case letter,
+a lower case letter, or a back slash.
+The rest of the characters in a word are lower case letters.
+The case of the first letter does not matter when checking for special words;
+e.g., if `abcd` is *special_1* then `Abcd` will be considered a valid word.
+The back slash is included at the beginning of a word
+so that latex commands are considered words.
+The latex commands corresponding to the letters in the greek alphabet
+are automatically included.
+Any latex commands in the
+[extra_special_words](#extra_special_words)
+are also automatically included.
 
 ## Code Blocks
 A code block within a markdown section begins and ends with three back quotes.
@@ -106,9 +130,37 @@ import re
 import os
 import pdb
 import spellchecker
+# ---------------------------------------------------------------------------
+greek_alphabet_latex_command = [
+    r'\alpha',
+    r'\beta',
+    r'\gamma',
+    r'\delta',
+    r'\epsilon',
+    r'\zeta',
+    r'\eta',
+    r'\theta',
+    r'\iota',
+    r'\kappa',
+    r'\lamda',
+    r'\mu',
+    r'\nu',
+    r'\xi',
+    r'\omicron',
+    r'\pi',
+    r'\rho',
+    r'\sigma',
+    r'\tau',
+    r'\upsilon',
+    r'\phi',
+    r'\chi',
+    r'\psi',
+    r'\omega',
+]
 #
 spell_checker = spellchecker.SpellChecker(distance=1)
-spell_checker.word_frequency.load_words(extra_spellchecker_words)
+spell_checker.word_frequency.load_words(greek_alphabet_latex_command)
+spell_checker.word_frequency.load_words(extra_special_words)
 #
 # add program name to system error call
 def sys_exit(msg) :
@@ -140,7 +192,7 @@ pattern_spell_markdown = re.compile( '\\{spell_markdown([^}]*)\\}' )
 pattern_begin_3quote   = re.compile( '[^\\n]*(```\\s*\\w*)[^\\n]*' )
 pattern_end_3quote     = re.compile( '[^\\n]*(```)[^\\n]*' )
 pattern_newline        = re.compile( '\\n')
-pattern_word           = re.compile( '[A-Za-z][a-z]*' )
+pattern_word           = re.compile( r'[\\A-Za-z][a-z]*' )
 # -----------------------------------------------------------------------------
 # process each file in the list
 for file_in in file_list :

@@ -3,8 +3,6 @@
 '''
 {begin_markdown get_started_xam}
 {spell_markdown
-    frac
-    ldots
     params
     covs
     param

@@ -3,12 +3,6 @@
 '''
 {begin_markdown covariate_xam}
 {spell_markdown
-    frac
-    ldots
-    cdot
-    cdots
-    erf
-    mbox
     params
     param
     dtype
@@ -16,6 +10,7 @@
     init
     ftol
     gtol
+    erf
 }
 
 # Using Covariates
