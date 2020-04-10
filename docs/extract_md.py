@@ -87,7 +87,7 @@ Special words can be added to the correct spelling list for a particular
 section as follows:
 <p style="margin-left:10%">
 {spell_markdown
-    <i>special_1 ...  special_n
+    <i>special_1 ...  special_n</i>
 }
 <p/>
 Here *special_1*, ..., *special_n* are special words
@@ -186,12 +186,12 @@ section_list       = list()
 corresponding_file = list()
 #
 # pattern for start of markdown section
-pattern_begin_markdown = re.compile( '\\{begin_markdown \\s*(\\w*)\\}' )
-pattern_end_markdown   = re.compile( '\\{end_markdown \\s*(\\w*)\\}' )
-pattern_spell_markdown = re.compile( '\\{spell_markdown([^}]*)\\}' )
-pattern_begin_3quote   = re.compile( '[^\\n]*(```\\s*\\w*)[^\\n]*' )
-pattern_end_3quote     = re.compile( '[^\\n]*(```)[^\\n]*' )
-pattern_newline        = re.compile( '\\n')
+pattern_begin_markdown = re.compile( r'{begin_markdown \s*(\w*)}' )
+pattern_end_markdown   = re.compile( r'{end_markdown \s*(\w*)}' )
+pattern_spell_markdown = re.compile( r'{spell_markdown([^}]*)}' )
+pattern_begin_3quote   = re.compile( r'[^\n]*(```\s*\w*)[^\n]*' )
+pattern_end_3quote     = re.compile( r'[^\n]*(```)[^\n]*' )
+pattern_newline        = re.compile( r'\n')
 pattern_word           = re.compile( r'[\\A-Za-z][a-z]*' )
 # -----------------------------------------------------------------------------
 # process each file in the list
