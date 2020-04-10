@@ -16,7 +16,7 @@
 
 # Getting Started Using CurveFit
 
-## Data Mean
+## Generalized Logistic Model
 The model for the mean of the data for this example is one of the following:
 \[
     f(t; \alpha, \beta, p)  = \frac{p}{1 + \exp [ -\alpha(t  - \beta) ]}
@@ -49,7 +49,7 @@ While the social distance is in the data set, it is not used.
 
 ## Simulated data
 
-## Problem Settings
+### Problem Settings
 The following settings are used to simulate the data and check
 that the solution is correct:
 ```python '''

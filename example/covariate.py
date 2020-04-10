@@ -15,7 +15,7 @@
 
 # Using Covariates
 
-## Data Mean
+## Generalized Error Function
 The model for the mean of the data for this example is:
 \[
     f(t; \alpha, \beta, p) =
@@ -28,7 +28,7 @@ In addition, the value of \( \beta \) depends on covariate.
 
 ## Fixed Effects
 We use the notation \( a \), \( b \), \( c \) and \( \phi \)
-for the fixed effect corresponding to the parameters
+for the fixed effects corresponding to the parameters
 \( \alpha \), \( \beta \), and \( p \).
 For this example, the link functions, that map from the fixed
 effects to the parameters, are
@@ -40,10 +40,6 @@ effects to the parameters, are
 \end{aligned}
 \]
 where \( s \) is the social distance covariate.
-The fixed effects
-\( a \), \( b \), \( c \), and \( \phi \)
-are initialized so that they correspond to
-the true fixed effects divided by three.
 
 ## Random effects
 For this example the random effects are constrained to be zero.
@@ -71,6 +67,10 @@ c_true    = 1.0 / b_true         # c used to simulate data
 phi_true  = math.log(0.1)        # phi used to simulate data
 rel_tol   = 1e-5          # relative tolerance used to check optimal solution
 '''```
+The fixed effects
+\( a \), \( b \), \( c \), and \( \phi \)
+are initialized so that they correspond to
+the true fixed effects divided by three.
 
 ### Time Grid
 A grid of *n_data* points in time, \( t_i \), where

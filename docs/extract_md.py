@@ -7,8 +7,8 @@ output_dir = 'docs/extract_md'
 file_list = [
     'example/get_started.py',
     'example/covariate.py',
+    'example/random_effect.py',
     'example/sizes_to_indices.py',
-
     'src/curvefit/core/utils.py',
     'docs/extract_md.py',
 ]
@@ -36,6 +36,7 @@ extra_special_words = [
     r'\left',
     r'\mbox',
     r'\right',
+    r'\sum',
 ]
 # ----------------------------------------------------------------------------
 '''{begin_markdown extract_md}
@@ -131,6 +132,10 @@ import os
 import pdb
 import spellchecker
 # ---------------------------------------------------------------------------
+# spell_checker
+bad_words_in_spellchecker = [
+    'thier',
+]
 greek_alphabet_latex_command = [
     r'\alpha',
     r'\beta',
@@ -159,8 +164,10 @@ greek_alphabet_latex_command = [
 ]
 #
 spell_checker = spellchecker.SpellChecker(distance=1)
+spell_checker.word_frequency.remove_words(bad_words_in_spellchecker)
 spell_checker.word_frequency.load_words(greek_alphabet_latex_command)
 spell_checker.word_frequency.load_words(extra_special_words)
+# ---------------------------------------------------------------------------
 #
 # add program name to system error call
 def sys_exit(msg) :
