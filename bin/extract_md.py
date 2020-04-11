@@ -1,4 +1,4 @@
-#! /bin/python3
+#! /usr/bin/python3
 # vim: set expandtab:
 # ----------------------------------------------------------------------------
 # Original *.md files are written in this directory (must start with docs/)
@@ -10,7 +10,7 @@ file_list = [
     'example/random_effect.py',
     'example/sizes_to_indices.py',
     'src/curvefit/core/utils.py',
-    'docs/extract_md.py',
+    'bin/extract_md.py',
 ]
 # list of extra words that the spell checker will consider correct
 extra_special_words = [
