@@ -1,4 +1,4 @@
-#! /bin/python3
+#! /usr/bin/env python3
 '''
 {begin_markdown get_started_xam}
 {spell_markdown

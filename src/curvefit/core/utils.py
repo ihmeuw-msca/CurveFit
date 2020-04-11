@@ -12,7 +12,7 @@ def sizes_to_indices(sizes):
     # Converting sizes to corresponding indices.
 
     ## Syntax
-    `indices = sizes_to_indices(sizes)`
+    `indices = curvefit.sizes_to_indices(sizes)`
 
     ## sizes
     The argument `sizes` is a one dimensional `numpy.array` of integers sizes.

@@ -1,4 +1,4 @@
-#! /bin/python3
+#! /usr/bin/env python3
 '''
 {begin_markdown random_effect_xam}
 {spell_markdown

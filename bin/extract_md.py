@@ -9,6 +9,7 @@ file_list = [
     'example/random_effect.py',
     'example/sizes_to_indices.py',
     'src/curvefit/core/utils.py',
+    'src/curvefit/core/functions.py',
     'bin/extract_md.py',
     'bin/get_cppad_py.py',
 ]
@@ -33,8 +34,10 @@ extra_special_words = [
     r'\frac',
     r'\int',
     r'\ldots',
+    r'\log',
     r'\left',
     r'\mbox',
+    r'\partial',
     r'\right',
     r'\sum',
 ]

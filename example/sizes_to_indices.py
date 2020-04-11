@@ -1,3 +1,4 @@
+#! /usr/bin/env python3
 '''{begin_markdown sizes_to_indices_xam}
 {spell_markdown utils}
 

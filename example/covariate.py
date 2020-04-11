@@ -1,4 +1,4 @@
-#! /bin/python3
+#! /usr/bin/env python3
 '''
 {begin_markdown covariate_xam}
 {spell_markdown
