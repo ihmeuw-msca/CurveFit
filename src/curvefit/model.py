@@ -366,6 +366,32 @@ class CurveModel:
         self.result = result
         self.params = self.compute_params(self.result.x, expand=False)
 
+    def compute_rmse(self, x=None, use_obs_se=True):
+        """Compute the Root Mean Squre Error.
+
+        Args:
+            x (numpy.ndarray | None, optional):
+                Provided solution array, if None use the object solution.
+            use_obs_se (bool, optional):
+                If True include the observation standard deviation into the
+                calculation.
+
+        Returns:
+            float: root mean square error.
+        """
+        if x is None:
+            assert self.result is not None
+            x = self.result.x
+
+        params = self.compute_params(x)
+        residual = self.obs - self.fun(self.t, params)
+
+        if use_obs_se:
+            return np.sqrt(np.sum(residual**2/self.obs_se**2)/
+                           np.sum(1.0/self.obs_se**2))
+        else:
+            return np.sqrt(np.mean(residual**2))
+
     def predict(self, t, group_name='all', prediction_functional_form=None):
         """Predict the observation by given independent variable and group name.
 
