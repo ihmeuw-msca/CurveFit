@@ -1,5 +1,4 @@
 #! /bin/python3
-# vim: set expandtab:
 '''
 {begin_markdown get_started_xam}
 {spell_markdown

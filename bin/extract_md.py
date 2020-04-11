@@ -1,5 +1,4 @@
 #! /usr/bin/python3
-# vim: set expandtab:
 # ----------------------------------------------------------------------------
 # Original *.md files are written in this directory (must start with docs/)
 output_dir = 'docs/extract_md'
