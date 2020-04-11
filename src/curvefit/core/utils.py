@@ -769,6 +769,7 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
                                    spline_degree=2,
                                    tol_der=1e-2,
                                    tol_num_obs=20,
+                                   tol_after_peak=3,
                                    return_spline_fit=False):
     """Create potential peaked groups.
 
@@ -787,6 +788,8 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
         tol_num_obs (int, optional):
             Only the ones with number of observation above or equal to this
             threshold will be considered as the potential peaked group.
+        tol_after_peak (int | float, optional):
+            Pick the ones already pass peaked day for this amount of time.
         return_spline_fit (bool, optional):
             If True, return the spline fits as well.
 
@@ -820,7 +823,8 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
         ddy = ddX.dot(c)
         if np.abs(dy).min() < tol_der and \
                 np.all(ddy <= 0.0) and \
-                df.shape[0] >= tol_num_obs:
+                df.shape[0] >= tol_num_obs and \
+                df['days'].max() - t[np.argmin(np.abs(dy))] >= tol_after_peak:
             potential_groups.append(location)
 
     if return_spline_fit:
