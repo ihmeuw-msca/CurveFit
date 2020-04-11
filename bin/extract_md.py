@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#! /usr/bin/env python3
 # ----------------------------------------------------------------------------
 # Original *.md files are written in this directory (must start with docs/)
 output_dir = 'docs/extract_md'
@@ -10,6 +10,7 @@ file_list = [
     'example/sizes_to_indices.py',
     'src/curvefit/core/utils.py',
     'bin/extract_md.py',
+    'bin/get_cppad_py.py',
 ]
 # list of extra words that the spell checker will consider correct
 extra_special_words = [
@@ -38,25 +39,26 @@ extra_special_words = [
     r'\sum',
 ]
 # ----------------------------------------------------------------------------
-'''{begin_markdown extract_md}
+'''{begin_markdown extract_md.py}
 {spell_markdown
     markdown
     md
+    underbar
 }
 
 # Extracting Markdown Documentation From Source Code
 
 ## Syntax
-`python docs/extract_md.py`
+`bin/extract_md.py`
 
 ## output_dir
-The variable *output_dir* at top of `docs/extract_md.py`
+The variable *output_dir* at top of `bin/extract_md.py`
 determines the directory where the markdown files will be written.
 Any files names that end in `.md` in that directory will be
 removed at the beginning (so that the extracted files can be easily recognized).
 
 ## file_list
-The variable *file_list* at top of `docs/extract_md.py`
+The variable *file_list* at top of `bin/extract_md.py`
 is a list of file names, relative to the top git repository directory,
 that the markdown files will be extracted from.
 
@@ -73,6 +75,8 @@ text:
 <p/>
 Here *section_name* is the name of output file corresponding to this section.
 This name does not include the *output_dir* or the .md extension.
+The possible characters in *section_name* are A-Z, a-z, 0-9, underbar `_`,
+and dot `.`.
 
 ## End Section
 The end of a markdown section of the input file is indicated by the following
@@ -123,7 +127,7 @@ by the same number of space characters, those space characters
 are not included in the markdown output. This enables one to indent the
 markdown so it is grouped with the proper code block in the source.
 
-{end_markdown extract_md}'''
+{end_markdown extract_md.py}'''
 # ----------------------------------------------------------------------------
 import sys
 import re
@@ -170,7 +174,7 @@ spell_checker.word_frequency.load_words(extra_special_words)
 #
 # add program name to system error call
 def sys_exit(msg) :
-    sys.exit( 'docs/extract_md.py: ' + msg )
+    sys.exit( 'bin/extract_md.py: ' + msg )
 #
 # check working directory
 if not os.path.isdir('.git') :
@@ -192,8 +196,8 @@ section_list       = list()
 corresponding_file = list()
 #
 # pattern for start of markdown section
-pattern_begin_markdown = re.compile( r'{begin_markdown \s*(\w*)}' )
-pattern_end_markdown   = re.compile( r'{end_markdown \s*(\w*)}' )
+pattern_begin_markdown = re.compile( r'{begin_markdown \s*([A-Za-z0-9_.]*)}' )
+pattern_end_markdown   = re.compile( r'{end_markdown \s*([A-Za-z0-9_.]*)}' )
 pattern_spell_markdown = re.compile( r'{spell_markdown([^}]*)}' )
 pattern_begin_3quote   = re.compile( r'[^\n]*(```\s*\w*)[^\n]*' )
 pattern_end_3quote     = re.compile( r'[^\n]*(```)[^\n]*' )
@@ -218,8 +222,9 @@ for file_in in file_list :
         #
         if match_begin == None :
             if data_index == 0 :
-                # There is no match for pattern_begin_markdown in this file.
-                msg  = 'can not find: {begin_markdown section_name\}\n'
+                # Use @ so does not match pattern_begin_markdown in this file.
+                msg  = 'can not find: @begin_markdown section_name}\n'
+                msg  = msg.replace('@', '{')
                 msg += 'in ' + file_in + '\n'
                 sys_exit(msg)
             data_index = len(file_data)
@@ -249,7 +254,7 @@ for file_in in file_list :
             match_end = pattern_end_markdown.search(data_rest)
             #
             if match_end == None :
-                msg  = 'can not find: [end\_markdown section_name]\n'
+                msg  = 'can not find: "{end_markdown section_name}\n'
                 msg += 'in ' + file_in + ', section ' + section_name + '\n'
                 sys_exit(msg)
             #
