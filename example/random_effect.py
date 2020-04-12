@@ -1,5 +1,4 @@
-#! /bin/python3
-# vim: set expandtab:
+#! /usr/bin/env python3
 '''
 {begin_markdown random_effect_xam}
 {spell_markdown
@@ -103,7 +102,7 @@ fe_gprior = [
 '''```
 
 
-## Source Code
+## Example Source Code
 ```python '''
 # -------------------------------------------------------------------------
 import scipy
@@ -188,7 +187,7 @@ curve_model = curvefit.core.model.CurveModel(
 # fit_params
 #
 # initialize fixed effects so correspond to true parameters divided by three
-fe_init   = numpy.array( [ a_true[0], b_true[0], phi_true[0] ] )
+fe_init   = numpy.array( [ a_true[0], b_true[0], phi_true[0] ] ) / 3.0
 re_init   = numpy.zeros( num_re )
 fe_bounds = [ [-numpy.inf, numpy.inf] ] * num_fe
 re_bounds = [ [-numpy.inf, numpy.inf] ] * num_fe

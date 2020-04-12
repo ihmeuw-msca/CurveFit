@@ -1,5 +1,4 @@
-#! /bin/python3
-# vim: set expandtab:
+#! /usr/bin/env python3
 '''
 {begin_markdown get_started_xam}
 {spell_markdown
@@ -37,7 +36,7 @@ effects to the parameters, are
     p      & = \exp( \phi  )
 \end{aligned}
 \]
-The fixed effects are initialized to be thier true values divided by three.
+The fixed effects are initialized to be their true values divided by three.
 
 ## Random effects
 For this example the random effects are constrained to be zero.
@@ -78,7 +77,7 @@ To be specific, for \( i = 0 , \ldots , n_D - 1 \)
 Note that when we do the fitting, we model each data point as having
 noise.
 
-## Source Code
+## Example Source Code
 ```python '''
 # -------------------------------------------------------------------------
 import scipy

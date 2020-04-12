@@ -1,12 +1,11 @@
 # makefile for easy manage package
 .PHONY: clean, tests
 
-doc_phony:
+phony:
 
-gh-pages: doc_phony
-	python docs/extract_md.py
+gh-pages: phony
+	bin/extract_md.py
 	mkdocs build
-	rm site/extract_md.py
 	git checkout mkdocs.yml
 	git checkout gh-pages
 	rm -r extract_md
@@ -34,6 +33,10 @@ examples:
 	python example/covariate.py
 	python example/random_effect.py
 	python example/sizes_to_indices.py
+	python example/param_time_fun.py
+
+cppad_py: phony
+	pytest cppad_py
 
 clean:
 	find . -name "*.so*" | xargs rm -rf

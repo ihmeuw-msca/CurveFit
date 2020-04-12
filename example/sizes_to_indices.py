@@ -1,8 +1,13 @@
+#! /usr/bin/env python3
 '''{begin_markdown sizes_to_indices_xam}
 {spell_markdown utils}
 
 # Example and Test of sizes_to_indices
 
+## Function Documentation
+[size_to_indices](sizes_to_incides.md)
+
+## Example Source Code
 ```python'''
 import sys
 import numpy

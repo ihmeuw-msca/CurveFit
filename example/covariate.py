@@ -1,5 +1,4 @@
-#! /bin/python3
-# vim: set expandtab:
+#! /usr/bin/env python3
 '''
 {begin_markdown covariate_xam}
 {spell_markdown
@@ -90,7 +89,7 @@ To be specific, for \( i = 0 , \ldots , n_D - 1 \)
 Note that when we do the fitting, we model each data point as having noise.
 
 
-## Source Code
+## Example Source Code
 ```python '''
 # -------------------------------------------------------------------------
 import sys
