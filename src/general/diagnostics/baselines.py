@@ -10,7 +10,7 @@ class Baseline:
         self.features = features
 
         self.grp_to_obs = {}
-        for grp, obs in zip(grp, observations):
+        for grp, obs in zip(groups, observations):
             self.grp_to_obs[grp] = obs
 
     def fit(self):
