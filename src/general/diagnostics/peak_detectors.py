@@ -72,8 +72,8 @@ class PieceWiseLinearPeakDetector(PeakDetector):
     def has_peaked(self, observation, group, feature):
         factors = self.compute_factors(observation, feature)
         prediction = self.classifier.predict(np.atleast_2d(factors))
-        self.predicted[group] = prediction
-        return prediction
+        self.predicted[group] = prediction[0]
+        return prediction[0]
 
 
     

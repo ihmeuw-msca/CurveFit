@@ -2,6 +2,8 @@ import pandas as pd
 from general.diagnostics.peak_detectors import PieceWiseLinearPeakDetector
 from curvefit.core.utils import split_by_group
 
+MINIMUM_NUM_POINTS = 6
+
 class PeakDetector:
 
     def __init__(self, df, col_log_derf_obs, col_group, col_t, peaked_groups, not_peaked_groups):
@@ -11,6 +13,10 @@ class PeakDetector:
         self.col_t = col_t 
         self.peaked_groups = peaked_groups
         self.not_peaked_groups = not_peaked_groups
+
+    @property 
+    def group_to_pred(self):
+        return self.peak_detector.predicted
 
     def get_peak_detector(self):
         self.df_by_group = split_by_group(self.df, self.col_group)
@@ -30,17 +36,16 @@ class PeakDetector:
         
         self.peak_detector = PieceWiseLinearPeakDetector(log_derf_obs, self.groups, times, peaked)
         self.peak_detector.train_peak_classifier() 
-        self.grp_to_pred = self.peak_detector.predicted
 
     def predict_peaked(self):
         for grp, df in self.df_by_group.items():
             if grp not in self.groups:
-                self.grp_to_pred[grp] = self.peak_detector.has_peaked(
-                    df[self.col_log_derf_obs].to_numpy(), 
-                    grp,
-                    df[self.col_t].to_numpy(),
-                )
-        return pd.DataFrame.from_dict(self.grp_to_pred, orient='index')
+                obs = df[self.col_log_derf_obs].to_numpy()
+                if len(obs) < MINIMUM_NUM_POINTS:
+                    print('insufficient data for ', grp)
+                else:
+                    self.peak_detector.has_peaked(obs, grp, df[self.col_t].to_numpy())
+        return pd.DataFrame.from_dict(self.group_to_pred, orient='index')
 
 
 
