@@ -36,7 +36,7 @@ examples:
 	python example/param_time_fun.py
 
 cppad_py: phony
-	python cppad_py/gaussian_cdf_xam.py
+	pytest cppad_py
 
 clean:
 	find . -name "*.so*" | xargs rm -rf
