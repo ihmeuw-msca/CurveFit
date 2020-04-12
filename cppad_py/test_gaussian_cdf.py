@@ -1,32 +1,7 @@
-#! /usr/bin/env python3
 import numpy
 import cppad_py
-from cppad_py import a_double
-#
 import curvefit
-
-def erf(vec) :
-    assert isinstance(vec, numpy.ndarray)
-    assert vec.ndim == 1
-    #
-    if isinstance(vec[0], cppad_py.a_double) :
-        result = numpy.empty(len(vec), dtype = cppad_py.a_double )
-        for i in range( len(vec) ) :
-            result[i] = vec[i].erf()
-    else :
-        result = scipy.special.erf(vec)
-    return result
-#
-def gaussian_cdf(t, param) :
-    assert param.shape[0] == 3
-    assert t.ndim == 1
-    if param.ndim == 2 :
-        assert param.shape[1] == t.shape[0]
-    alpha  = param[0]
-    beta   = param[1]
-    p      = param[2]
-    z      = alpha * (t - beta)
-    return p * ( a_double(1.0) + erf(z) ) / a_double(2.0)
+import functions
 #
 def test_gaussian_cdf() :
     eps99  = 99.0 * numpy.finfo(float).eps
@@ -39,14 +14,14 @@ def test_gaussian_cdf() :
     param  = numpy.vstack( (alpha, beta, p) )
     #
     # aparam
-    aparam = numpy.empty( param.shape , dtype = a_double )
+    aparam = numpy.empty( param.shape , dtype = cppad_py.a_double )
     for i in range( param.shape[0] ) :
         for j in range( param.shape[1] ) :
-            aparam[i][j] = a_double( param[i][j] )
+            aparam[i][j] = cppad_py.a_double( param[i][j] )
     #
     # f(t) = gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = gaussian_cdf(at, aparam)
+    ay = functions.gaussian_cdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
     # zero order foward mode using same values as during recording
