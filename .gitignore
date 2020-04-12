@@ -23,3 +23,5 @@ experiments
 # temporary file names in any directory
 junk
 junk.*
+# jize
+*.vscode
