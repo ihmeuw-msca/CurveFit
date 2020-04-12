@@ -33,6 +33,7 @@ examples:
 	python example/covariate.py
 	python example/random_effect.py
 	python example/sizes_to_indices.py
+	python example/param_time_fun.py
 
 clean:
 	find . -name "*.so*" | xargs rm -rf

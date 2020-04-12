@@ -8,6 +8,8 @@ file_list = [
     'example/covariate.py',
     'example/random_effect.py',
     'example/sizes_to_indices.py',
+    'example/param_time_fun.py',
+
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',
     'bin/extract_md.py',
@@ -29,6 +31,7 @@ extra_special_words = [
 
     r'\begin',
     r'\cdot',
+    r'\circ',
     r'\end',
     r'\exp',
     r'\frac',

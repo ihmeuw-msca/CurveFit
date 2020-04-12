@@ -9,11 +9,13 @@
     erf
     derf
     dderf
+    xam
+    param
 }
 # Predefined Parametric Functions of Time
 
-@# head Syntax
-`result = curvefit.fun(t, params)`
+## head Syntax
+`result = curvefit.core.functions.fun(t, params)`
 
 ## t
 This is a `list` or one dimensional `numpy.array`.
@@ -100,6 +102,9 @@ If *params* is a two dimensional array
 ```python
     result[i] = fun(t[i], alpha[i], beta[i], p[i])
 ```
+
+## Example
+[param_time_fun_xam](param_time_fun_xam.md)
 
 {end_markdown param_time_fun}'''
 # ----------------------------------------------------------------------------

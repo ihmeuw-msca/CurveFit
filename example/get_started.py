@@ -77,7 +77,7 @@ To be specific, for \( i = 0 , \ldots , n_D - 1 \)
 Note that when we do the fitting, we model each data point as having
 noise.
 
-## Source Code
+## Example Source Code
 ```python '''
 # -------------------------------------------------------------------------
 import scipy

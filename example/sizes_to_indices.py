@@ -4,6 +4,10 @@
 
 # Example and Test of sizes_to_indices
 
+## Function Documentation
+[size_to_indices](sizes_to_incides.md)
+
+## Example Source Code
 ```python'''
 import sys
 import numpy

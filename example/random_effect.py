@@ -102,7 +102,7 @@ fe_gprior = [
 '''```
 
 
-## Source Code
+## Example Source Code
 ```python '''
 # -------------------------------------------------------------------------
 import scipy
