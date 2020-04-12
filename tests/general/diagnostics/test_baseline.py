@@ -6,7 +6,7 @@ from data_simulator import simulate_linear_data_multigroups
 class TestBaselines:
 
     # Note (Jize) -- we probably need more tests. This is just a sanity check.
-    @pytest.mark.parametrize('n_groups, max_n_data, n_features, noisy', [[10, 30, 1, False], [5, 20, 3, True]])
+    @pytest.mark.parametrize('n_groups, max_n_data, n_features, noisy', [[5, 30, 1, False], [5, 30, 3, True]])
     def test_linear_regression_baseline(self, n_groups, max_n_data, n_features, noisy):
         ys, Xs, groups, ytrues = simulate_linear_data_multigroups(n_groups, max_n_data, n_features)
         baseline = LinearRegressionBaseline(ys, groups, Xs)
