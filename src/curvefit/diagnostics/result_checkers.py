@@ -49,9 +49,9 @@ class LogDerfLinearRegressionChecker(ResultChecker):
         lr_log_derf = LinearRegressionBaseline(log_derf_obs, self.groups, times)
         lr_log_derf.fit()
         metric_fun = lambda est, obs: np.sqrt(np.mean((est - obs)**2))
-        log_derf_rmses = lr_log_derf.compare([estimates], [self.groups], metric_fun)
+        log_derf_rmses = lr_log_derf.compare(estimates, self.groups, metric_fun)
         
-        result_df = pd.from_dict(log_derf_rmses, orient='index', columns=['baseline', 'curr model'])
+        result_df = pd.DataFrame.from_dict(log_derf_rmses, orient='index', columns=['baseline', 'curr model'])
         return result_df
 
     

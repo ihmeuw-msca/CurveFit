@@ -1,3 +1,4 @@
+import numpy as np
 from sklearn.linear_model import HuberRegressor
 
 class Baseline:
@@ -39,6 +40,7 @@ class LinearRegressionBaseline(Baseline):
             self.add_group(obs, grp, ft)
     
     def compare(self, estimations, groups, metric_fun):
+        # Note (jize) -- metric fun takes two args (est, obs)
         if len(estimations) != len(groups):
             raise ValueError()
         metric_fun_values = {}
@@ -51,9 +53,13 @@ class LinearRegressionBaseline(Baseline):
 
     def add_group(self, observation, group, feature):
         model = self.regressor
-        model.fit(feature, observation)
+        if len(feature.shape) == 1:
+            model.fit(np.reshape(feature, (-1, 1)), observation)
+            self.baseline_est[group] = model.predict(np.reshape(feature, (-1, 1)))
+        else:
+            model.fit(feature, observation)
+            self.baseline_est[group] = model.predict(feature)
         self.models[group] = model
-        self.baseline_est[group] = model.predict(feature)
                 
 
 
