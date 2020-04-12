@@ -108,21 +108,24 @@ system_command( [
 stdout = system_command( [ 'bin/get_cppad.sh' ] )
 print(stdout[:-1])
 #
-# build command
-build_cmd = [ 'python3', 'setup.py', 'build_ext', '--inplace' ]
-if debug :
-    build_cmd += [ '--debug', '--undef', 'NDEBUG' ]
-#
 # test
 if test :
+    # build
+    build_cmd = [ 'python3', 'setup.py', 'build_ext', '--inplace' ]
+    if debug :
+        build_cmd += [ '--debug', '--undef', 'NDEBUG' ]
     system_command( build_cmd )
+    #
+    # test
     os.chdir('lib/example/python')
     stdout = system_command( [ 'python3', 'check_all.py' ] )
     print(stdout[:-1])
     os.chdir('../../..')
 #
 # install
-install_cmd = build_cmd
+install_cmd = [ 'python3', 'setup.py', 'build_ext' ]
+if debug :
+        install_cmd += [ '--debug', '--undef', 'NDEBUG' ]
 install_cmd.append( 'install' )
 if prefix != None :
     install_cmd.append( '--prefix=' + prefix )

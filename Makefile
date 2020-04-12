@@ -1,9 +1,9 @@
 # makefile for easy manage package
 .PHONY: clean, tests
 
-doc_phony:
+phony:
 
-gh-pages: doc_phony
+gh-pages: phony
 	bin/extract_md.py
 	mkdocs build
 	git checkout mkdocs.yml
@@ -34,6 +34,9 @@ examples:
 	python example/random_effect.py
 	python example/sizes_to_indices.py
 	python example/param_time_fun.py
+
+cppad_py: phony
+	python cppad_py/gaussian_cdf_xam.py
 
 clean:
 	find . -name "*.so*" | xargs rm -rf
