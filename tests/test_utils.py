@@ -245,3 +245,32 @@ def test_filter_death_rate_by_group():
     df_result = utils.filter_death_rate_by_group(df, 'group', 't', 'rate')
     assert np.allclose(df_result['t'], [0, 1, 2, 0, 2])
     assert np.allclose(df_result['rate'], [0.0, 0.1, 0.2, 0.0, 0.2])
+
+
+def test_process_input():
+    df = pd.DataFrame({
+        'group': ['a', 'a', 'a', 'b', 'b', 'b'],
+        't': [0, 1, 2, 0, 1, 2],
+        'rate': [0.1, 0.2, 0.3, 0.1, 0.0, 0.3]
+    })
+
+    df_result = utils.process_input(df, 'group', 't', 'rate')
+
+    assert 'location' in df_result
+    assert 'days' in df_result
+    assert 'ascdr' in df_result
+    assert 'asddr' in df_result
+    assert 'ln ascdr' in df_result
+    assert 'ln asddr' in df_result
+
+    days = np.array([0, 1, 2, 0, 2])
+    ascdr = np.array([0.1, 0.2, 0.3, 0.1, 0.3])
+    asddr = np.array([0.1, 0.1, 0.1, 0.1, 0.2])
+    ln_ascdr = np.log(ascdr)
+    ln_asddr = np.log(asddr)
+
+    assert np.allclose(df_result['days'], days)
+    assert np.allclose(df_result['ascdr'], ascdr)
+    assert np.allclose(df_result['asddr'], asddr)
+    assert np.allclose(df_result['ln ascdr'], ln_ascdr)
+    assert np.allclose(df_result['ln asddr'], ln_asddr)
