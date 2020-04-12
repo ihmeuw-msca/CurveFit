@@ -1,4 +1,5 @@
 import pandas as pd
+import copy
 from general.diagnostics.peak_detectors import PieceWiseLinearPeakDetector
 from curvefit.core.utils import split_by_group
 
@@ -13,10 +14,6 @@ class PeakDetector:
         self.col_t = col_t 
         self.peaked_groups = peaked_groups
         self.not_peaked_groups = not_peaked_groups
-
-    @property 
-    def group_to_pred(self):
-        return self.peak_detector.predicted
 
     def get_peak_detector(self):
         self.df_by_group = split_by_group(self.df, self.col_group)
@@ -38,14 +35,15 @@ class PeakDetector:
         self.peak_detector.train_peak_classifier() 
 
     def predict_peaked(self):
+        grp_to_pred = {}
         for grp, df in self.df_by_group.items():
             if grp not in self.groups:
                 obs = df[self.col_log_derf_obs].to_numpy()
                 if len(obs) < MINIMUM_NUM_POINTS:
-                    print('insufficient data for ', grp)
+                    grp_to_pred[grp] = -1
                 else:
                     self.peak_detector.has_peaked(obs, grp, df[self.col_t].to_numpy())
-        return pd.DataFrame.from_dict(self.group_to_pred, orient='index')
+        return pd.DataFrame.from_dict({**grp_to_pred,**self.peak_detector.predicted}, orient='index')
 
 
 
