@@ -31,7 +31,7 @@ class ResultChecker:
         raise NotImplementedError() 
 
 
-class LogDerfLinearRegressionChecker(ResultChecker):
+class LogDerfRegressionChecker(ResultChecker):
 
     def __init__(self, df, col_log_derf_obs, col_group, col_t, col_est=None, models_dict=None):
         super().__init__(df, col_log_derf_obs, col_group, col_est, models_dict)
@@ -51,7 +51,7 @@ class LogDerfLinearRegressionChecker(ResultChecker):
         metric_fun = lambda est, obs: np.sqrt(np.mean((est - obs)**2))
         log_derf_rmses = lr_log_derf.compare(estimates, self.groups, metric_fun)
         
-        result_df = pd.DataFrame.from_dict(log_derf_rmses, orient='index', columns=['baseline', 'curr model'])
+        result_df = pd.DataFrame.from_dict(log_derf_rmses, orient='index', columns=['baseline RMSE', 'curr model RMSE'])
         return result_df
 
     
