@@ -21,7 +21,7 @@ def test_expit() :
     #
     # f(t) = expit(t, param)
     at = cppad_py.independent(t)
-    ay = functions.expit(at, aparam)
+    ay = functions.a_expit(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
     # zero order foward mode using same values as during recording

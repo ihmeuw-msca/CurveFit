@@ -18,10 +18,10 @@ def test_gaussian_cdf() :
     for i in range( param.shape[0] ) :
         for j in range( param.shape[1] ) :
             aparam[i][j] = cppad_py.a_double( param[i][j] )
-    #
+    # -----------------------------------------------------------------------
     # f(t) = gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = functions.gaussian_cdf(at, aparam)
+    ay = functions.a_gaussian_cdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
     # zero order foward mode using same values as during recording
@@ -47,3 +47,16 @@ def test_gaussian_cdf() :
                 assert abs( rel_error ) < eps99
             else :
                 assert J[i,j] == 0.0
+    # -----------------------------------------------------------------------
+    # g(t) = log_gaussian_cdf(t, param)
+    at = cppad_py.independent(t)
+    ay = functions.a_log_gaussian_cdf(at, aparam)
+    g  = cppad_py.d_fun(at, ay)
+    #
+    # zero order foward mode using same values as during recording
+    y  = g.forward(0, t)
+    #
+    # check using curvefit values for same function
+    check     = curvefit.core.functions.log_erf(t, param)
+    rel_error = y / check - 1.0
+    assert all( abs( rel_error ) < eps99 )
