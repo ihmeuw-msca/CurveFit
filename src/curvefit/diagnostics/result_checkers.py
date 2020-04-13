@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import collections
 from curvefit.core.utils import split_by_group
 from general.diagnostics.baselines import LinearRegressionBaseline
 
@@ -48,10 +49,26 @@ class LogDerfRegressionChecker(ResultChecker):
             
         lr_log_derf = LinearRegressionBaseline(log_derf_obs, self.groups, times)
         lr_log_derf.fit()
-        metric_fun = lambda est, obs: np.sqrt(np.mean((est - obs)**2))
-        log_derf_rmses = lr_log_derf.compare(estimates, self.groups, metric_fun)
-        
-        result_df = pd.DataFrame.from_dict(log_derf_rmses, orient='index', columns=['baseline RMSE', 'curr model RMSE'])
+        metric_fun_log_derf = lambda est, obs: np.sqrt(np.mean((est - obs)**2))
+        log_derf_rmses = lr_log_derf.compare(estimates, self.groups, metric_fun_log_derf)
+        metric_fun_derf = lambda est, obs: np.sqrt(np.mean((np.exp(est) - np.exp(obs))**2))
+        derf_rmses = lr_log_derf.compare(estimates, self.groups, metric_fun_derf)
+
+        rmses = collections.defaultdict(list)
+        for k, v in log_derf_rmses.items():
+            rmses[k].extend(v)
+        for k, v in derf_rmses.items():
+            rmses[k].extend(v)
+        result_df = pd.DataFrame.from_dict(
+            rmses, 
+            orient='index', 
+            columns=[
+                'baseline RMSE log_derf', 
+                'curr model RMSE log_derf', 
+                'baseline RMSE derf', 
+                'curr model RMSE derf',
+            ]
+        )
         return result_df
 
     
