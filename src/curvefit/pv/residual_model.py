@@ -55,7 +55,7 @@ class ResidualModel:
             epsilon: (float) cv floor
 
         Returns:
-            (np.ndarray) with shape (num_simulations, forecast_out_times)
+            (np.ndarray) with shape (num_samples, forecast_out_times)
         """
         pass
 
@@ -64,7 +64,7 @@ class SimpleResidualModel(ResidualModel):
     """
     A simple residual model that uses standard deviation of residuals.
     """
-    def sample(self, num_simulations, forecast_out_times, num_data, epsilon):
+    def sample(self, num_samples, forecast_out_times, num_data, epsilon):
         residuals = self.predict_frame(
             far_out=forecast_out_times, num_data=np.array([num_data])
         )
@@ -72,12 +72,12 @@ class SimpleResidualModel(ResidualModel):
         residuals['residual_std'] = self.predict(df=residuals)
 
         std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
-        standard_noise = np.random.randn(num_simulations)
+        standard_noise = np.random.randn(num_samples)
         error = np.outer(standard_noise, std_residual)
         return error
 
 
-class LinearRM(ResidualModel):
+class LinearRM(SimpleResidualModel):
     def __init__(self, **kwargs):
         """
         A basic linear regression for the residuals.
@@ -107,7 +107,7 @@ class LinearRM(ResidualModel):
         return pred.dot(self.coef)
 
 
-class LocalSmoothDistanceExtrapolateRM(ResidualModel):
+class LocalSmoothDistanceExtrapolateRM(SimpleResidualModel):
     def __init__(self, radius, **kwargs):
         """
         An n-dimensional smoother for the covariates that are passed. Extrapolates
@@ -157,7 +157,7 @@ class LocalSmoothDistanceExtrapolateRM(ResidualModel):
         return data['residual_std'].values
 
 
-class LocalSmoothSimpleExtrapolateRM(ResidualModel):
+class LocalSmoothSimpleExtrapolateRM(SimpleResidualModel):
     def __init__(self, radius, num_smooths, **kwargs):
         """
         An n-dimensional smoother for the covariates that are passed.

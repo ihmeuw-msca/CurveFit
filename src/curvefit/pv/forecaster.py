@@ -84,8 +84,8 @@ class Forecaster:
 
         forecast_out_times = prediction_times[add_noise] - max_t
 
-        error = self.residual_model.create_residual_samples(
-            num_simulations=num_simulations,
+        error = self.residual_model.sample(
+            num_samples=num_simulations,
             forecast_out_times=forecast_out_times,
             num_data=num_obs,
             epsilon=epsilon

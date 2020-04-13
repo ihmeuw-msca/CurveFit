@@ -77,7 +77,8 @@ class ModelPipeline:
         self.all_data.sort_values([col_group, col_t], inplace=True)
         self.groups = sorted(self.all_data[self.col_group].unique())
 
-        self.pv = None
+        self.pv_1 = None
+        self.pv_2 = None
         self.forecaster = None
 
         self.mean_predictions = None
@@ -87,6 +88,7 @@ class ModelPipeline:
 
     def run(self, n_draws, prediction_times, cv_threshold,
             smoothed_radius, num_smooths, exclude_groups, exclude_below=0,
+            bias_correct_lookback=None,
             exp_smoothing=None, max_last=None):
         """
         Runs the whole model with PV and forecasting residuals and creating draws.
@@ -105,6 +107,7 @@ class ModelPipeline:
             exclude_below: (int) exclude results from the predictive validity analysis
                 that had less than this many data points -- just for going into the regression
                 to predict the coefficient of variation (low numbers of data points makes this unstable)
+            bias_correction_lookback: (optional int)
             exp_smoothing: (optional float) exponential smoothing parameter for combining time series predictions
             max_last: (optional int) number of models from previous observations to use since the maximum time
         Returns:

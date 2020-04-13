@@ -68,10 +68,12 @@ class PVGroup:
         self.times = np.unique(self.grp_df[self.col_t].values)
         self.num_times = len(self.times)
 
+        # If we are doing PV only for a subset of times out of sample (like if we're splitting into multiple
+        # hold out datasets), then look_back determines which subset
         if self.look_back is not None:
-            pass
+            self.eval_indices = np.arange(self.num_times - self.look_back[0], self.num_times - self.look_back[1])
         else:
-            self.look_times = self.times
+            self.eval_indices = np.arange(len(self.times))
 
         # get the differences between the available times
         # these need to all be integers. the cumulative differences
@@ -130,22 +132,26 @@ class PVGroup:
         Run predictive validity for all observation sequences in the available data for this group.
         """
         print(f"Running PV for {self.predict_group}")
-        predictions = []
+
+        self.prediction_matrix = np.empty((self.num_times, self.num_times))
+        self.prediction_matrix[:] = np.nan
 
         for i, time in enumerate(self.times):
             print(f"Fitting model for end time {time}", end='\r')
+            # don't fit the model with holdouts that won't be used
+            if i not in self.eval_indices:
+                continue
+
             # remove the rows for this group that are greater than the available times
             remove_rows = (self.df[self.col_t] > time) & (self.df[self.col_grp] == self.predict_group)
             df = self.df[~remove_rows].copy()
+
             self.models[i].fit(df=df, group=self.predict_group)
-            predictions.append(
-                self.models[i].predict(
+            self.prediction_matrix[i, :] = self.models[i].predict(
                     times=self.times,
                     predict_space=self.predict_space,
                     predict_group=self.predict_group
-                )
             )
-        self.prediction_matrix = np.vstack([predictions])
         self.compute_residuals(theta=theta)
 
         return self
@@ -164,6 +170,16 @@ class PVGroup:
             sequential_diffs=self.difference,
             data_density=self.amount_data
         )
+        evaluate_residuals = np.logical_and(
+            self.residuals[:, 0] + self.residuals[:, 1] <= self.num_times - self.look_back[1],
+            self.residuals[:, 0] <= self.look_back[0] - self.look_back[1]
+        )
+        self.residuals = self.residuals[
+            np.logical_and(
+                ~np.isnan(self.residuals[:, -1]),
+                evaluate_residuals
+            )
+        ]
 
     def residual_df(self):
         return pd.DataFrame({
@@ -245,7 +261,7 @@ class PVGroup:
 
 class PVModel:
     def __init__(self, data, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space,
-                 look_back=None):
+                 look_back=(5, 0)):
         """
         Runs and stores predictive validity for a whole model and all groups in the model.
 
