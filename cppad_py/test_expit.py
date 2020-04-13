@@ -18,7 +18,7 @@ def test_expit() :
     for i in range( param.shape[0] ) :
         for j in range( param.shape[1] ) :
             aparam[i][j] = cppad_py.a_double( param[i][j] )
-    #
+    # -----------------------------------------------------------------------
     # f(t) = expit(t, param)
     at = cppad_py.independent(t)
     ay = functions.a_expit(at, aparam)
@@ -29,5 +29,18 @@ def test_expit() :
     #
     # check using curvefit values for same function
     check     = curvefit.core.functions.expit(t, param)
+    rel_error = y / check - 1.0
+    assert all( abs( rel_error ) < eps99 )
+    # -----------------------------------------------------------------------
+    # g(t) = log_gaussian_cdf(t, param)
+    at = cppad_py.independent(t)
+    ay = functions.a_log_expit(at, aparam)
+    g  = cppad_py.d_fun(at, ay)
+    #
+    # zero order foward mode using same values as during recording
+    y  = g.forward(0, t)
+    #
+    # check using curvefit values for same function
+    check     = curvefit.core.functions.log_expit(t, param)
     rel_error = y / check - 1.0
     assert all( abs( rel_error ) < eps99 )
