@@ -6,7 +6,7 @@ from curvefit.core.utils import neighbor_mean_std
 
 class PVGroup:
     def __init__(self, data, col_t, col_obs, col_grp, col_obs_compare,
-                 model_generator, predict_space, predict_group):
+                 model_generator, predict_space, look_back, predict_group):
         """
         Gets forward out of sample predictive validity for a model based on the function
         fit_model that takes arguments df and times and returns predictions at times.
@@ -23,6 +23,8 @@ class PVGroup:
             predict_space: a function from curvefit.model that gives the prediction space to calculate PV in
                 (needs to be the same as col_obs_compare)
             predict_group: name of group to predict for
+            look_back: (tuple[int]) how far back to go like (10, 5) will do predictive validity starting
+                by removing the last 10 data points and predicting up to the last 5 data points
 
         Attributes:
             self.grp_df: (pd.DataFrame) the data frame for this group only
@@ -50,6 +52,7 @@ class PVGroup:
         self.col_obs_compare = col_obs_compare
         self.predict_space = predict_space
         self.model_generator = model_generator
+        self.look_back = look_back
 
         assert type(self.col_t) == str
         assert type(self.col_obs) == str
@@ -57,10 +60,18 @@ class PVGroup:
         assert self.col_obs in self.df.columns
         assert callable(self.model_generator.fit)
         assert callable(self.model_generator.predict)
+        if self.look_back is not None:
+            assert len(self.look_back) == 2
 
         self.grp_df = self.df.loc[self.df[self.col_grp] == self.predict_group].copy()
+
         self.times = np.unique(self.grp_df[self.col_t].values)
         self.num_times = len(self.times)
+
+        if self.look_back is not None:
+            pass
+        else:
+            self.look_times = self.times
 
         # get the differences between the available times
         # these need to all be integers. the cumulative differences
@@ -233,7 +244,8 @@ class PVGroup:
 
 
 class PVModel:
-    def __init__(self, data, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space):
+    def __init__(self, data, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space,
+                 look_back=None):
         """
         Runs and stores predictive validity for a whole model and all groups in the model.
 
@@ -248,6 +260,8 @@ class PVModel:
             model_generator: object of class model_generator.ModelGenerator
             predict_space: a function from curvefit.model that gives the prediction space to calculate PV in
                 (needs to be the same as col_obs_compare)
+            look_back: (optional tuple[int]) how far back to go like (10, 5) will do predictive validity starting
+                by removing the last 10 data points and predicting up to the last 5 data points
 
         Attributes:
             self.groups: the groups in this model
@@ -266,6 +280,7 @@ class PVModel:
         self.col_obs_compare = col_obs_compare
         self.model_generator = model_generator
         self.predict_space = predict_space
+        self.look_back = look_back
 
         assert type(self.col_group) == str
         assert self.col_group in self.df.columns
@@ -278,7 +293,7 @@ class PVModel:
             grp: PVGroup(
                 data=self.df, col_t=self.col_t, col_obs=self.col_obs, col_grp=self.col_group,
                 col_obs_compare=self.col_obs_compare, model_generator=self.model_generator.generate(),
-                predict_space=self.predict_space, predict_group=grp
+                predict_space=self.predict_space, look_back=self.look_back, predict_group=grp
             ) for grp in self.groups
         }
 
