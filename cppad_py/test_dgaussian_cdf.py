@@ -29,7 +29,7 @@ def test_dgaussian_cdf() :
     ay = functions.a_dgaussian_cdf(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
-    # used first order foreard on f to check g
+    # check a_dgaussian_cdf
     f.forward(0, t)
     g0  = g.forward(0, t)
     dt  = functions.constant_array((t.size,), 0.0)
@@ -39,3 +39,11 @@ def test_dgaussian_cdf() :
         rel_error = g0[i] / df[i] - 1.0
         dt[i]     = 0.0
         assert abs(rel_error) < eps99
+    # -----------------------------------------------------------------------
+    # check a_log_dgaussain_cdf
+    at = cppad_py.independent(t)
+    ay = functions.a_log_dgaussian_cdf(at, aparam)
+    f  = cppad_py.d_fun(at, ay)
+    f0 = f.forward(0, t)
+    rel_error = f0 / numpy.log(g0) - 1
+    assert all( abs(rel_error) < eps99 )
