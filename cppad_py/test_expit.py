@@ -1,7 +1,7 @@
 import numpy
 import cppad_py
 import curvefit
-import functions
+import a_functions
 #
 def test_expit() :
     eps99  = 99.0 * numpy.finfo(float).eps
@@ -21,7 +21,7 @@ def test_expit() :
     # -----------------------------------------------------------------------
     # f(t) = expit(t, param)
     at = cppad_py.independent(t)
-    ay = functions.a_expit(at, aparam)
+    ay = a_functions.a_expit(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
     # zero order foward mode using same values as during recording
@@ -34,7 +34,7 @@ def test_expit() :
     # -----------------------------------------------------------------------
     # g(t) = log_gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = functions.a_log_expit(at, aparam)
+    ay = a_functions.a_log_expit(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
     # zero order foward mode using same values as during recording

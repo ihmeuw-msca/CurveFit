@@ -1,7 +1,7 @@
 import numpy
 import cppad_py
 import curvefit
-import functions
+import a_functions
 #
 def test_gaussian_cdf() :
     eps99  = 99.0 * numpy.finfo(float).eps
@@ -21,7 +21,7 @@ def test_gaussian_cdf() :
     # -----------------------------------------------------------------------
     # f(t) = gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = functions.a_gaussian_cdf(at, aparam)
+    ay = a_functions.a_gaussian_cdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
     # zero order foward mode using same values as during recording
@@ -50,7 +50,7 @@ def test_gaussian_cdf() :
     # -----------------------------------------------------------------------
     # g(t) = log_gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = functions.a_log_gaussian_cdf(at, aparam)
+    ay = a_functions.a_log_gaussian_cdf(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
     # zero order foward mode using same values as during recording

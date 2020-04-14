@@ -1,7 +1,7 @@
 import numpy
 import cppad_py
 import curvefit
-import functions
+import a_functions
 #
 def test_dgaussian_cdf() :
     eps99  = 99.0 * numpy.finfo(float).eps
@@ -21,18 +21,18 @@ def test_dgaussian_cdf() :
     # -----------------------------------------------------------------------
     # f(t) = gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = functions.a_gaussian_cdf(at, aparam)
+    ay = a_functions.a_gaussian_cdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
     # g(t) = d/dt gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = functions.a_dgaussian_cdf(at, aparam)
+    ay = a_functions.a_dgaussian_cdf(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
     # check a_dgaussian_cdf
     f.forward(0, t)
     g0  = g.forward(0, t)
-    dt  = functions.constant_array((t.size,), 0.0)
+    dt  = a_functions.constant_array((t.size,), 0.0)
     for i in range(len(t)) :
         dt[i]     = 1.0
         df        = f.forward(1, dt)
@@ -42,7 +42,7 @@ def test_dgaussian_cdf() :
     # -----------------------------------------------------------------------
     # check a_log_dgaussain_cdf
     at = cppad_py.independent(t)
-    ay = functions.a_log_dgaussian_cdf(at, aparam)
+    ay = a_functions.a_log_dgaussian_cdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     f0 = f.forward(0, t)
     rel_error = f0 / numpy.log(g0) - 1
