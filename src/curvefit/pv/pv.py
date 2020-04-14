@@ -58,8 +58,8 @@ class PVGroup:
         assert type(self.col_obs) == str
         assert self.col_t in self.df.columns
         assert self.col_obs in self.df.columns
-        assert callable(self.model_generator.fit)
-        assert callable(self.model_generator.predict)
+        assert callable(self.model_generator.run_fit)
+        assert callable(self.model_generator.get_predictions)
         if self.look_back is not None:
             assert len(self.look_back) == 2
 
@@ -146,12 +146,13 @@ class PVGroup:
             remove_rows = (self.df[self.col_t] > time) & (self.df[self.col_grp] == self.predict_group)
             df = self.df[~remove_rows].copy()
 
-            self.models[i].fit(df=df, group=self.predict_group)
-            self.prediction_matrix[i, :] = self.models[i].predict(
-                    times=self.times,
-                    predict_space=self.predict_space,
-                    predict_group=self.predict_group
+            self.models[i].run_fit(df=df, group=self.predict_group)
+            self.prediction_matrix[i, :] = self.models[i].get_predictions(
+                times=self.times,
+                predict_space=self.predict_space,
+                predict_group=self.predict_group
             )
+
         self.compute_residuals(theta=theta)
 
         return self
@@ -170,16 +171,17 @@ class PVGroup:
             sequential_diffs=self.difference,
             data_density=self.amount_data
         )
-        evaluate_residuals = np.logical_and(
-            self.residuals[:, 0] + self.residuals[:, 1] <= self.num_times - self.look_back[1],
-            self.residuals[:, 0] <= self.look_back[0] - self.look_back[1]
-        )
-        self.residuals = self.residuals[
-            np.logical_and(
-                ~np.isnan(self.residuals[:, -1]),
-                evaluate_residuals
+        if self.look_back is not None:
+            evaluate_residuals = np.logical_and(
+                self.residuals[:, 0] + self.residuals[:, 1] <= self.num_times - self.look_back[1],
+                self.residuals[:, 0] <= self.look_back[0] - self.look_back[1]
             )
-        ]
+            self.residuals = self.residuals[
+                np.logical_and(
+                    ~np.isnan(self.residuals[:, -1]),
+                    evaluate_residuals
+                )
+            ]
 
     def residual_df(self):
         return pd.DataFrame({
@@ -261,7 +263,7 @@ class PVGroup:
 
 class PVModel:
     def __init__(self, data, col_group, col_t, col_obs, col_obs_compare, model_generator, predict_space,
-                 look_back=(5, 0)):
+                 look_back=None):
         """
         Runs and stores predictive validity for a whole model and all groups in the model.
 

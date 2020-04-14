@@ -2,6 +2,7 @@ from copy import deepcopy
 
 from curvefit.pv.forecaster import Forecaster
 from curvefit.pv.pv import PVModel
+from curvefit.pv.bias_corrector import BiasCorrector
 from curvefit.diagnostics.plot_diagnostics import plot_fits
 
 
@@ -12,7 +13,8 @@ class ModelPipeline:
     put that in run_init_model
     """
     def __init__(self, all_data, col_t, col_obs, col_group,
-                 col_obs_compare, all_cov_names, fun, predict_space, obs_se_func=None):
+                 col_obs_compare, all_cov_names, fun, predict_space, obs_se_func=None,
+                 bias_correction=None):
         """
         Base class for a model pipeline. At minimum needs the following arguments for a
         model pipeline.
@@ -28,6 +30,8 @@ class ModelPipeline:
             fun: (callable) the space to fit in, one of curvefit.functions
             predict_space: (callable) the space to do predictive validity in, one of curvefit.functions
             obs_se_func: (optional) function to get observation standard error from col_t
+            bias_correction: (optional int) whether to do bias correction, and if so how many last data points
+                to use in the bias correction
 
         Attributes:
             self.pv: (curvefit.pv.PVModel) predictive validity model
@@ -45,6 +49,7 @@ class ModelPipeline:
         self.fun = fun
         self.predict_space = predict_space
         self.obs_se_func = obs_se_func
+        self.bias_correction = bias_correction
 
         # If we're doing predictive validity in log space, we want absolute residuals, which
         # corresponds to theta = 0. If we're doing predictive validity in linear space, we want
@@ -71,15 +76,16 @@ class ModelPipeline:
         # these are the attributes that can't be used to initialize a
         # CurveModel but are needed to initialize the ModelPipeline
         self.pop_cols = [
-            'all_data', 'all_cov_names', 'col_obs_compare', 'predict_space', 'obs_se_func'
+            'all_data', 'all_cov_names', 'col_obs_compare', 'predict_space', 'obs_se_func', 'bias_correction'
         ]
 
         self.all_data.sort_values([col_group, col_t], inplace=True)
         self.groups = sorted(self.all_data[self.col_group].unique())
 
-        self.pv_1 = None
-        self.pv_2 = None
+        self.pv = None
         self.forecaster = None
+        self.bias_corrector = None
+        self.bias_corrector_generator = None
 
         self.mean_predictions = None
         self.simulated_data = None
@@ -88,7 +94,6 @@ class ModelPipeline:
 
     def run(self, n_draws, prediction_times, cv_threshold,
             smoothed_radius, num_smooths, exclude_groups, exclude_below=0,
-            bias_correct_lookback=None,
             exp_smoothing=None, max_last=None):
         """
         Runs the whole model with PV and forecasting residuals and creating draws.
@@ -107,7 +112,6 @@ class ModelPipeline:
             exclude_below: (int) exclude results from the predictive validity analysis
                 that had less than this many data points -- just for going into the regression
                 to predict the coefficient of variation (low numbers of data points makes this unstable)
-            bias_correction_lookback: (optional int)
             exp_smoothing: (optional float) exponential smoothing parameter for combining time series predictions
             max_last: (optional int) number of models from previous observations to use since the maximum time
         Returns:
@@ -155,6 +159,11 @@ class ModelPipeline:
         Should be run at the end of the inheriting class' init so that the self.generate()
         gets the model settings to be run for all models.
         """
+        if self.bias_correction is not None:
+
+            self.bias_corrector_generator = self.generate()
+            self.bias_corrector_generator.bias_correction = None
+
         self.pv = PVModel(
             data=self.all_data,
             col_t=self.col_t,
@@ -164,6 +173,7 @@ class ModelPipeline:
             predict_space=self.predict_space,
             model_generator=self.generate()
         )
+
         self.forecaster = Forecaster()
 
     def run_init_model(self):
@@ -193,6 +203,37 @@ class ModelPipeline:
         """
         pass
 
+    def run_fit(self, df, group=None):
+        """
+        Fits a model with the given dataframe and runs bias correction if applicable.
+        Don't override this class, instead override self.fit.
+
+        Args:
+            df:
+            group:
+
+        Returns:
+
+        """
+        if group is not None:
+            group_df = df.copy()
+        else:
+            group_df = df.loc[self.col_group == group].copy()
+        self.fit(df=df, group=group)
+        if self.bias_correction is not None:
+            if len(group_df[self.col_t].unique()) < self.bias_correction:
+                self.bias_corrector = BiasCorrector(
+                    data=df,
+                    col_t=self.col_t,
+                    col_group=self.col_group,
+                    col_obs=self.col_obs,
+                    col_obs_compare=self.col_obs_compare,
+                    predict_space=self.predict_space,
+                    model_generator=self.bias_corrector_generator.generate(),
+                    look_back=(self.bias_correction, 0)
+                )
+                self.bias_corrector.run_bias_correction(theta=self.theta)
+
     def predict(self, times, predict_space, predict_group):
         """
         Function to create predictions based on the model fit.
@@ -202,6 +243,31 @@ class ModelPipeline:
             predict_group: which group to make predictions for
         """
         pass
+
+    def get_predictions(self, times, predict_space, predict_group):
+        """
+        Creates predictions with a bias correction, if applicable.
+        Don't override this class, instead override self.predict.
+
+        Args:
+            times:
+            predict_space:
+            predict_group:
+
+        Returns:
+
+        """
+        predictions = self.predict(
+            times=times,
+            predict_space=predict_space,
+            predict_group=predict_group
+        )
+        if self.bias_correction is None:
+            return predictions
+        else:
+            return self.bias_corrector.get_corrected_predictions(
+                predictions=predictions
+            )
 
     def run_predictive_validity(self, theta):
         """
