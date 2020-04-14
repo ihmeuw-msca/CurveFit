@@ -47,7 +47,7 @@ class APModel(BasicModel):
             groups = self.peaked_groups if self.peaked_groups is not None else \
                 self.groups
             models = self.run_models(self.all_data, groups)
-            self.fun_gprior = self.get_log_alpha_beta_prior(models)
+            self.fun_gprior = self.get_ln_alpha_beta_prior(models)
             print('create log-alpha-beta prior', self.fun_gprior[1])
             self.fit_dict.update({
                 'fun_gprior': self.fun_gprior
@@ -67,7 +67,7 @@ class APModel(BasicModel):
             })
 
     @staticmethod
-    def get_log_alpha_beta_prior(models):
+    def get_ln_alpha_beta_prior(models):
         a = np.array([model.params[0, 0]
                       for group, model in models.items()])
         b = np.array([model.params[1, 0]
@@ -171,13 +171,13 @@ class APModel(BasicModel):
             ax[i, 0].plot(t, y)
             ax[i, 0].set_title(location)
 
-            dy = derf(t, model.params[:, 0])
-            derf_obs = data_translator(model.obs,
-                                       self.basic_model_dict['fun'], 'derf')
-            ax[i, 1].scatter(model.t, derf_obs)
+            dy = gaussian_pdf(t, model.params[:, 0])
+            gaussian_pdf_obs = data_translator(model.obs,
+                                       self.basic_model_dict['fun'], 'gaussian_pdf')
+            ax[i, 1].scatter(model.t, gaussian_pdf_obs)
             ax[i, 1].plot(t, dy)
             ax[i, 1].set_title(location)
-            ax[i, 1].set_ylim(0.0, max(dy.max(), derf_obs.max()) * 1.1)
+            ax[i, 1].set_ylim(0.0, max(dy.max(), gaussian_pdf_obs.max()) * 1.1)
 
     def summarize_result(self):
         models = self.models
@@ -186,22 +186,22 @@ class APModel(BasicModel):
                                                'RMSE DERF',
                                                ])
         location_list = []
-        rmse_erf_list = []
-        rmse_derf_list = []
+        rmse_gaussian_cdf_list = []
+        rmse_gaussian_pdf_list = []
         for i, (location, model) in enumerate(models.items()):
-            erf_pred = model.fun(model.t, model.params[:, 0])
-            rmse_erf = np.linalg.norm(erf_pred - model.obs) ** 2
-            derf_obs = data_translator(model.obs, self.basic_model_dict['fun'], 'derf')
-            derf_pred = derf(model.t, model.params[:, 0])
-            rmse_derf = np.linalg.norm(derf_obs - derf_pred) ** 2
+            gaussian_cdf_pred = model.fun(model.t, model.params[:, 0])
+            rmse_gaussian_cdf = np.linalg.norm(gaussian_cdf_pred - model.obs) ** 2
+            gaussian_pdf_obs = data_translator(model.obs, self.basic_model_dict['fun'], 'gaussian_pdf')
+            gaussian_pdf_pred = gaussian_pdf(model.t, model.params[:, 0])
+            rmse_gaussian_pdf = np.linalg.norm(gaussian_pdf_obs - gaussian_pdf_pred) ** 2
 
             location_list.append(location)
-            rmse_erf_list.append(rmse_erf)
-            rmse_derf_list.append(rmse_derf)
+            rmse_gaussian_cdf_list.append(rmse_gaussian_cdf)
+            rmse_gaussian_pdf_list.append(rmse_gaussian_pdf)
 
         df_summary['Location'] = location_list
-        df_summary['RMSE ERF'] = rmse_erf_list
-        df_summary['RMSE DERF'] = rmse_derf_list
+        df_summary['RMSE ERF'] = rmse_gaussian_cdf_list
+        df_summary['RMSE DERF'] = rmse_gaussian_pdf_list
 
         return df_summary
 
@@ -269,7 +269,7 @@ class APModel(BasicModel):
         beta = max(slope_at + 1.0, np.median(param_samples[1]))
         slope = np.median(samples['slope'])
 
-        p = solve_p_from_dderf(
+        p = solve_p_from_dgaussian_pdf(
             np.array([alpha]), np.array([beta]), np.array([slope]),
             slope_at=slope_at
         )[0]
@@ -336,12 +336,12 @@ class APModel(BasicModel):
 
         if 'slope' in params:
             slope = np.array([
-                dderf(slope_at, model.params[:, 0])
+                dgaussian_pdf(slope_at, model.params[:, 0])
                 for group, model in models.items()
             ])
-            log_slope = np.log(slope)
+            ln_slope = np.log(slope)
             samples.update({
-                'slope': np.exp(sample_from_samples(log_slope, sample_size))
+                'slope': np.exp(sample_from_samples(ln_slope, sample_size))
             })
 
         return samples

@@ -57,7 +57,7 @@ def get_obs_se(df, col_t, func=lambda x: 1 / (1 + x)):
     return data
 
 # TODO: replace with the data translator?
-def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
+def get_derivative_of_column_in_ln_space(df, col_obs, col_t, col_grp):
     """
     Adds a new column for the derivative of col_obs.
     Col_obs needs to be in log space. # TODO: Change this later to allow for other spaces.
@@ -223,24 +223,24 @@ def convex_combination(t, pred1, pred2, pred_fun,
     b = -start_day * a
     lam = np.maximum(0.0, np.minimum(1.0, a * t + b))
 
-    if pred_fun.__name__ == 'log_erf':
+    if pred_fun.__name__ == 'ln_gaussian_cdf':
         pred1 = np.exp(pred1)
         pred2 = np.exp(pred2)
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.log(np.cumsum(pred_tmp, axis=1))
-    elif pred_fun.__name__ == 'erf':
+    elif pred_fun.__name__ == 'gaussian_cdf':
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.cumsum(pred_tmp, axis=1)
-    elif pred_fun.__name__ == 'log_derf':
+    elif pred_fun.__name__ == 'ln_gaussian_pdf':
         pred1_tmp = np.exp(pred1)
         pred2_tmp = np.exp(pred2)
         pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.log(pred_tmp)
-    elif pred_fun.__name__ == 'derf':
+    elif pred_fun.__name__ == 'gaussian_pdf':
         pred = lam * pred1 + (1.0 - lam) * pred2
     else:
         pred = None
@@ -266,24 +266,24 @@ def model_average(pred1, pred2, w1, w2, pred_fun):
     assert callable(pred_fun)
     assert w1 + w2 == 1
 
-    if pred_fun.__name__ == 'log_erf':
+    if pred_fun.__name__ == 'ln_gaussian_cdf':
         pred1 = np.exp(pred1)
         pred2 = np.exp(pred2)
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
         pred = np.log(np.cumsum(pred_tmp, axis=1))
-    elif pred_fun.__name__ == 'erf':
+    elif pred_fun.__name__ == 'gaussian_cdf':
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
         pred = np.cumsum(pred_tmp, axis=1)
-    elif pred_fun.__name__ == 'log_derf':
+    elif pred_fun.__name__ == 'ln_gaussian_pdf':
         pred1_tmp = np.exp(pred1)
         pred2_tmp = np.exp(pred2)
         pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
         pred = np.log(pred_tmp)
-    elif pred_fun.__name__ == 'derf':
+    elif pred_fun.__name__ == 'gaussian_pdf':
         pred = w1 * pred1 + w2 * pred2
     else:
         pred = None
@@ -340,7 +340,7 @@ def data_translator(data, input_space, output_space,
     if callable(output_space):
         output_space = output_space.__name__
 
-    total_space = ['erf', 'derf', 'log_erf', 'log_derf']
+    total_space = ['gaussian_cdf', 'gaussian_pdf', 'ln_gaussian_cdf', 'ln_gaussian_pdf']
 
     assert input_space in total_space
     assert output_space in total_space
@@ -352,16 +352,16 @@ def data_translator(data, input_space, output_space,
         data = data[None, :]
 
     # thresholding the data in the linear space
-    if input_space in ['erf', 'derf']:
+    if input_space in ['gaussian_cdf', 'gaussian_pdf']:
         data = np.maximum(threshold, data)
 
     if input_space == output_space:
         output_data = data.copy()
-    elif output_space == 'log_' + input_space:
+    elif output_space == 'ln_' + input_space:
         output_data = np.log(data)
-    elif input_space == 'log_' + output_space:
+    elif input_space == 'ln_' + output_space:
         output_data = np.exp(data)
-    elif 'derf' in input_space:
+    elif 'gaussian_pdf' in input_space:
         if 'log' in input_space:
             data = np.exp(data)
         output_data = np.cumsum(data, axis=1)
@@ -435,8 +435,8 @@ def compute_starting_params(fe_dict):
     return fe_init, re_init
 
 
-def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
-    """Compute p from alpha, beta and slopes of derf at given point.
+def solve_p_from_dgaussian_pdf(alpha, beta, slopes, slope_at=14):
+    """Compute p from alpha, beta and slopes of gaussian_pdf at given point.
 
     Args:
         alpha (np.ndarray | float):
@@ -529,10 +529,10 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
     if callable(last_obs_space):
         last_obs_space = last_obs_space.__name__
 
-    assert draw_space in ['erf', 'derf', 'log_erf', 'log_derf']
-    assert last_obs_space in ['erf', 'derf', 'log_erf', 'log_derf']
+    assert draw_space in ['gaussian_cdf', 'gaussian_pdf', 'ln_gaussian_cdf', 'ln_gaussian_pdf']
+    assert last_obs_space in ['gaussian_cdf', 'gaussian_pdf', 'ln_gaussian_cdf', 'ln_gaussian_pdf']
 
-    if last_obs_space == 'erf':
+    if last_obs_space == 'gaussian_cdf':
         assert last_obs >= 0.0
     else:
         last_obs = np.exp(last_obs)
@@ -540,21 +540,21 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
     last_day = int(np.round(last_day))
     assert t.min() <= last_day < t.max()
 
-    derf_draws = data_translator(draws, draw_space, 'derf')
-    derf_draws = derf_draws[:, last_day + 1:]
+    gaussian_pdf_draws = data_translator(draws, draw_space, 'gaussian_pdf')
+    gaussian_pdf_draws = gaussian_pdf_draws[:, last_day + 1:]
 
-    if draw_space == 'derf':
-        final_draws = derf_draws
-    elif draw_space == 'log_derf':
-        final_draws = data_translator(derf_draws, 'derf', 'log_derf')
-    elif draw_space == 'erf':
-        assert last_obs_space in ['erf', 'log_erf']
-        last_obs = last_obs if last_obs_space == 'erf' else np.exp(last_obs)
-        final_draws = data_translator(derf_draws, 'derf', 'erf') + last_obs
+    if draw_space == 'gaussian_pdf':
+        final_draws = gaussian_pdf_draws
+    elif draw_space == 'ln_gaussian_pdf':
+        final_draws = data_translator(gaussian_pdf_draws, 'gaussian_pdf', 'ln_gaussian_pdf')
+    elif draw_space == 'gaussian_cdf':
+        assert last_obs_space in ['gaussian_cdf', 'ln_gaussian_cdf']
+        last_obs = last_obs if last_obs_space == 'gaussian_cdf' else np.exp(last_obs)
+        final_draws = data_translator(gaussian_pdf_draws, 'gaussian_pdf', 'gaussian_cdf') + last_obs
     else:
-        assert last_obs_space in ['erf', 'log_erf']
-        last_obs = last_obs if last_obs_space == 'erf' else np.exp(last_obs)
-        final_draws = data_translator(derf_draws, 'derf', 'erf') + last_obs
+        assert last_obs_space in ['gaussian_cdf', 'ln_gaussian_cdf']
+        last_obs = last_obs if last_obs_space == 'gaussian_cdf' else np.exp(last_obs)
+        final_draws = data_translator(gaussian_pdf_draws, 'gaussian_pdf', 'gaussian_cdf') + last_obs
         final_draws = np.log(final_draws)
 
     if draw_ndim == 1:

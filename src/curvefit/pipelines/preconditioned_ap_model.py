@@ -5,7 +5,7 @@ from curvefit.pipelines.ap_model import APModel
 from curvefit.diagnostics.preconditioners import BetaBoundsPreConditioner
 from curvefit.core.model import CurveModel
 from curvefit.core.utils import data_translator
-from curvefit.core.functions import derf
+from curvefit.core.functions import gaussian_pdf
 
 
 class PreConditionedAPModel(APModel):
@@ -105,26 +105,26 @@ class PreConditionedAPModel(APModel):
                                                'RMSE DERF',
                                                'RMSE LNR'])
         location_list = []
-        rmse_erf_list = []
-        rmse_derf_list = []
-        rmse_derf_linear_list = []
+        rmse_gaussian_cdf_list = []
+        rmse_gaussian_pdf_list = []
+        rmse_gaussian_pdf_linear_list = []
         for i, (location, model) in enumerate(models.items()):
-            erf_pred = model.fun(model.t, model.params[:, 0])
-            rmse_erf = np.linalg.norm(erf_pred - model.obs) ** 2
-            derf_obs = data_translator(model.obs, self.basic_model_dict['fun'], 'derf')
-            derf_pred = derf(model.t, model.params[:, 0])
-            rmse_derf = np.linalg.norm(derf_obs - derf_pred) ** 2
-            rmse_derf_linear = self.preconditioner._statistics["linear_rmse"].get(location, 1e10)
-            summary.append([location, rmse_erf, rmse_derf, rmse_derf_linear])
+            gaussian_cdf_pred = model.fun(model.t, model.params[:, 0])
+            rmse_gaussian_cdf = np.linalg.norm(gaussian_cdf_pred - model.obs) ** 2
+            gaussian_pdf_obs = data_translator(model.obs, self.basic_model_dict['fun'], 'gaussian_pdf')
+            gaussian_pdf_pred = gaussian_pdf(model.t, model.params[:, 0])
+            rmse_gaussian_pdf = np.linalg.norm(gaussian_pdf_obs - gaussian_pdf_pred) ** 2
+            rmse_gaussian_pdf_linear = self.preconditioner._statistics["linear_rmse"].get(location, 1e10)
+            summary.append([location, rmse_gaussian_cdf, rmse_gaussian_pdf, rmse_gaussian_pdf_linear])
 
             location_list.append(location)
-            rmse_erf_list.append(rmse_erf)
-            rmse_derf_list.append(rmse_derf)
-            rmse_derf_linear_list.append(rmse_derf_linear)
+            rmse_gaussian_cdf_list.append(rmse_gaussian_cdf)
+            rmse_gaussian_pdf_list.append(rmse_gaussian_pdf)
+            rmse_gaussian_pdf_linear_list.append(rmse_gaussian_pdf_linear)
 
         df_summary['Location'] = location_list
-        df_summary['RMSE ERF'] = rmse_erf_list
-        df_summary['RMSE DERF'] = rmse_derf_list
-        df_summary['RMSE LNR'] = rmse_derf_linear_list
+        df_summary['RMSE ERF'] = rmse_gaussian_cdf_list
+        df_summary['RMSE DERF'] = rmse_gaussian_pdf_list
+        df_summary['RMSE LNR'] = rmse_gaussian_pdf_linear_list
 
         return df_summary
