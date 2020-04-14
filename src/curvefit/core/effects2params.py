@@ -40,7 +40,7 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
     ## var_link_fun
     The value `len(var_link_fun)` is equal to the number of fixed effects and
     `link_fun[i]` is a function with one argument and one result that
-    transforms the j-th fixed effect.
+    transforms the i-th fixed effect.
     The first `len(covs[0])` fixed effects correspond to the first parameter,
     the next `len(covs[1])` fixed effects correspond to the second parameter
     and so on.
@@ -50,10 +50,9 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
     (for each group of observations).
 
     ## x
-    This is a one dimensional numpy array contain a value for the objective.
-    It contains the fixed effects followed by the random effects.
-    The random effects are divided into sub-vectors with length equal
-    to the number of fixed effects.
+    This is a one dimensional numpy array contain a value for the fixed effects
+    followed by the random effects. The random effects are divided into
+    sub-vectors with length equal to the number of fixed effects.
     The j-th sub-vector corresponds to the j-th group of observations.
 
     ## params
@@ -61,23 +60,26 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
     \( r_{i,j} \) the matrix of random effects corresponding to *x*.
     We define the vector, with length equal to the number of fixed effects,
     \[
-        v_i = V_i \left( f_i + \sum_j r_{i,j} \right)
+        v_{i,j} = V_i \left( f_i + r_{i,j} \right)
     \]
     where \( V_i \) is the function `var_link_fun[i]`.
+    If *expand* is true (false) \( j \) indexes observations (groups).
+    (If *expand* is true the random effect for a group gets repeated
+    for all the observations in the group.)
     The return value `params` is a numpy array with row dimension
     equal to the number of parameters.
     If *expand* is true (false), its column  column dimension
     equal to the number of observations (number of groups).
-    The value `params[k][ell]` is
+    The value `params[k][j]` is
     \[
-        P_k \left( \sum_{i(k)} v_i c_{i,\ell} \right)
+        P_k \left( \sum_{i(k)} v_i c_{i,j} \right)
     \]
     where \( P_k \) is the function `link_fun[k]`,
     \( i(k) \) is the set of fixed effects indices
     corresponding to the k-th parameter,
-    \( c_{i,\ell} \) is the covariate value corresponding to the
-    i-th fixed effect and the ell-th observation, if *expand* is true,
-    or ell-th group, if *expand* is false.
+    \( c_{i,j} \) is the covariate value corresponding to the
+    i-th fixed effect and the j-th observation, if *expand* is true,
+    or j-th group, if *expand* is false.
 
     {end_markdown effects2params}'''
     num_obs    = numpy.sum(group_sizes)
@@ -90,8 +92,8 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
     fe_idx     = curvefit.core.utils.sizes_to_indices(fe_sizes)
     #
     # asserts
-    for i in range(num_params) :
-        assert covs[i].shape[0] == num_obs
+    for k in range(num_params) :
+        assert covs[k].shape[0] == num_obs
     assert len(link_fun) == num_params
     #
     #
@@ -102,22 +104,22 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
         re = numpy.repeat(re, group_sizes, axis=0)
     else :
         # subsample covariates
-        covs = [ covs[i][group_idx,:] for i in range(num_params) ]
+        covs = [ covs[k][group_idx,:] for k in range(num_params) ]
     #
     # var  = var_link_fun( fe + re )
     var = fe + re
     for i in range(num_fe) :
         var[:, i] = var_link_fun[i]( var[:, i] )
     #
-    # params[i] = link_fun[i] ( sum_j covs[i, j] * var[i, j] )
+    # params[k][j] = link_fun[k] ( sum_{i(k)} covs[i, j] * var[j, i] )
     shape  = (num_params, num_obs) if expand else (num_params, num_groups)
     params = numpy.empty( shape, dtype = type(x[0]) )
-    for i in range(num_params) :
+    for k in range(num_params) :
         # covariate times variable for i-th parameter
-        prod      = covs[i] * var[:, fe_idx[i]]
+        prod      = covs[k] * var[:, fe_idx[k]]
         # sum of produces for i-th parameter
-        params[i] = numpy.sum(prod, axis=1)
+        params[k] = numpy.sum(prod, axis=1)
         # transform the sum
-        params[i] = link_fun[i]( params[i] )
+        params[k] = link_fun[k]( params[k] )
     #
     return params
