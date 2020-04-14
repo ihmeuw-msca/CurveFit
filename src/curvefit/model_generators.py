@@ -99,7 +99,7 @@ class ModelPipeline:
         self.draws = None
         self.draw_models = None
 
-    def run(self, n_draws, prediction_times, cv_threshold,
+    def run(self, n_draws, prediction_times, cv_lower_threshold,
             smoothed_radius, num_smooths, exclude_groups, exclude_below=0, cv_upper_threshold=np.inf):
         """
         Runs the whole model with PV and forecasting residuals and creating draws.
@@ -107,7 +107,7 @@ class ModelPipeline:
         Args:
             n_draws: (int) number of draws to produce
             prediction_times: (np.array) array of times to make predictions at
-            cv_threshold: (float) lower bound on the coefficient of variation
+            cv_lower_threshold: (float) lower bound on the coefficient of variation
                 for the residuals simulation
             cv_upper_threshold: (optional float) upper bound on the coefficient of variation
                 for the residuals simulation
@@ -123,7 +123,7 @@ class ModelPipeline:
         Returns:
         """
         assert type(n_draws) == int
-        assert type(cv_threshold) == float
+        assert type(cv_lower_threshold) == float
         assert type(cv_upper_threshold) == float
         assert type(smoothed_radius) == list
         assert type(num_smooths) == int
@@ -150,7 +150,7 @@ class ModelPipeline:
         # Create draws. Access them in self.draws by location.
         self.create_draws(
             num_draws=n_draws,
-            std_threshold=cv_threshold,
+            std_lower_threshold=cv_lower_threshold,
             std_upper_threshold=cv_upper_threshold,
             prediction_times=prediction_times,
             theta=self.theta
@@ -248,7 +248,7 @@ class ModelPipeline:
         )
 
     def create_draws(self, num_draws, prediction_times,
-                     theta=1, std_threshold=1e-2, std_upper_threshold=np.inf):
+                     theta=1, std_lower_threshold=1e-2, std_upper_threshold=np.inf):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
         for far out and num data points.
@@ -256,7 +256,8 @@ class ModelPipeline:
         Args:
             num_draws: (int) the number of draws to take
             prediction_times: (int) which times to produce final predictions (draws) at
-            std_threshold: (float) floor for standard deviation
+            std_lower_threshold: (float) floor for standard deviation
+            std_uppper_threshold: (float) ceiling for standard deviation
             theta: (float) between 0 and 1, how much scaling of the residuals to do relative to the prediction mean
         """
         if self.pv.all_residuals is None:
@@ -282,8 +283,8 @@ class ModelPipeline:
                 prediction_times=prediction_times,
                 group=group,
                 theta=theta,
-                epsilon=std_threshold,
-                epsilon_upper_threshold=std_upper_threshold
+                std_floor=std_lower_threshold,
+                std_ceiling=std_upper_threshold
             )
             if self.de_bias_draws:
                 draws = draws - draws.var(axis=0) / 2
