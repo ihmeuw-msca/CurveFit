@@ -1,5 +1,4 @@
 import numpy
-import scipy
 from cppad_py import a_double
 
 # ---------------------------------------------------------------------------
