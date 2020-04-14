@@ -1,8 +1,16 @@
-import warnings
 import numpy
 import scipy
 from cppad_py import a_double
 
+def constant_array(shape, value) :
+    size = 1
+    for dim in shape :
+        size *= dim
+    vec = numpy.empty(size, dtype=type(value))
+    for i in range(size) :
+        vec[i] = value
+    return numpy.reshape(vec, shape)
+#
 def a_erf(vec) :
     result = numpy.empty(len(vec), dtype = a_double )
     for i in range( len(vec) ) :
@@ -45,3 +53,8 @@ def a_log_expit(t, param) :
 def a_log_gaussian_cdf(t, param) :
     alpha, beta, p = unpack_param(t, param)
     return numpy.log( a_gaussian_cdf(t, param) )
+#
+def a_dgaussian_cdf(t, param) :
+    alpha, beta, p = unpack_param(t, param)
+    z              = alpha * (t - beta)
+    return alpha * p * a_exp( - z * z ) / numpy.sqrt(numpy.pi)
