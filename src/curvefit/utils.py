@@ -672,3 +672,156 @@ def smooth_mat(mat, radius=None):
         mean = mean.ravel()
 
     return mean
+
+
+def split_by_group(df, col_group):
+    """Split the data frame by the group definition.
+    Args:
+        df (pd.DataFrame): Provided data frame.
+        col_group (str): Column name of group definition.
+    Returns:
+        dict{str, pd.DataFrame}:
+            Dictionary with key as the group definition and value as the
+            corresponding data frame.
+    """
+    assert col_group in df
+    data = {
+        group: df[df[col_group] == group].reset_index(drop=True)
+        for group in df[col_group].unique()
+    }
+
+    return data
+
+
+def filter_death_rate(df, col_t, col_death_rate):
+    """Filter cumulative death rate. Remove non-monotonically increasing points.
+    Args:
+        df (pd.DataFrame): Provided data frame.
+        col_t (str): Column name of the independent variable.
+        col_death_rate (str): Name for column that contains the death rate.
+    Returns:
+        pd.DataFrame: Filtered data frame.
+    """
+    df = df.sort_values(col_t).reset_index(drop=True)
+    t = df[col_t]
+    death_rate = df[col_death_rate]
+    drop_idx = [i for i in range(1, t.size)
+                if np.any(death_rate[i] <= death_rate[:i])]
+    df = df.drop(drop_idx).reset_index(drop=True)
+    return df
+
+def filter_death_rate_by_group(df, col_group, col_t, col_death_rate):
+    """Filter cumulative death rate within each group.
+    Args:
+        df (pd.DataFrame): Provided data frame.
+        col_group (str): Column name of group definition.
+        col_t (str): Column name of the independent variable.
+        col_death_rate (str): Name for column that contains the death rate.
+    Returns:
+        pd.DataFrame: Filtered data frame.
+    """
+    df_split = list(split_by_group(df, col_group).values())
+    for i, df_sub in enumerate(df_split):
+        df_split[i] = filter_death_rate(df_sub, col_t, col_death_rate)
+
+    return pd.concat(df_split)
+
+
+def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
+                                   tol_num_obs=20,
+                                   tol_after_peak=3,
+                                   return_poly_fit=False):
+    """Create potential peaked groups.
+
+    Args:
+        df (pd.DataFrame): Provided data frame.
+        col_group (str): Column name of group definition.
+        col_t (str): Column name of the independent variable.
+        col_death_rate (str): Name for column that contains the death rate.
+        spline_konts (np.array, optional):
+            Knots for the spline fits.
+        spline_degree (int, optional):
+            Degree for the spline fits.
+        tol_num_obs (int, optional):
+            Only the ones with number of observation above or equal to this
+            threshold will be considered as the potential peaked group.
+        tol_after_peak (int | float, optional):
+            Pick the ones already pass peaked day for this amount of time.
+        return_poly_fit (bool, optional):
+            If True, return the spline fits as well.
+
+    Returns:
+        list | tuple(list, dict):
+            List of potential peaked groups or with the spline fit as well.
+    """
+    data = process_input(df, col_group, col_t, col_death_rate, return_df=False)
+
+    poly_fit = {}
+    for location in data.keys():
+        df = data[location]
+        t = df['days']
+        y = df['ln asddr']
+
+        c = np.polyfit(t, y, 2)
+        poly_fit.update({
+            location: deepcopy(c)
+        })
+
+    potential_groups = []
+    for i, (location, df) in enumerate(data.items()):
+        c = poly_fit[location]
+        last_day = df['days'].max()
+        num_obs = df.shape[0]
+        b = np.inf if np.isclose(c[0], 0.0) else -0.5*c[1]/c[0]
+        if c[0] < 0.0 and b >= 0.0 and num_obs >= tol_num_obs and \
+            last_day - b >= tol_after_peak:
+            potential_groups.append(location)
+
+    if return_poly_fit:
+        return potential_groups, poly_fit
+    else:
+        return potential_groups
+
+
+def process_input(df, col_group, col_t, col_death_rate, return_df=True):
+    """Trim filter and adding extra information to the data frame.
+    Args:
+        df (pd.DataFrame): Provided data frame.
+        col_group (str): Column name of group definition.
+        col_t (str): Column name of the independent variable.
+        col_death_rate (str): Name for column that contains the death rate.
+        return_df (bool, optional):
+            If True return the combined data frame, otherwise return the
+            splitted dictionary.
+    Returns:
+        pd.DataFrame: processed data frame.
+    """
+    assert col_group in df
+    assert col_t in df
+    assert col_death_rate in df
+
+    # trim down the data frame
+    df = df[[col_group, col_t, col_death_rate]].reset_index(drop=True)
+    df.sort_values([col_group, col_t], inplace=True)
+    df.columns = ['location', 'days', 'ascdr']
+
+    # check and filter and add more information
+    data = split_by_group(df, col_group='location')
+    for location, df_location in data.items():
+        assert df_location.shape[0] == df_location['days'].unique().size
+        df_location = filter_death_rate(df_location,
+                                        col_t='days',
+                                        col_death_rate='ascdr')
+        df_location['ln ascdr'] = np.log(df_location['ascdr'])
+        df_location['asddr'] = df_location['ascdr'].values - \
+            np.insert(df_location['ascdr'].values[:-1], 0, 0.0)
+        df_location['ln asddr'] = np.log(df_location['asddr'])
+
+        data.update({
+            location: df_location.copy()
+        })
+
+    if return_df:
+        return pd.concat(list(data.values()))
+    else:
+        return data
