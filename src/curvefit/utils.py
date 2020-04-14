@@ -825,3 +825,64 @@ def process_input(df, col_group, col_t, col_death_rate, return_df=True):
         return pd.concat(list(data.values()))
     else:
         return data
+
+
+def peak_score(t, y, c, num_obs,
+               tol_num_obs=5,
+               weight_num_obs=1.0,
+               min_score=0.1,
+               max_score=1.0,
+               lslope=0.1,
+               rslope=0.1):
+    """Compute the peak score of give prediction.
+
+    Args:
+        t (numpy.ndarray): Time array.
+        y (numpy.ndarray): Prediction in the daily death space.
+        c (numpy.ndarray): The coefficient of the polyfit.
+        num_obs (int): Number of the observations.
+        tol_num_obs (int, optional):
+            If num_obs lower than this value, then assign equal weights.
+        weight_num_obs (float, optional):
+            Weight for importancy of the number of observations.
+        min_score (float, optional): Minimum score, required to be positive.
+        max_score (float, optional):
+            Maximum score, required greater than min_score.
+        lslope (float, optional): Slope for underestimate the peak time.
+        rslope (float, optional): Slope for overestimate the peak time.
+
+    Returns:
+        float: The score.
+    """
+    assert isinstance(t, np.ndarray)
+    assert isinstance(y, np.ndarray)
+    assert isinstance(c, np.ndarray)
+    assert t.size == y.size
+    assert c.size == 3
+    assert num_obs >= 1.0
+    assert tol_num_obs >= 0.0
+    assert 0.0 <= weight_num_obs <= 1.0
+    assert min_score >= 0.0
+    assert max_score >= min_score
+    assert lslope >= 0.0
+    assert rslope >= 0.0
+
+    b = -0.5*c[1]/c[0]
+    beta = t[np.argmax(y)]
+    if np.isclose(c[0], 0.0) or \
+            c[0] > 0.0 or \
+            num_obs <= tol_num_obs or \
+            b <= 0.0:
+        return 0.5*(min_score + max_score)
+
+    if min_score == max_score:
+        return min_score
+
+    height = max_score - min_score
+
+    score = min_score + height*(1.0 - weight_num_obs/num_obs)*np.exp(-(
+        lslope*min(beta - b, 0.0)**2 +
+        rslope*max(beta - b, 0.0)**2
+    ))
+
+    return score
