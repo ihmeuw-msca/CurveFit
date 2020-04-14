@@ -7,6 +7,7 @@ function that takes those arguments. That callable will be generated with the mo
 """
 
 from copy import deepcopy
+import numpy as np
 
 from curvefit.model import CurveModel
 from curvefit.forecaster import Forecaster
@@ -99,7 +100,7 @@ class ModelPipeline:
         self.draw_models = None
 
     def run(self, n_draws, prediction_times, cv_threshold,
-            smoothed_radius, num_smooths, exclude_groups, exclude_below=0):
+            smoothed_radius, num_smooths, exclude_groups, exclude_below=0, cv_upper_threshold=np.inf):
         """
         Runs the whole model with PV and forecasting residuals and creating draws.
 
@@ -107,6 +108,8 @@ class ModelPipeline:
             n_draws: (int) number of draws to produce
             prediction_times: (np.array) array of times to make predictions at
             cv_threshold: (float) lower bound on the coefficient of variation
+                for the residuals simulation
+            cv_upper_threshold: (optional float) upper bound on the coefficient of variation
                 for the residuals simulation
             smoothed_radius: List[int] residual smoothing before running the
                 residual forecast -- how many neighbors to look at, e.g. [3, 3]
@@ -121,6 +124,7 @@ class ModelPipeline:
         """
         assert type(n_draws) == int
         assert type(cv_threshold) == float
+        assert type(cv_upper_threshold) == float
         assert type(smoothed_radius) == list
         assert type(num_smooths) == int
         assert type(exclude_below) == int
@@ -147,6 +151,7 @@ class ModelPipeline:
         self.create_draws(
             num_draws=n_draws,
             std_threshold=cv_threshold,
+            std_upper_threshold=cv_upper_threshold,
             prediction_times=prediction_times,
             theta=self.theta
         )
@@ -243,7 +248,7 @@ class ModelPipeline:
         )
 
     def create_draws(self, num_draws, prediction_times,
-                     theta=1, std_threshold=1e-2):
+                     theta=1, std_threshold=1e-2, std_upper_threshold=np.inf):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
         for far out and num data points.
@@ -277,7 +282,8 @@ class ModelPipeline:
                 prediction_times=prediction_times,
                 group=group,
                 theta=theta,
-                epsilon=std_threshold
+                epsilon=std_threshold,
+                epsilon_upper_threshold=std_upper_threshold
             )
             if self.de_bias_draws:
                 draws = draws - draws.var(axis=0) / 2

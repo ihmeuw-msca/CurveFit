@@ -248,7 +248,8 @@ class Forecaster:
 
         return new_data
 
-    def create_residual_samples(self, num_simulations, forecast_out_times, num_data, epsilon):
+    def create_residual_samples(self, num_simulations, forecast_out_times, num_data, epsilon,
+                                epsilon_upper_threshold=np.inf):
         """
 
         Args:
@@ -263,12 +264,13 @@ class Forecaster:
         residuals = self.predict(
             far_out=forecast_out_times, num_data=np.array([num_data])
         )
-        std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
+        std_residual = residuals['residual_std'].apply(lambda x: min(max(x, epsilon), epsilon_upper_threshold)).values
         standard_noise = np.random.randn(num_simulations)
         error = np.outer(standard_noise, std_residual)
         return error
 
-    def simulate(self, mp, num_simulations, prediction_times, group, epsilon=1e-2, theta=1):
+    def simulate(self, mp, num_simulations, prediction_times, group, epsilon=1e-2, theta=1,
+                 epsilon_upper_threshold=np.inf):
         """
         Simulate the residuals based on the mean and standard deviation of predicting
         into the future.
@@ -298,7 +300,8 @@ class Forecaster:
             num_simulations=num_simulations,
             forecast_out_times=forecast_out_times,
             num_data=num_obs,
-            epsilon=epsilon
+            epsilon=epsilon,
+            epsilon_upper_threshold=epsilon_upper_threshold
         )
         no_error = np.zeros(shape=(num_simulations, sum(no_noise)))
         all_error = np.hstack([no_error, error])
