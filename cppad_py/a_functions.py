@@ -1,7 +1,9 @@
 import numpy
-import scipy
 from cppad_py import a_double
 
+# ---------------------------------------------------------------------------
+# Local Functions
+# ---------------------------------------------------------------------------
 def constant_array(shape, value) :
     size = 1
     for dim in shape :
@@ -10,6 +12,15 @@ def constant_array(shape, value) :
     for i in range(size) :
         vec[i] = value
     return numpy.reshape(vec, shape)
+#
+def array2a_double(array) :
+    shape = array.shape
+    size  = array.size
+    vec   = numpy.reshape(array, size, order='C')
+    a_vec = numpy.empty(shape, dtype=a_double)
+    for i in range(size) :
+        a_vec[i] = a_double( vec[i] )
+    return a_vec
 #
 def a_erf(vec) :
     result = numpy.empty(len(vec), dtype = a_double )
@@ -35,7 +46,9 @@ def unpack_param(t, param) :
     beta   = param[1]
     p      = param[2]
     return alpha, beta, p
-#
+# ---------------------------------------------------------------------------
+# Model Functions
+# ---------------------------------------------------------------------------
 def a_gaussian_cdf(t, param) :
     alpha, beta, p = unpack_param(t, param)
     z              = alpha * (t - beta)
@@ -69,3 +82,11 @@ def a_ddgaussian_cdf(t, param) :
     z              = alpha * (t - beta)
     two            = a_double(2.0)
     return - two * z * alpha * a_dgaussian_cdf(t, param)
+# ----------------------------------------------------------------------------
+# Loss Functions
+# ----------------------------------------------------------------------------
+def a_st_loss(r, nu) :
+    return numpy.sum( numpy.log( a_double(1.0) + r * r / nu) )
+#
+def a_normal_loss(r) :
+    return a_double(0.5) * numpy.sum( r * r )

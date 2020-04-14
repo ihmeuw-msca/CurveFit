@@ -12,6 +12,7 @@ file_list = [
 
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',
+    'src/curvefit/core/effects2params.py',
     'bin/extract_md.py',
     'bin/get_cppad_py.py',
 ]
@@ -32,6 +33,7 @@ extra_special_words = [
     r'\begin',
     r'\cdot',
     r'\circ',
+    r'\ell',
     r'\end',
     r'\exp',
     r'\frac',
