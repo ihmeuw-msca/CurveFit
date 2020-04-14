@@ -63,3 +63,9 @@ def a_log_dgaussian_cdf(t, param) :
     alpha, beta, p = unpack_param(t, param)
     z              = alpha * (t - beta)
     return numpy.log( alpha * p / numpy.sqrt(numpy.pi) ) - z * z
+#
+def a_ddgaussian_cdf(t, param) :
+    alpha, beta, p = unpack_param(t, param)
+    z              = alpha * (t - beta)
+    two            = a_double(2.0)
+    return - two * z * alpha * a_dgaussian_cdf(t, param)
