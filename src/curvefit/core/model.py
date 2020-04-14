@@ -25,7 +25,8 @@ class CurveModel:
                  var_link_fun,
                  fun,
                  col_obs_se=None,
-                 loss_fun=None):
+                 loss_fun=None,
+                 scale_obs_se=True):
         """Constructor function of LogisticCurveModel.
 
         Args:
@@ -57,6 +58,9 @@ class CurveModel:
                 assume all the observation standard error to be all one.
             loss_fun(callable | None, optional):
                 Loss function, if None, use Gaussian distribution.
+            scale_obs_se (bool, optional):
+                If scale the observation standard deviation by the absolute mean
+                of the observations.
         """
         # input data
         self.df = df.copy()
@@ -83,10 +87,13 @@ class CurveModel:
 
         # extracting information
         self.obs = self.df[self.col_obs].values
-        if self.col_obs_se is None:
-            self.obs_se = np.ones(self.num_obs)*self.obs.mean()
-        else:
-            self.obs_se = self.df[self.col_obs_se]
+        self.obs_se = np.ones(self.num_obs) if self.col_obs_se is None else \
+            self.df[col_obs_se].values
+
+        self.scale_obs_se = scale_obs_se
+        if self.scale_obs_se:
+            self.obs_se *= np.abs(self.obs).mean()/self.obs_se.mean()
+
         self.t = self.df[self.col_t].values
         self.group = self.df[self.col_group].values
         self.covs = [
