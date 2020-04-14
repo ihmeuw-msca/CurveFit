@@ -1,10 +1,7 @@
-#! /bin/python3
-# vim: set expandtab:
+#! /usr/bin/env python3
 '''
 {begin_markdown get_started_xam}
 {spell_markdown
-    frac
-    ldots
     params
     covs
     param
@@ -18,14 +15,40 @@
 
 # Getting Started Using CurveFit
 
-## Data Mean
+## Generalized Logistic Model
 The model for the mean of the data for this example is one of the following:
 \[
     f(t; \alpha, \beta, p)  = \frac{p}{1 + \exp [ -\alpha(t  - \beta) ]}
 \]
 where \( \alpha \), \( \beta \), and \( p \) are unknown parameters.
 
-## Problem Settings
+
+## Fixed Effects
+We use the notation \( a \), \( b \) and \( \phi \)
+for the fixed effect corresponding to the parameters
+\( \alpha \), \( \beta \), \( p \) respectively.
+For this example, the link functions, that map from the fixed
+effects to the parameters, are
+\[
+\begin{aligned}
+    \alpha & = \exp( a ) \\
+    \beta  & =  b \\
+    p      & = \exp( \phi  )
+\end{aligned}
+\]
+The fixed effects are initialized to be their true values divided by three.
+
+## Random effects
+For this example the random effects are constrained to be zero.
+
+## Covariates
+This example data set has two covariates,
+the constant one and a social distance measure.
+While the social distance is in the data set, it is not used.
+
+## Simulated data
+
+### Problem Settings
 The following settings are used to simulate the data and check
 that the solution is correct:
 ```python '''
@@ -35,8 +58,6 @@ alpha_true   = 2.0 / beta_true  # alpha_true * beta_true = 2.0
 p_true       = 0.1              # maximum cumulative death fraction
 rel_tol      = 1e-5  # relative tolerance used to check optimal solution
 '''```
-
-## Simulated data
 
 ### Time Grid
 A grid of *n_data* points in time, \( t_i \), where
@@ -56,31 +77,7 @@ To be specific, for \( i = 0 , \ldots , n_D - 1 \)
 Note that when we do the fitting, we model each data point as having
 noise.
 
-## Fixed Effects
-We use the notation \( a \), \( b \) and \( \phi \)
-for the fixed effect corresponding to the parameters
-\( \alpha \), \( \beta \), \( p \) respectively.
-For this example, the link functions, that map from the fixed
-effects to the parameters, are
-\[
-\begin{aligned}
-    \alpha & = \exp( a ) \\
-    \beta  & =  b \\
-    p      & = \exp( \phi  )
-\end{aligned}
-\]
-The fixed effects are initialized to be thier true values divided by three.
-
-## Random effects
-For this example the random effects are constrained to be zero.
-
-## Covariates
-This example data set has two covariates,
-the constant one and a social distance measure.
-While the social distance is in the data set, it is not used.
-
-
-## Source Code
+## Example Source Code
 ```python '''
 # -------------------------------------------------------------------------
 import scipy

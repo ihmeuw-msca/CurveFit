@@ -1,5 +1,4 @@
-#! /bin/python3
-# vim: set expandtab:
+#! /usr/bin/env python3
 # ----------------------------------------------------------------------------
 # Original *.md files are written in this directory (must start with docs/)
 output_dir = 'docs/extract_md'
@@ -7,13 +6,17 @@ output_dir = 'docs/extract_md'
 file_list = [
     'example/get_started.py',
     'example/covariate.py',
+    'example/random_effect.py',
     'example/sizes_to_indices.py',
+    'example/param_time_fun.py',
 
     'src/curvefit/core/utils.py',
-    'docs/extract_md.py',
+    'src/curvefit/core/functions.py',
+    'bin/extract_md.py',
+    'bin/get_cppad_py.py',
 ]
-# list of extra words to add to the pyspellchecker dictionary
-extra_spellchecker_words = [
+# list of extra words that the spell checker will consider correct
+extra_special_words = [
     'covariates',
     'covariate',
     'curvefit',
@@ -25,29 +28,50 @@ extra_spellchecker_words = [
     'py',
     'sandbox',
     'scipy',
+
+    r'\begin',
+    r'\cdot',
+    r'\circ',
+    r'\end',
+    r'\exp',
+    r'\frac',
+    r'\int',
+    r'\ldots',
+    r'\log',
+    r'\left',
+    r'\mbox',
+    r'\partial',
+    r'\right',
+    r'\sum',
 ]
 # ----------------------------------------------------------------------------
-'''{begin_markdown extract_md}
+'''{begin_markdown extract_md.py}
 {spell_markdown
     markdown
     md
+    underbar
 }
 
 # Extracting Markdown Documentation From Source Code
 
 ## Syntax
-`python docs/extract_md.py`
+`bin/extract_md.py`
 
 ## output_dir
-The variable *output_dir* at top of `docs/extract_md.py`
+The variable *output_dir* at top of `bin/extract_md.py`
 determines the directory where the markdown files will be written.
 Any files names that end in `.md` in that directory will be
 removed at the beginning (so that the extracted files can be easily recognized).
 
 ## file_list
-The variable *file_list* at top of `docs/extract_md.py`
+The variable *file_list* at top of `bin/extract_md.py`
 is a list of file names, relative to the top git repository directory,
 that the markdown files will be extracted from.
+
+## extra_special_words
+The variable *extra_special_words* is a list of extra words that
+the spell checker will consider correct; see
+[spell checking](#spell-checking) below.
 
 ## Start Section
 The start of a markdown section of the input file is indicated by the following
@@ -57,6 +81,8 @@ text:
 <p/>
 Here *section_name* is the name of output file corresponding to this section.
 This name does not include the *output_dir* or the .md extension.
+The possible characters in *section_name* are A-Z, a-z, 0-9, underbar `_`,
+and dot `.`.
 
 ## End Section
 The end of a markdown section of the input file is indicated by the following
@@ -71,17 +97,25 @@ Special words can be added to the correct spelling list for a particular
 section as follows:
 <p style="margin-left:10%">
 {spell_markdown
-    <i>special_1 ...  special_n
+    <i>special_1 ...  special_n</i>
 }
 <p/>
-Here *special_1*, ..., *special_n* are special words (a sequence of letters)
+Here *special_1*, ..., *special_n* are special words
 that are to be considered valid for this section.
 In the syntax above they are all on the same line,
 but they could be on different lines.
-Words are an Upper or lower case letter followed by a sequence of
-lower case letters. The case of the first letter does not matter
-when checking for special words; e.g., if `abcd` is *special_1* then
-`Abcd` will be considered a valid word.
+Each word starts with an upper case letter,
+a lower case letter, or a back slash.
+The rest of the characters in a word are lower case letters.
+The case of the first letter does not matter when checking for special words;
+e.g., if `abcd` is *special_1* then `Abcd` will be considered a valid word.
+The back slash is included at the beginning of a word
+so that latex commands are considered words.
+The latex commands corresponding to the letters in the greek alphabet
+are automatically included.
+Any latex commands in the
+[extra_special_words](#extra_special_words)
+are also automatically included.
 
 ## Code Blocks
 A code block within a markdown section begins and ends with three back quotes.
@@ -95,24 +129,58 @@ in the output.
 
 ## Indentation
 If all of the extracted markdown documentation for a section is indented
-by the same number of space characters, that may space characters
+by the same number of space characters, those space characters
 are not included in the markdown output. This enables one to indent the
 markdown so it is grouped with the proper code block in the source.
 
-{end_markdown extract_md}'''
+{end_markdown extract_md.py}'''
 # ----------------------------------------------------------------------------
 import sys
 import re
 import os
 import pdb
 import spellchecker
+# ---------------------------------------------------------------------------
+# spell_checker
+bad_words_in_spellchecker = [
+    'thier',
+]
+greek_alphabet_latex_command = [
+    r'\alpha',
+    r'\beta',
+    r'\gamma',
+    r'\delta',
+    r'\epsilon',
+    r'\zeta',
+    r'\eta',
+    r'\theta',
+    r'\iota',
+    r'\kappa',
+    r'\lamda',
+    r'\mu',
+    r'\nu',
+    r'\xi',
+    r'\omicron',
+    r'\pi',
+    r'\rho',
+    r'\sigma',
+    r'\tau',
+    r'\upsilon',
+    r'\phi',
+    r'\chi',
+    r'\psi',
+    r'\omega',
+]
 #
 spell_checker = spellchecker.SpellChecker(distance=1)
-spell_checker.word_frequency.load_words(extra_spellchecker_words)
+spell_checker.word_frequency.remove_words(bad_words_in_spellchecker)
+spell_checker.word_frequency.load_words(greek_alphabet_latex_command)
+spell_checker.word_frequency.load_words(extra_special_words)
+# ---------------------------------------------------------------------------
 #
 # add program name to system error call
 def sys_exit(msg) :
-    sys.exit( 'docs/extract_md.py: ' + msg )
+    sys.exit( 'bin/extract_md.py: ' + msg )
 #
 # check working directory
 if not os.path.isdir('.git') :
@@ -134,13 +202,13 @@ section_list       = list()
 corresponding_file = list()
 #
 # pattern for start of markdown section
-pattern_begin_markdown = re.compile( '\\{begin_markdown \\s*(\\w*)\\}' )
-pattern_end_markdown   = re.compile( '\\{end_markdown \\s*(\\w*)\\}' )
-pattern_spell_markdown = re.compile( '\\{spell_markdown([^}]*)\\}' )
-pattern_begin_3quote   = re.compile( '[^\\n]*(```\\s*\\w*)[^\\n]*' )
-pattern_end_3quote     = re.compile( '[^\\n]*(```)[^\\n]*' )
-pattern_newline        = re.compile( '\\n')
-pattern_word           = re.compile( '[A-Za-z][a-z]*' )
+pattern_begin_markdown = re.compile( r'{begin_markdown \s*([A-Za-z0-9_.]*)}' )
+pattern_end_markdown   = re.compile( r'{end_markdown \s*([A-Za-z0-9_.]*)}' )
+pattern_spell_markdown = re.compile( r'{spell_markdown([^}]*)}' )
+pattern_begin_3quote   = re.compile( r'[^\n]*(```\s*\w*)[^\n]*' )
+pattern_end_3quote     = re.compile( r'[^\n]*(```)[^\n]*' )
+pattern_newline        = re.compile( r'\n')
+pattern_word           = re.compile( r'[\\A-Za-z][a-z]*' )
 # -----------------------------------------------------------------------------
 # process each file in the list
 for file_in in file_list :
@@ -160,8 +228,9 @@ for file_in in file_list :
         #
         if match_begin == None :
             if data_index == 0 :
-                # There is no match for pattern_begin_markdown in this file.
-                msg  = 'can not find: {begin_markdown section_name\}\n'
+                # Use @ so does not match pattern_begin_markdown in this file.
+                msg  = 'can not find: @begin_markdown section_name}\n'
+                msg  = msg.replace('@', '{')
                 msg += 'in ' + file_in + '\n'
                 sys_exit(msg)
             data_index = len(file_data)
@@ -191,7 +260,7 @@ for file_in in file_list :
             match_end = pattern_end_markdown.search(data_rest)
             #
             if match_end == None :
-                msg  = 'can not find: [end\_markdown section_name]\n'
+                msg  = 'can not find: "{end_markdown section_name}\n'
                 msg += 'in ' + file_in + ', section ' + section_name + '\n'
                 sys_exit(msg)
             #

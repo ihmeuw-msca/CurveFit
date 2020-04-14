@@ -1,7 +1,113 @@
 # -*- coding: utf-8 -*-
-"""
-    Functions used for curve fitting.
-"""
+# ---------------------------------------------------------------------------
+# model functions:
+# ---------------------------------------------------------------------------
+'''{begin_markdown param_time_fun}
+{spell_markdown
+    params
+    expit
+    erf
+    derf
+    dderf
+    xam
+    param
+}
+# Predefined Parametric Functions of Time
+
+## head Syntax
+`result = curvefit.core.functions.fun(t, params)`
+
+## t
+This is a `list` or one dimensional `numpy.array`.
+
+## params
+This is either a `list`, or `numpy.array` with one or two dimensions.
+In any case, `len(params) == 3`.
+If `params` is a two dimensional array, `params.shape[1] == len(t)`.
+We use the notation below for the values in `params`:
+
+Notation | Definition
+--- | ---
+\( \alpha \) | `params[0]`
+\( \beta \) | `params[1]`
+\( p \) | `params[2]`
+
+## fun
+The possible values for *fun* are listed in the subheadings below:
+
+### expit
+This is the generalized logistic function which is defined by
+\[
+    \mbox{expit} ( t , \alpha , \beta , p ) =
+    \frac{p}{ 1.0 + \exp [ - \alpha ( t - \beta ) ] }
+\]
+
+### log_expit
+This is the log of the generalized logistic function which is defined by
+\[
+    \mbox{log_expit} ( t , \alpha , \beta , p ) =
+        \log \circ \; \mbox{expit} ( t , \alpha , \beta , p )
+\]
+
+### erf
+This is the generalized Gaussian error function which is defined by
+\[
+    \mbox{erf} ( t , \alpha , \beta , p ) = \frac{p}{2} \left[
+        1.0 + \frac{2}{\pi} \int_0^{\alpha(t-\beta)}
+            \exp ( - \tau^2 ) d \tau
+    \right]
+\]
+
+### log_erf
+This is the log of the
+generalized Gaussian error function which is defined by
+\[
+    \mbox{log_erf} ( t , \alpha , \beta , p ) =
+        \log \circ \; \mbox{erf} ( t , \alpha , \beta , p )
+\]
+
+### derf
+This is the derivative of the
+generalized Gaussian error function which is defined by
+\[
+    \mbox{derf} ( t , \alpha , \beta , p ) =
+        \partial_t \; \mbox{erf} ( t , \alpha , \beta , p )
+\]
+
+### log_derf
+This is the log of the derivative of the
+generalized Gaussian error function which is defined by
+\[
+    \mbox{log_erf} ( t , \alpha , \beta , p ) =
+        \log \circ \; \mbox{derf} ( t , \alpha , \beta , p )
+\]
+
+### dderf
+This is the second derivative of the
+generalized Gaussian error function which is defined by
+\[
+    \mbox{dderf} ( t , \alpha , \beta , p ) =
+        \partial_t \; \mbox{derf} ( t , \alpha , \beta , p )
+\]
+
+
+## result
+The result is a `list` or one dimensional `numpy.array` with
+`len(result) == len(t)`.
+If *params* is a `list` or one dimensional array
+```python
+    result[i] = fun(t[i], alpha, beta, p)
+```
+If *params* is a two dimensional array
+```python
+    result[i] = fun(t[i], alpha[i], beta[i], p[i])
+```
+
+## Example
+[param_time_fun_xam](param_time_fun_xam.md)
+
+{end_markdown param_time_fun}'''
+# ----------------------------------------------------------------------------
 import numpy as np
 from scipy import special
 
@@ -80,6 +186,10 @@ def dderf(t, params):
     p = params[2]
     tmp = a*(t - b)
     return -2.0*a**2*p*tmp*np.exp(-tmp**2)/np.sqrt(np.pi)
+
+# ---------------------------------------------------------------------------
+# Other fuctions
+# ---------------------------------------------------------------------------
 
 
 # Student's T loss function

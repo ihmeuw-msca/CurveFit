@@ -15,7 +15,8 @@ setup(
         'pandas',
         'pytest',
         'matplotlib',
-        'xspline'
+        'xspline',
+        'scikit-learn',
     ],
-    zip_safe=False
+    zip_safe=False,
 )
