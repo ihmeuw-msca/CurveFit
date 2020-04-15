@@ -917,3 +917,19 @@ def peak_score(t, y, c, num_obs,
     ))
 
     return score
+
+def compute_gaussian_mixture_matrix(x, params, beta_stride, mixture_size):
+    half_size = mixture_size // 2
+    mixture_size = half_size * 2 + 1 # making sure it's odd
+    betas = np.linspace(
+        params[1] - half_size * beta_stride, 
+        params[1] + half_size * beta_stride, 
+        num=mixture_size,
+    )
+    assert np.abs(betas[half_size] - params[1]) / np.abs(params[1]) < 1e-2
+    X = []
+    for beta in betas:
+        X.append(gaussian_pdf(x, [params[0], beta, params[2]]))
+    X = np.asarray(X).T
+    assert X.shape == (len(x), mixture_size)
+    return X, betas
