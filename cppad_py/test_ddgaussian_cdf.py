@@ -3,7 +3,7 @@ import cppad_py
 import curvefit
 import a_functions
 #
-def test_ddgaussian_cdf() :
+def test_dgaussian_pdf() :
     eps99  = 99.0 * numpy.finfo(float).eps
     #
     # test values for t, param
@@ -19,17 +19,17 @@ def test_ddgaussian_cdf() :
         for j in range( param.shape[1] ) :
             aparam[i][j] = cppad_py.a_double( param[i][j] )
     # -----------------------------------------------------------------------
-    # f(t) = dgaussian_cdf(t, param)
+    # f(t) = gaussian_pdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.a_dgaussian_cdf(at, aparam)
+    ay = a_functions.a_gaussian_pdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
-    # g(t) = ddgaussian_cdf(t, param)
+    # g(t) = dgaussian_pdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.a_ddgaussian_cdf(at, aparam)
+    ay = a_functions.a_dgaussian_pdf(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
-    # check a_ddgaussian_cdf
+    # check a_dgaussian_pdf
     f.forward(0, t)
     g0  = g.forward(0, t)
     dt  = a_functions.constant_array((t.size,), 0.0)

@@ -3,7 +3,7 @@ import cppad_py
 import curvefit
 import a_functions
 #
-def test_dgaussian_cdf() :
+def test_gaussian_pdf() :
     eps99  = 99.0 * numpy.finfo(float).eps
     #
     # test values for t, param
@@ -26,10 +26,10 @@ def test_dgaussian_cdf() :
     #
     # g(t) = d/dt gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.a_dgaussian_cdf(at, aparam)
+    ay = a_functions.a_gaussian_pdf(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
-    # check a_dgaussian_cdf
+    # check a_gaussian_pdf
     f.forward(0, t)
     g0  = g.forward(0, t)
     dt  = a_functions.constant_array((t.size,), 0.0)
@@ -40,9 +40,9 @@ def test_dgaussian_cdf() :
         dt[i]     = 0.0
         assert abs(rel_error) < eps99
     # -----------------------------------------------------------------------
-    # check a_log_dgaussain_cdf
+    # check a_ln_dgaussain_cdf
     at = cppad_py.independent(t)
-    ay = a_functions.a_log_dgaussian_cdf(at, aparam)
+    ay = a_functions.a_ln_gaussian_pdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     f0 = f.forward(0, t)
     rel_error = f0 / numpy.log(g0) - 1

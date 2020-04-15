@@ -28,7 +28,7 @@ def test_gaussian_cdf() :
     y  = f.forward(0, t)
     #
     # check using curvefit values for same function
-    check     = curvefit.core.functions.erf(t, param)
+    check     = curvefit.core.functions.gaussian_cdf(t, param)
     rel_error = y / check - 1.0
     assert all( abs( rel_error ) < eps99 )
     #
@@ -39,7 +39,7 @@ def test_gaussian_cdf() :
     assert J.shape[1] == t.size
     #
     # check using curvefitl values for derivative function
-    check = curvefit.core.functions.derf(t, param)
+    check = curvefit.core.functions.gaussian_pdf(t, param)
     for i in range( t.size ) :
         for i in range( t.size ) :
             if i == j :
@@ -48,15 +48,15 @@ def test_gaussian_cdf() :
             else :
                 assert J[i,j] == 0.0
     # -----------------------------------------------------------------------
-    # g(t) = log_gaussian_cdf(t, param)
+    # g(t) = ln_gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.a_log_gaussian_cdf(at, aparam)
+    ay = a_functions.a_ln_gaussian_cdf(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
     # zero order foward mode using same values as during recording
     y  = g.forward(0, t)
     #
     # check using curvefit values for same function
-    check     = curvefit.core.functions.log_erf(t, param)
+    check     = curvefit.core.functions.ln_gaussian_cdf(t, param)
     rel_error = y / check - 1.0
     assert all( abs( rel_error ) < eps99 )
