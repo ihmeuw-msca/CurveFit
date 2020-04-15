@@ -3,10 +3,10 @@
     test new pipeline
 """
 import numpy as np
-from .model_generators import BasicModel
-from .model import CurveModel
-from .utils import *
-from .functions import *
+from curvefit.pipelines._pipeline import BasicModel
+from curvefit.model import CurveModel
+from curvefit.utils import *
+from curvefit.functions import *
 from copy import deepcopy
 import matplotlib.pyplot as plt
 
