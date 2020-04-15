@@ -12,13 +12,13 @@ Peng Zheng (zhengp@uw.edu)
 Marlena Bannick (mnorwood@uw.edu)
 
 ### Resources
--Current forecasts: https://covid19.healthdata.org/projections
+- Current forecasts: https://covid19.healthdata.org/projections
 
--FAQ: http://www.healthdata.org/covid/faqs
+- FAQ: http://www.healthdata.org/covid/faqs
 
--Updates: http://www.healthdata.org/covid/updates
+- Updates: http://www.healthdata.org/covid/updates
 
--Paper (will be updated soon): https://www.medrxiv.org/content/10.1101/2020.03.27.20043752v1
+- Paper (will be updated soon): https://www.medrxiv.org/content/10.1101/2020.03.27.20043752v1
 
 
 ### **For any inquiries, please contact covid19@healthdata.org.**
