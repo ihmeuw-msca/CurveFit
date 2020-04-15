@@ -215,15 +215,15 @@ class ModelPipeline:
         Returns:
 
         """
-        if group is not None:
+        if group is None:
             group_df = df.copy()
         else:
-            group_df = df.loc[self.col_group == group].copy()
+            group_df = df.loc[df[self.col_group] == group].copy()
         self.fit(df=df, group=group)
         if self.bias_correction is not None:
-            if len(group_df[self.col_t].unique()) < self.bias_correction:
+            if len(group_df[self.col_t].unique()) > self.bias_correction:
                 self.bias_corrector = BiasCorrector(
-                    data=df,
+                    data=group_df,
                     col_t=self.col_t,
                     col_group=self.col_group,
                     col_obs=self.col_obs,
@@ -244,29 +244,35 @@ class ModelPipeline:
         """
         pass
 
-    def get_predictions(self, times, predict_space, predict_group):
+    def get_predictions(self, times, predict_space, predict_group,
+                        forecast_time_start=0):
         """
         Creates predictions with a bias correction, if applicable.
         Don't override this class, instead override self.predict.
 
         Args:
-            times:
-            predict_space:
-            predict_group:
+            times: (np.array) prediction times
+            predict_space: (callable) space to predict in
+            predict_group: (str) group to predict for
+            forecast_time_start: (int) time point at which the forecasting
+                starts rather than fitting
 
         Returns:
 
         """
-        predictions = self.predict(
-            times=times,
-            predict_space=predict_space,
-            predict_group=predict_group
-        )
-        if self.bias_correction is None:
-            return predictions
+        if self.bias_corrector is None:
+            return self.predict(
+                times=times,
+                predict_space=predict_space,
+                predict_group=predict_group
+            )
         else:
             return self.bias_corrector.get_corrected_predictions(
-                predictions=predictions
+                mp=self,
+                times=times,
+                predict_space=predict_space,
+                predict_group=predict_group,
+                forecast_time_start=forecast_time_start
             )
 
     def run_predictive_validity(self, theta):

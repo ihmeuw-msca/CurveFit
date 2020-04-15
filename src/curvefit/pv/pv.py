@@ -1,5 +1,7 @@
 import numpy as np
 import pandas as pd
+import math
+
 from curvefit.diagnostics.plot_diagnostics import plot_residuals, plot_predictions, plot_residuals_1d, plot_es
 from curvefit.core.utils import neighbor_mean_std
 
@@ -131,16 +133,16 @@ class PVGroup:
         """
         Run predictive validity for all observation sequences in the available data for this group.
         """
-        print(f"Running PV for {self.predict_group}")
+        print(f"Running PV for {self.predict_group} and ")
 
         self.prediction_matrix = np.empty((self.num_times, self.num_times))
         self.prediction_matrix[:] = np.nan
 
         for i, time in enumerate(self.times):
-            print(f"Fitting model for end time {time}", end='\r')
             # don't fit the model with holdouts that won't be used
             if i not in self.eval_indices:
                 continue
+            print(f"Predictive validity fitting model for {self.predict_group} end time {time}.")
 
             # remove the rows for this group that are greater than the available times
             remove_rows = (self.df[self.col_t] > time) & (self.df[self.col_grp] == self.predict_group)
@@ -150,7 +152,8 @@ class PVGroup:
             self.prediction_matrix[i, :] = self.models[i].get_predictions(
                 times=self.times,
                 predict_space=self.predict_space,
-                predict_group=self.predict_group
+                predict_group=self.predict_group,
+                forecast_time_start=math.ceil(time)
             )
 
         self.compute_residuals(theta=theta)
@@ -423,14 +426,30 @@ class PVModel:
                            absolute=True,
                            x_label=x_axis, y_label=y_axis)
 
-    def plot_predictions(self, group_name):
+    def plot_predictions(self, group_name, bias_correction=False):
         """
         Plot the predictions for one location for each model that was fit deleting the ith data point.
         Args:
             group_name: (str) location to plot
+            bias_correction: (bool) whether or not to plot the bias correction
         """
         times = self.pv_groups[group_name].times
         observations = self.pv_groups[group_name].compare_observations
         predictions = self.pv_groups[group_name].prediction_matrix
+
+        if bias_correction:
+            uncorrected_preds = np.empty(self.pv_groups[group_name].prediction_matrix.shape)
+            uncorrected_preds[:] = np.nan
+
+            for i, model in enumerate(self.pv_groups[group_name].models):
+                if model.bias_corrector is None:
+                    continue
+                else:
+                    bp = model.bias_corrector.pv_groups[group_name].prediction_matrix[-1]
+                    uncorrected_preds[i, 0:bp.shape[0]] = bp
+        else:
+            uncorrected_preds = None
+
         plot_predictions(prediction_array=predictions, group_name=group_name,
-                         times=times, observations=observations)
+                         times=times, observations=observations,
+                         bias=uncorrected_preds)
