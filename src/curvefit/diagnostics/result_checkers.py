@@ -32,41 +32,41 @@ class ResultChecker:
         raise NotImplementedError() 
 
 
-class LogDerfRegressionChecker(ResultChecker):
+class LogDgaussian_cdfRegressionChecker(ResultChecker):
 
-    def __init__(self, df, col_log_derf_obs, col_group, col_t, col_est=None, models_dict=None):
-        super().__init__(df, col_log_derf_obs, col_group, col_est, models_dict)
+    def __init__(self, df, col_ln_gaussian_pdf_obs, col_group, col_t, col_est=None, models_dict=None):
+        super().__init__(df, col_ln_gaussian_pdf_obs, col_group, col_est, models_dict)
         self.col_t = col_t
 
     def check_result(self): 
-        log_derf_obs = []
+        ln_gaussian_pdf_obs = []
         times = []
         estimates = []
         for grp in self.groups:
-            log_derf_obs.append(self.obs_by_group[grp])
+            ln_gaussian_pdf_obs.append(self.obs_by_group[grp])
             times.append(self.df_by_group[grp][self.col_t].to_numpy())
             estimates.append(self.est_by_group[grp])
             
-        lr_log_derf = LinearRegressionBaseline(log_derf_obs, self.groups, times)
-        lr_log_derf.fit()
-        metric_fun_log_derf = lambda est, obs: np.sqrt(np.mean((est - obs)**2))
-        log_derf_rmses = lr_log_derf.compare(estimates, self.groups, metric_fun_log_derf)
-        metric_fun_derf = lambda est, obs: np.sqrt(np.mean((np.exp(est) - np.exp(obs))**2))
-        derf_rmses = lr_log_derf.compare(estimates, self.groups, metric_fun_derf)
+        lr_ln_gaussian_pdf = LinearRegressionBaseline(ln_gaussian_pdf_obs, self.groups, times)
+        lr_ln_gaussian_pdf.fit()
+        metric_fun_ln_gaussian_pdf = lambda est, obs: np.sqrt(np.mean((est - obs)**2))
+        ln_gaussian_pdf_rmses = lr_ln_gaussian_pdf.compare(estimates, self.groups, metric_fun_ln_gaussian_pdf)
+        metric_fun_gaussian_pdf = lambda est, obs: np.sqrt(np.mean((np.exp(est) - np.exp(obs))**2))
+        gaussian_pdf_rmses = lr_ln_gaussian_pdf.compare(estimates, self.groups, metric_fun_gaussian_pdf)
 
         rmses = collections.defaultdict(list)
-        for k, v in log_derf_rmses.items():
+        for k, v in ln_gaussian_pdf_rmses.items():
             rmses[k].extend(v)
-        for k, v in derf_rmses.items():
+        for k, v in gaussian_pdf_rmses.items():
             rmses[k].extend(v)
         result_df = pd.DataFrame.from_dict(
             rmses, 
             orient='index', 
             columns=[
-                'baseline RMSE log_derf', 
-                'curr model RMSE log_derf', 
-                'baseline RMSE derf', 
-                'curr model RMSE derf',
+                'baseline RMSE ln_gaussian_pdf', 
+                'curr model RMSE ln_gaussian_pdf', 
+                'baseline RMSE gaussian_pdf', 
+                'curr model RMSE gaussian_pdf',
             ]
         )
         return result_df

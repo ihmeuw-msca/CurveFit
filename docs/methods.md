@@ -5,7 +5,7 @@ The main application in this development is COVID-19 forecasting, so that
 the curves we consider are variants of logistic models. However the interface
 allows any user-specified parametrized family.
 
-Parametrized curves have several key features that make them useful for forecating:  
+Parametrized curves have several key features that make them useful for forecasting:  
 
 - We can capture key signals from noisy data.
 - Parameters are interpretable, and can be modeled using covariates in a transparent way.

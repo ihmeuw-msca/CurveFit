@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 from curvefit.core.model import CurveModel
-from curvefit.core.functions import log_erf
+from curvefit.core.functions import ln_gaussian_cdf
 from curvefit.core.functions import normal_loss, st_loss
 from curvefit.core.effects2params import effects2params
 
@@ -24,7 +24,7 @@ def test_data(seed=123):
 
 
 @pytest.mark.parametrize('param_names', [['alpha', 'beta', 'p']])
-@pytest.mark.parametrize('fun', [log_erf])
+@pytest.mark.parametrize('fun', [ln_gaussian_cdf])
 @pytest.mark.parametrize('link_fun', [[np.exp, lambda x: x, np.exp]])
 @pytest.mark.parametrize('var_link_fun', [[lambda x: x]*3])
 @pytest.mark.parametrize('loss_fun', [normal_loss, st_loss])
@@ -58,7 +58,7 @@ def test_loss_fun(test_data, param_names,
 
 
 @pytest.mark.parametrize('param_names', [['alpha', 'beta', 'p']])
-@pytest.mark.parametrize('fun', [log_erf])
+@pytest.mark.parametrize('fun', [ln_gaussian_cdf])
 @pytest.mark.parametrize('link_fun', [[np.exp, lambda x: x, np.exp]])
 @pytest.mark.parametrize('var_link_fun', [[lambda x: x]*3])
 @pytest.mark.parametrize('loss_fun', [normal_loss])
@@ -77,7 +77,7 @@ def test_defualt_obs_se(test_data, param_names,
 
 
 @pytest.mark.parametrize('param_names', [['alpha', 'beta', 'p']])
-@pytest.mark.parametrize('fun', [log_erf])
+@pytest.mark.parametrize('fun', [ln_gaussian_cdf])
 @pytest.mark.parametrize('link_fun', [[np.exp, lambda x: x, np.exp]])
 @pytest.mark.parametrize('var_link_fun', [[lambda x: x]*3])
 @pytest.mark.parametrize('loss_fun', [normal_loss])
@@ -126,7 +126,7 @@ def exp_fun(x):
 
 
 # inverse of function used for alpha, p
-def log_fun(x):
+def ln_fun(x):
     return np.log(x)
 
 
@@ -166,7 +166,7 @@ def test_curve_model(alpha_true, beta_true, p_true, n_data):
         fun=generalized_logistic,
         col_obs_se='measurement_std'
     )
-    inv_link_fun = [log_fun, identity_fun, log_fun]
+    inv_link_fun = [ln_fun, identity_fun, ln_fun]
     fe_init = np.zeros(num_params)
     for j in range(num_params):
         fe_init[j] = inv_link_fun[j](params_true[j] / 3.0)

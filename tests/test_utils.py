@@ -9,7 +9,7 @@
 import numpy as np
 import pandas as pd
 import pytest
-from curvefit.core.functions import derf, dderf
+from curvefit.core.functions import gaussian_pdf, dgaussian_pdf
 import curvefit.core.utils as utils
 
 
@@ -98,7 +98,7 @@ def test_get_obs_se(func):
 
 @pytest.mark.parametrize('t', [np.arange(5)])
 @pytest.mark.parametrize(('start_day', 'end_day', 'pred_fun'),
-                         [(1, 3, derf)])
+                         [(1, 3, gaussian_pdf)])
 @pytest.mark.parametrize(('mat1', 'mat2', 'result'),
                          [(np.ones(5), np.ones(5), np.ones(5)),
                           (np.arange(5), np.ones(5),
@@ -112,7 +112,7 @@ def test_convex_combination(t, mat1, mat2, pred_fun, start_day, end_day,
     assert np.allclose(result, my_result)
 
 @pytest.mark.parametrize(('w1', 'w2', 'pred_fun'),
-                         [(0.3, 0.7, derf)])
+                         [(0.3, 0.7, gaussian_pdf)])
 @pytest.mark.parametrize(('mat1', 'mat2', 'result'),
                          [(np.ones(5), np.ones(5), np.ones(5)),
                           (np.ones(5), np.zeros(5), np.ones(5)*0.3),
@@ -166,8 +166,8 @@ def test_local_smoother(radius):
 
 @pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
 @pytest.mark.parametrize(('input_space', 'output_space'),
-                         [('erf', 'derf'),
-                          ('log_erf', 'log_derf')])
+                         [('gaussian_cdf', 'gaussian_pdf'),
+                          ('ln_gaussian_cdf', 'ln_gaussian_pdf')])
 def test_data_translator_diff(data, input_space, output_space):
     result = utils.data_translator(data, input_space, output_space)
     if 'log' in input_space:
@@ -178,8 +178,8 @@ def test_data_translator_diff(data, input_space, output_space):
 
 @pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
 @pytest.mark.parametrize(('input_space', 'output_space'),
-                         [('erf', 'log_erf'),
-                          ('derf', 'log_derf')])
+                         [('gaussian_cdf', 'ln_gaussian_cdf'),
+                          ('gaussian_pdf', 'ln_gaussian_pdf')])
 def test_data_translator_exp(data, input_space, output_space):
     result = utils.data_translator(data, input_space, output_space)
     assert np.allclose(data, np.exp(result))
@@ -187,10 +187,10 @@ def test_data_translator_exp(data, input_space, output_space):
 
 @pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
 @pytest.mark.parametrize(('input_space', 'output_space'),
-                         [('erf', 'erf'),
-                          ('derf', 'derf'),
-                          ('log_erf', 'log_erf'),
-                          ('log_derf', 'log_derf')])
+                         [('gaussian_cdf', 'gaussian_cdf'),
+                          ('gaussian_pdf', 'gaussian_pdf'),
+                          ('ln_gaussian_cdf', 'ln_gaussian_cdf'),
+                          ('ln_gaussian_pdf', 'ln_gaussian_pdf')])
 def test_data_translator_exp(data, input_space, output_space):
     result = utils.data_translator(data, input_space, output_space)
     assert np.allclose(data, result)
@@ -200,15 +200,15 @@ def test_data_translator_exp(data, input_space, output_space):
 @pytest.mark.parametrize('beta', [5.0])
 @pytest.mark.parametrize('slopes', [0.5])
 @pytest.mark.parametrize('slope_at', [1, 2, 3])
-def test_solve_p_from_dderf(alpha, beta, slopes, slope_at):
-    result = utils.solve_p_from_dderf(alpha,
+def test_solve_p_from_dgaussian_pdf(alpha, beta, slopes, slope_at):
+    result = utils.solve_p_from_dgaussian_pdf(alpha,
                                       beta,
                                       slopes,
                                       slope_at=slope_at)
     np.random.seed(100)
 
     def fun(t, a, b, p, s):
-        return dderf(t, [a, b, p]) - s
+        return dgaussian_pdf(t, [a, b, p]) - s
 
     assert np.abs(fun(slope_at, alpha, beta, result, slopes)) < 1e-10
 
