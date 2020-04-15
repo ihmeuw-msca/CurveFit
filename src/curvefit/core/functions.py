@@ -9,7 +9,6 @@
     gaussian_cdf
     gaussian_pdf
     dgaussian_pdf
-    xam
     param
 }
 # Predefined Parametric Functions of Time

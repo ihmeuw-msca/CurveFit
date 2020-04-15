@@ -2,8 +2,42 @@ import numpy
 import curvefit
 
 def unzip_x(x, num_groups, num_fe) :
+    '''{begin_markdown unzip_x}
+    {spell_markdown params}
+
+    # Extract Fixed and Random Effects from Single Vector Form
+
+    ## Syntax
+    `fe, re = curvefit.core.effects2params.unzip_x(x, num_groups, num_fe)`
+
+    ## num_groups
+    is the number of data groups.
+
+    ## num_fe
+    is the number of fixed effects.
+
+    ## x
+    is a numpy vector with length equal to `(num_groups + 1)*num_fe`
+
+    ## fe
+    this return value
+    is a numpy vector containing the fist *num_fe* elements of *x*.
+
+    ## re
+    this return value
+    is a numpy two dimensional array with row dimension *num_groups*
+    and column dimension *num_fe*.
+    The i-th row of *re* contains the following sub-vector of *x*
+    ```python
+        re[i,:] = x[(i+1)*num_fe : (i+2)*num_fe]
+    ```
+
+    ## Example
+    [unzip_x_xam](unzip_x_xam.md)
+
+    {end_markdown unzip_x}'''
     fe = x[: num_fe]
-    re = x[num_fe :].reshape(num_groups, num_fe)
+    re = x[num_fe :].reshape(num_groups, num_fe, order='C')
     return fe, re
 
 def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
@@ -13,7 +47,7 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
     # Map Vector of Fixed and Random Effects to Parameter Matrix
 
     ## Syntax
-    `params = effects2params(
+    `params = curvefit.core.effects2params(
         x, group_sizes, covs, link_fun, var_link_fun, expand=True
     )`
 

@@ -9,6 +9,7 @@ file_list = [
     'example/random_effect.py',
     'example/sizes_to_indices.py',
     'example/param_time_fun.py',
+    'example/unzip_x.py',
 
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',
@@ -29,6 +30,7 @@ extra_special_words = [
     'py',
     'sandbox',
     'scipy',
+    'xam',
 
     r'\begin',
     r'\cdot',
@@ -265,6 +267,12 @@ for file_in in file_list :
                 msg  = 'can not find: "{end_markdown section_name}\n'
                 msg += 'in ' + file_in + ', section ' + section_name + '\n'
                 sys_exit(msg)
+            if match_end.group(1) != section_name :
+                msg = 'in file ' + file_in + '\nsection names do not match\n'
+                msg += 'begin_markdown section name = '+section_name + '\n'
+                msg += 'end_markdown section name   = '
+                msg += match_end.group(1) + '\n'
+                sys_exit(msg)
             #
             # output_data
             output_start = data_index
@@ -306,7 +314,7 @@ for file_in in file_list :
                 data_index  = len(data_left)
                 match_begin = pattern_begin_3quote.search(data_right)
             #
-            # num_remove
+            # num_remove (for indented documentation)
             len_output   = len(output_data)
             num_remove   = len(output_data)
             newline_itr  = pattern_newline.finditer(output_data)
@@ -325,15 +333,19 @@ for file_in in file_list :
                         msg += 'in ' + file_in
                         msg +=+ ', section ' + section_name + '\n'
                         sys_exit(msg)
-                    if ch != '\n' and ch != ' ' :
+                    tripple_back_quote = output_data[next_:].startswith('```')
+                    if ch != '\n' and ch != ' ' and not tripple_back_quote :
                         num_remove = min(num_remove, next_ - start - 1)
             #
             # write file for this section
             file_out          = output_dir + '/' + section_name + '.md'
             file_ptr          = open(file_out, 'w')
-            start_line        = num_remove
+            start_line        = 0
             first_spell_error = True
             for newline in newline_list :
+                tripple_back_quote = output_data[start_line:].startswith('```')
+                if not tripple_back_quote :
+                    start_line += num_remove
                 if start_line <= newline :
                     line = output_data[start_line : newline + 1]
                     # ------------------------------------------------------
@@ -358,7 +370,7 @@ for file_in in file_list :
                     file_ptr.write( line )
                 else :
                     file_ptr.write( "\n" )
-                start_line = newline + 1 + num_remove
+                start_line = newline + 1
             file_ptr.close()
             #
             # data_index

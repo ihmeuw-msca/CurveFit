@@ -26,6 +26,7 @@ examples:
 	python example/random_effect.py
 	python example/sizes_to_indices.py
 	python example/param_time_fun.py
+	python example/unzip_x.py
 
 cppad_py: phony
 	pytest cppad_py
