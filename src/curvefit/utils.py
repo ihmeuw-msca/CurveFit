@@ -761,8 +761,11 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
         df = data[location]
         t = df['days']
         y = df['ln asddr']
-
-        c = np.polyfit(t, y, 2)
+        num_obs = df.shape[0]
+        if num_obs < tol_num_obs:
+            c = np.zeros(3)
+        else:
+            c = np.polyfit(t, y, 2)
         poly_fit.update({
             location: deepcopy(c)
         })
