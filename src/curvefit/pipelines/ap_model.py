@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-    test new pipeline
+Alpha Prior Model Pipeline
 """
 import numpy as np
-from curvefit.pipelines._pipeline import BasicModel
-from curvefit.model import CurveModel
-from curvefit.utils import *
-from curvefit.functions import *
+from curvefit.pipelines.basic_model import BasicModel
+from curvefit.core.model import CurveModel
+from curvefit.core.utils import *
+from curvefit.core.functions import *
 from copy import deepcopy
 import matplotlib.pyplot as plt
 
+
 class APModel(BasicModel):
-    """Alapha prior model.
     """
+    Alpha prior model.
+    """
+
     def __init__(self, obs_bounds=None,
                  prior_modifier=None,
                  peaked_groups=None,
@@ -24,9 +27,7 @@ class APModel(BasicModel):
         self.models = {}
         self.prior_modifier = prior_modifier
         if self.prior_modifier is None:
-            self.prior_modifier = lambda x: 10**(min(0.0, max(-2.0,
-                0.3*x - 3.5
-            )))
+            self.prior_modifier = lambda x: 10 ** (min(0.0, max(-2.0, 0.3 * x - 3.5)))
 
         self.peaked_groups = peaked_groups
         self.joint_model_fit_dict = {} if joint_model_fit_dict is None else \
@@ -47,7 +48,7 @@ class APModel(BasicModel):
             groups = self.peaked_groups if self.peaked_groups is not None else \
                 self.groups
             models = self.run_models(self.all_data, groups)
-            self.fun_gprior = self.get_log_alpha_beta_prior(models)
+            self.fun_gprior = self.get_ln_alpha_beta_prior(models)
             print('create log-alpha-beta prior', self.fun_gprior[1])
             self.fit_dict.update({
                 'fun_gprior': self.fun_gprior
@@ -60,25 +61,26 @@ class APModel(BasicModel):
             if 'fe_gprior' in self.fit_dict:
                 fe_gprior = self.fit_dict['fe_gprior']
             else:
-                fe_gprior = [[0.0, np.inf]]*model.num_fe
+                fe_gprior = [[0.0, np.inf]] * model.num_fe
             fe_gprior[1] = beta_fe_gprior
             self.fit_dict.update({
                 'fe_gprior': deepcopy(fe_gprior)
             })
 
-
-    def get_log_alpha_beta_prior(self, models):
+    @staticmethod
+    def get_ln_alpha_beta_prior(models):
         a = np.array([model.params[0, 0]
                       for group, model in models.items()])
         b = np.array([model.params[1, 0]
                       for group, model in models.items()])
-        prior_mean = np.log(a*b).mean()
-        prior_std = np.log(a*b).std()
+        prior_mean = np.log(a * b).mean()
+        prior_std = np.log(a * b).std()
 
-        return [lambda params: np.log(params[0]*params[1]),
+        return [lambda params: np.log(params[0] * params[1]),
                 [prior_mean, prior_std]]
 
-    def get_beta_fe_gprior(self, model):
+    @staticmethod
+    def get_beta_fe_gprior(model):
         fe, re = model.unzip_x(model.result.x)
         beta_fe_mean = fe[1]
         beta_fe_std = np.std(re[:, 1])
@@ -102,7 +104,6 @@ class APModel(BasicModel):
         fit_dict.update({
             'fe_gprior': fe_gprior
         })
-        # print(fit_dict['fe_gprior'])
         model.fit_params(**fit_dict)
         return model
 
@@ -124,7 +125,6 @@ class APModel(BasicModel):
 
         return model
 
-
     def run_filtered_models(self, df, obs_bounds):
         """Run filtered models.
         """
@@ -142,8 +142,7 @@ class APModel(BasicModel):
     def fit(self, df, group=None):
         """Fit models by the alpha-beta prior.
         """
-        if ('fun_gprior' not in self.fit_dict or
-            self.fit_dict['fun_gprior'] is None):
+        if 'fun_gprior' not in self.fit_dict or self.fit_dict['fun_gprior'] is None:
             self.run_init_model()
 
         if group is None:
@@ -165,20 +164,46 @@ class APModel(BasicModel):
 
     def plot_result(self, t):
         models = self.models
-        fig, ax = plt.subplots(len(models), 2, figsize=(8*2, 4*len(models)))
+        fig, ax = plt.subplots(len(models), 2, figsize=(8 * 2, 4 * len(models)))
         for i, (location, model) in enumerate(models.items()):
             y = model.fun(t, model.params[:, 0])
             ax[i, 0].scatter(model.t, model.obs)
             ax[i, 0].plot(t, y)
             ax[i, 0].set_title(location)
 
-            dy = derf(t, model.params[:, 0])
-            derf_obs = data_translator(model.obs,
-                                       self.basic_model_dict['fun'], 'derf')
-            ax[i, 1].scatter(model.t, derf_obs)
+            dy = gaussian_pdf(t, model.params[:, 0])
+            gaussian_pdf_obs = data_translator(
+                model.obs, self.basic_model_dict['fun'], 'gaussian_pdf'
+            )
+            ax[i, 1].scatter(model.t, gaussian_pdf_obs)
             ax[i, 1].plot(t, dy)
             ax[i, 1].set_title(location)
-            ax[i, 1].set_ylim(0.0, max(dy.max(), derf_obs.max())*1.1)
+            ax[i, 1].set_ylim(0.0, max(dy.max(), gaussian_pdf_obs.max()) * 1.1)
+
+    def summarize_result(self):
+        models = self.models
+        df_summary = pd.DataFrame({}, columns=['Location', 'RMSE ERF', 'RMSE DERF'])
+
+        location_list = []
+        rmse_gaussian_cdf_list = []
+        rmse_gaussian_pdf_list = []
+
+        for i, (location, model) in enumerate(models.items()):
+            gaussian_cdf_pred = model.fun(model.t, model.params[:, 0])
+            rmse_gaussian_cdf = np.linalg.norm(gaussian_cdf_pred - model.obs) ** 2
+            gaussian_pdf_obs = data_translator(model.obs, self.basic_model_dict['fun'], 'gaussian_pdf')
+            gaussian_pdf_pred = gaussian_pdf(model.t, model.params[:, 0])
+            rmse_gaussian_pdf = np.linalg.norm(gaussian_pdf_obs - gaussian_pdf_pred) ** 2
+
+            location_list.append(location)
+            rmse_gaussian_cdf_list.append(rmse_gaussian_cdf)
+            rmse_gaussian_pdf_list.append(rmse_gaussian_pdf)
+
+        df_summary['Location'] = location_list
+        df_summary['RMSE ERF'] = rmse_gaussian_cdf_list
+        df_summary['RMSE DERF'] = rmse_gaussian_pdf_list
+
+        return df_summary
 
     def create_overall_draws(self, t, models, covs,
                              alpha_times_beta=None,
@@ -192,8 +217,6 @@ class APModel(BasicModel):
                 Time points for the draws.
             models (dict{str, CurveModel}):
                 Curve fit models.
-            params (list{str}):
-                Parameter names that we want samples for.
             covs (np.ndarray):
                 Covariates for the group want have the draws.
             alpha_times_beta (float | None, optional):
@@ -232,12 +255,12 @@ class APModel(BasicModel):
             param_samples = np.zeros(fe_samples.shape)
             for i in range(2):
                 param_samples[i] = link_fun[i](
-                    fe_samples[i]*covs[i]
+                    fe_samples[i] * covs[i]
                 )
         else:
             beta_samples = link_fun[1](
-                var_link_fun[1](samples['beta_fe'])*covs[1])
-            alpha_samples = alpha_times_beta/beta_samples
+                var_link_fun[1](samples['beta_fe']) * covs[1])
+            alpha_samples = alpha_times_beta / beta_samples
             param_samples = np.vstack([alpha_samples, beta_samples])
 
         # print(param_samples)
@@ -246,15 +269,12 @@ class APModel(BasicModel):
         beta = max(slope_at + 1.0, np.median(param_samples[1]))
         slope = np.median(samples['slope'])
 
-        p = solve_p_from_dderf(
+        p = solve_p_from_dgaussian_pdf(
             np.array([alpha]), np.array([beta]), np.array([slope]),
             slope_at=slope_at
         )[0]
 
-
         params = np.array([alpha, beta, p])
-
-        # print(params)
 
         # create mean curve
         mean_curve = self.predict_space(t, params)
@@ -264,11 +284,10 @@ class APModel(BasicModel):
             sample_size, t, 1, epsilon
         )
 
-        return mean_curve - (mean_curve**self.theta)*error - \
-               np.var(error, axis=0)*0.5
+        return mean_curve - (mean_curve ** self.theta) * error - np.var(error, axis=0) * 0.5
 
-
-    def create_param_samples(self, models, params,
+    @staticmethod
+    def create_param_samples(models, params,
                              sample_size=100,
                              slope_at=14):
         """Create parameter samples from given models.
@@ -317,12 +336,12 @@ class APModel(BasicModel):
 
         if 'slope' in params:
             slope = np.array([
-                dderf(slope_at, model.params[:, 0])
+                dgaussian_pdf(slope_at, model.params[:, 0])
                 for group, model in models.items()
             ])
-            log_slope = np.log(slope)
+            ln_slope = np.log(slope)
             samples.update({
-                'slope': np.exp(sample_from_samples(log_slope, sample_size))
+                'slope': np.exp(sample_from_samples(ln_slope, sample_size))
             })
 
         return samples
