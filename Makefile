@@ -3,14 +3,6 @@
 
 phony:
 
-gh-pages: phony
-	bin/extract_md.py
-	mkdocs build
-	git checkout mkdocs.yml
-	git checkout gh-pages
-	rm -r extract_md
-	cp -r site/* .
-
 build: setup.py
 	python setup.py build
 
