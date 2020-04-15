@@ -9,9 +9,19 @@ experiments
 /dist/
 /build/
 /src/curvefit.egg-info/
-# directories created by mkdocs
+# directory created by docs/extract_md.py
+/docs/extract_md/
+# directory created by mkdocs
 /site/
+# directory used by Brad to stash files
+/new/
+/new.[0-9]/
 # vim editor swap files in any directory
 *.swp
 # python compiled files in any directory
 *.pyc
+# temporary file names in any directory
+junk
+junk.*
+# jize
+*.vscode

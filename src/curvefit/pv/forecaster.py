@@ -7,8 +7,8 @@ forward with respect to how much data is currently in the model and how far out 
 import numpy as np
 import pandas as pd
 import itertools
-from curvefit.utils import data_translator
-from curvefit.utils import neighbor_mean_std
+from curvefit.core.utils import data_translator
+from curvefit.core.utils import neighbor_mean_std
 
 
 class ResidualModel:
@@ -51,7 +51,7 @@ class LinearRM(ResidualModel):
         df['intercept'] = 1
         df['inv_num_data'] = 1 / df['num_data']
         df['num_data_transformed'] = 1 / (1 + df['num_data'])
-        df['log_num_data_transformed'] = np.log(df['num_data_transformed'])
+        df['ln_num_data_transformed'] = np.log(df['num_data_transformed'])
         pred = np.asarray(df[self.covariates])
         out = np.asarray(df[[self.outcome]])
         self.coef = np.linalg.inv(pred.T.dot(pred)).dot(pred.T).dot(out)
@@ -60,7 +60,7 @@ class LinearRM(ResidualModel):
         df['intercept'] = 1
         df['inv_num_data'] = 1 / df['num_data']
         df['num_data_transformed'] = 1 / (1 + df['num_data'])
-        df['log_num_data_transformed'] = np.log(df['num_data_transformed'])
+        df['ln_num_data_transformed'] = np.log(df['num_data_transformed'])
         pred = np.asarray(df[self.covariates])
         return pred.dot(self.coef)
 

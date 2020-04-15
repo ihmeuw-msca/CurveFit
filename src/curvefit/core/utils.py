@@ -1,37 +1,41 @@
 import numpy as np
 import pandas as pd
+from xspline import XSpline
 from copy import deepcopy
 from collections import OrderedDict
-from scipy.optimize import bisect
-from .functions import *
-try :
-	from scipy.stats import median_absolute_deviation
-except ImportError :
-	# median_absolute_deviation is not in scipy before version 1.3.0
-	def median_absolute_deviation(vec, nan_policy='omit', scale=1.4826 ) :
-		assert nan_polisy == 'omit'
-		assert scale == 1.4826
-		assert len( vec.shape ) == 1
-		med = numpy.median( vec )
-		mad = numpy.median( abs(vec - med) )
-		return scale * mad
+from curvefit.core.functions import *
 
 
 def sizes_to_indices(sizes):
-    """Converting sizes to corresponding indices.
-    Args:
-        sizes (numpy.dnarray):
-            An array consist of non-negative number.
-    Returns:
-        list{range}:
-            List the indices.
-    """
+    """{begin_markdown sizes_to_indices}
+    {spell_markdown subvector subvectors xam}
+    # Converting sizes to corresponding indices.
+
+    ## Syntax
+    `indices = curvefit.sizes_to_indices(sizes)`
+
+    ## sizes
+    The argument `sizes` is a one dimensional `numpy.array` of integers sizes.
+    The value `sizes[i]` is the number of elements in the i-th subvector
+    of a larger total vector that contains the subvectors in order.
+
+    ## indices
+    The return value `indices` is a `list` with `numpy.array` elements.
+    The value `indices[i]` is a vector with length equal to `sizes[i]`.
+    This vector `indices[i]` starts (ends) with the index in the total vector
+    of the first (last) element of the i-th subvector.  The elements of
+    `list[i]` are monotone and increase by one between elements.
+
+    ## Example
+    [sizes_to_indices_xam](sizes_to_indices_xam.md)
+
+    {end_markdown sizes_to_indices}"""
     indices = []
     a = 0
     b = 0
     for i, size in enumerate(sizes):
         b += size
-        indices.append(range(a, b))
+        indices.append(np.arange(a, b))
         a += size
 
     return indices
@@ -53,7 +57,8 @@ def get_obs_se(df, col_t, func=lambda x: 1 / (1 + x)):
     return data
 
 
-def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
+# TODO: replace with the data translator?
+def get_derivative_of_column_in_ln_space(df, col_obs, col_t, col_grp):
     """
     Adds a new column for the derivative of col_obs.
     Col_obs needs to be in log space. # TODO: Change this later to allow for other spaces.
@@ -92,43 +97,67 @@ def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
     return df_result
 
 
-def across_group_mean_std(df,
-                          col_val,
-                          col_group,
-                          col_axis):
-    """Compute the mean and std of the residual matrix across locations.
+def local_smoother(df,
+                   col_val,
+                   col_axis,
+                   radius=None):
+    """Compute the neighbor mean and std of the residual matrix.
 
     Args:
         df (pd.DataFrame): Residual data frame.
         col_val ('str'): Name for column that store the residual.
-        col_group ('str'): Name for column that store the group label.
         col_axis (list{str}): List of two axis column names.
+        radius (list{int} | None, optional):
+            List of the neighbor radius for each dimension.
 
     Returns:
         pd.DataFrame:
-            Averaged residual mean and std data frame.
+            Return the data frame with two extra columns contains neighbor
+            mean and std.
     """
-    df_list = [
-        df[df[col_group] == group].copy()
-        for group in df[col_group].unique()
-    ]
-    for i, df_sub in enumerate(df_list):
-        df_sub_result = df_sub.groupby(col_axis, as_index=False).agg(
-            {col_val: [np.nanmean, np.nanstd]}
-        )
-        df_sub_result.columns = [*col_axis, 'mean', 'std']
-        df_list[i] = df_sub_result
+    radius = [0, 0] if radius is None else radius
+    assert col_val in df
+    assert len(col_axis) == 2
+    assert len(radius) == 2
+    assert all([col in df for col in col_axis])
+    assert all([r >= 0 for r in radius])
 
-    return pd.concat(df_list)
+    col_mean = '_'.join([col_val, 'mean'])
+    col_std = '_'.join([col_val, 'std'])
+
+    # group by the axis
+    df = df.groupby(col_axis, as_index=False).agg({
+        col_val: [np.sum, lambda x: np.sum(x**2), 'count']
+    })
+
+    col_sum = '_'.join([col_val, 'sum'])
+    col_sum2 = '_'.join([col_val, 'sum2'])
+    col_count = '_'.join([col_val, 'count'])
+
+    df.columns = df.columns.droplevel(1)
+    df.columns = list(df.columns[:-3]) + [col_sum, col_sum2, col_count]
+
+    sum_mat, indices, axis = df_to_mat(df, col_val=col_sum, col_axis=col_axis,
+                                       return_indices=True)
+    sum2_mat = df_to_mat(df, col_val=col_sum2, col_axis=col_axis)
+    count_mat = df_to_mat(df, col_val=col_count, col_axis=col_axis)
+
+    sum_vec = convolve_sum(sum_mat, radius)[indices[:, 0], indices[:, 1]]
+    sum2_vec = convolve_sum(sum2_mat, radius)[indices[:, 0], indices[:, 1]]
+    count_vec = convolve_sum(count_mat, radius)[indices[:, 0], indices[:, 1]]
+
+    df[col_mean] = sum_vec/count_vec
+    df[col_std] = np.sqrt(sum2_vec/count_vec - df[col_mean]**2)
+    df.drop(columns=[col_sum, col_sum2, col_count], inplace=True)
+
+    return df
 
 
 def neighbor_mean_std(df,
                       col_val,
                       col_group,
                       col_axis,
-                      axis_offset=None,
-                      radius=None,
-                      compute_mad=False):
+                      radius=None):
     """Compute the neighbor mean and std of the residual matrix.
 
     Args:
@@ -136,95 +165,35 @@ def neighbor_mean_std(df,
         col_val ('str'): Name for column that store the residual.
         col_group ('str'): Name for column that store the group label.
         col_axis (list{str}): List of two axis column names.
-        axis_offset (list{int} | None, optional):
-            List of offset for each axis to make it suitable as numpy array.
         radius (list{int} | None, optional):
             List of the neighbor radius for each dimension.
-        compute_mad (bool, optional):
-            If compute_mad, also compute median absolute deviation.
 
     Returns:
         pd.DataFrame:
             Return the data frame with two extra columns contains neighbor
             mean and std.
     """
-    axis_offset = [0, 0] if axis_offset is None else axis_offset
-    radius = [1, 1] if radius is None else radius
-    assert col_val in df
     assert col_group in df
-    assert len(col_axis) == 2
-    assert len(axis_offset) == 2
-    assert len(radius) == 2
-    assert all([col in df for col in col_axis])
-    assert all([isinstance(offset, int) for offset in axis_offset])
-    assert all([isinstance(r, int) for r in radius])
+    groups = df[col_group].unique()
 
-    df_list = [
-        df[df[col_group] == group].reset_index()
-        for group in df[col_group].unique()
-    ]  # separate dataset by groups
-
-    for i, df_sub in enumerate(df_list):
-        index = np.unique(np.asarray(df_sub[col_axis].values), axis=0).astype(int)
-        new_df = pd.DataFrame({
-            'group': df_sub[col_group].iloc[0],
-            col_axis[0]: index[:, 0],
-            col_axis[1]: index[:, 1],
-            'residual_mean': np.nan,
-            'residual_std': np.nan
-        })
-        # Group rows by indices. It's like a 2d matrix, but each cell can have multiple entries (one per Location)
-        df_grouped_by_idx = df_sub.reset_index().fillna(0).groupby(by=[col_axis[0], col_axis[1]])
-        max_idx = np.max(index)
-        groups_locations = np.zeros((max_idx, max_idx)) - 1
-        groups = []
-        # Since the number of entities for any col_axis is undetermined, we have to keep it in a long list.
-        for idx, (name, group) in enumerate(df_grouped_by_idx):
-            s = int(name[0]) - 1
-            j = int(name[1]) - 1
-            groups.append(np.array(group[col_val].to_list()))
-            groups_locations[s, j] = idx
-
-        # Iterate over all combination of indices, calculate mean and variance around it.
-        for idx, row in new_df.iterrows():
-            s = int(row[col_axis[0]]) - 1
-            j = int(row[col_axis[1]]) - 1
-            total_sum = 0
-            total_count = 0
-            total_deviations_squared = 0
-
-            for k in range(max(s - radius[0], 0), min(s + radius[0] + 1, groups_locations.shape[0])):
-                for t in range(max(j - radius[1], 0), min(j + radius[1] + 1, groups_locations.shape[1])):
-                    location = int(groups_locations[k, t])
-                    if location == -1:
-                        continue
-                    residuals = groups[location]
-                    total_sum += residuals.sum()
-                    total_count += len(residuals)
-            if total_count == 0:
-                continue
-            mean = total_sum / total_count
-            new_df.at[idx, 'residual_mean'] = mean
-            for k in range(max(s - radius[0], 0), min(s + radius[0] + 1, groups_locations.shape[0])):
-                for t in range(max(j - radius[1], 0), min(j + radius[1] + 1, groups_locations.shape[1])):
-                    location = int(groups_locations[k, t])
-                    if location == -1:
-                        continue
-                    residuals = groups[location]
-                    total_deviations_squared += ((residuals - mean) ** 2).sum()
-            std = np.sqrt(total_deviations_squared / (total_count - 1))
-            new_df.at[idx, 'residual_std'] = std
-
-        df_list[i] = new_df
+    df_list = []
+    for i, group in enumerate(groups):
+        df_sub = df[df[col_group] == group].reset_index(drop=True)
+        df_result = local_smoother(df_sub, col_val, col_axis,
+                                   radius=radius)
+        df_result[col_group] = group
+        df_list.append(df_result)
 
     return pd.concat(df_list)
 
 
+# TODO: replace by the data translator?
 def cumulative_derivative(array):
     arr = array.copy()
     return arr - np.insert(arr[:, :-1], 0, 0.0, axis=1)
 
 
+# TODO: change to use the data translator
 def convex_combination(t, pred1, pred2, pred_fun,
                        start_day=2, end_day=20):
     """Combine the prediction.
@@ -255,24 +224,24 @@ def convex_combination(t, pred1, pred2, pred_fun,
     b = -start_day * a
     lam = np.maximum(0.0, np.minimum(1.0, a * t + b))
 
-    if pred_fun.__name__ == 'log_erf':
+    if pred_fun.__name__ == 'ln_gaussian_cdf':
         pred1 = np.exp(pred1)
         pred2 = np.exp(pred2)
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.log(np.cumsum(pred_tmp, axis=1))
-    elif pred_fun.__name__ == 'erf':
+    elif pred_fun.__name__ == 'gaussian_cdf':
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.cumsum(pred_tmp, axis=1)
-    elif pred_fun.__name__ == 'log_derf':
+    elif pred_fun.__name__ == 'ln_gaussian_pdf':
         pred1_tmp = np.exp(pred1)
         pred2_tmp = np.exp(pred2)
         pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
         pred = np.log(pred_tmp)
-    elif pred_fun.__name__ == 'derf':
+    elif pred_fun.__name__ == 'gaussian_pdf':
         pred = lam * pred1 + (1.0 - lam) * pred2
     else:
         pred = None
@@ -284,6 +253,7 @@ def convex_combination(t, pred1, pred2, pred_fun,
     return pred
 
 
+# TODO: use data_translator
 def model_average(pred1, pred2, w1, w2, pred_fun):
     """
     Average two models together in linear space.
@@ -298,24 +268,24 @@ def model_average(pred1, pred2, w1, w2, pred_fun):
     assert callable(pred_fun)
     assert w1 + w2 == 1
 
-    if pred_fun.__name__ == 'log_erf':
+    if pred_fun.__name__ == 'ln_gaussian_cdf':
         pred1 = np.exp(pred1)
         pred2 = np.exp(pred2)
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
         pred = np.log(np.cumsum(pred_tmp, axis=1))
-    elif pred_fun.__name__ == 'erf':
+    elif pred_fun.__name__ == 'gaussian_cdf':
         pred1_tmp = cumulative_derivative(pred1)
         pred2_tmp = cumulative_derivative(pred2)
         pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
         pred = np.cumsum(pred_tmp, axis=1)
-    elif pred_fun.__name__ == 'log_derf':
+    elif pred_fun.__name__ == 'ln_gaussian_pdf':
         pred1_tmp = np.exp(pred1)
         pred2_tmp = np.exp(pred2)
         pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
         pred = np.log(pred_tmp)
-    elif pred_fun.__name__ == 'derf':
+    elif pred_fun.__name__ == 'gaussian_pdf':
         pred = w1 * pred1 + w2 * pred2
     else:
         pred = None
@@ -324,6 +294,7 @@ def model_average(pred1, pred2, w1, w2, pred_fun):
     return pred
 
 
+# TODO: move the test from pv to here and test it not use the old code.
 def condense_residual_matrix(matrix, sequential_diffs, data_density):
     """
     Condense the residuals from a residual matrix to three columns
@@ -372,7 +343,7 @@ def data_translator(data, input_space, output_space,
     if callable(output_space):
         output_space = output_space.__name__
 
-    total_space = ['erf', 'derf', 'log_erf', 'log_derf']
+    total_space = ['gaussian_cdf', 'gaussian_pdf', 'ln_gaussian_cdf', 'ln_gaussian_pdf']
 
     assert input_space in total_space
     assert output_space in total_space
@@ -384,16 +355,16 @@ def data_translator(data, input_space, output_space,
         data = data[None, :]
 
     # thresholding the data in the linear space
-    if input_space in ['erf', 'derf']:
+    if input_space in ['gaussian_cdf', 'gaussian_pdf']:
         data = np.maximum(threshold, data)
 
     if input_space == output_space:
         output_data = data.copy()
-    elif output_space == 'log_' + input_space:
+    elif output_space == 'ln_' + input_space:
         output_data = np.log(data)
-    elif input_space == 'log_' + output_space:
+    elif input_space == 'ln_' + output_space:
         output_data = np.exp(data)
-    elif 'derf' in input_space:
+    elif 'gaussian_pdf' in input_space:
         if 'log' in input_space:
             data = np.exp(data)
         output_data = np.cumsum(data, axis=1)
@@ -467,8 +438,8 @@ def compute_starting_params(fe_dict):
     return fe_init, re_init
 
 
-def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
-    """Compute p from alpha, beta and slopes of derf at given point.
+def solve_p_from_dgaussian_pdf(alpha, beta, slopes, slope_at=14):
+    """Compute p from alpha, beta and slopes of gaussian_pdf at given point.
 
     Args:
         alpha (np.ndarray | float):
@@ -499,15 +470,11 @@ def solve_p_from_dderf(alpha, beta, slopes, slope_at=14):
     assert all(slopes > 0.0)
     assert all(beta >= slope_at)
 
-    # p = np.zeros(alpha.size)
-    #
-    # for i in range(alpha.size):
-    #     x = bisect(lambda x: dderf(slope_at, [alpha[i], beta[i], np.exp(x)]) -
-    #                slopes[i], -15.0, 0.0)
-    #     p[i] = np.exp(x)
-
     tmp = alpha*(slope_at - beta)
     p = np.sqrt(np.pi)*slopes/(2.0*alpha**2*np.abs(tmp)*np.exp(-tmp**2))
+
+    if is_scalar:
+        p = p[0]
 
     return p
 
@@ -565,38 +532,105 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
     if callable(last_obs_space):
         last_obs_space = last_obs_space.__name__
 
-    assert draw_space in ['erf', 'derf', 'log_erf', 'log_derf']
-    assert last_obs_space in ['erf', 'derf', 'log_erf', 'log_derf']
+    assert draw_space in ['gaussian_cdf', 'gaussian_pdf', 'ln_gaussian_cdf', 'ln_gaussian_pdf']
+    assert last_obs_space in ['gaussian_cdf', 'gaussian_pdf', 'ln_gaussian_cdf', 'ln_gaussian_pdf']
 
-    if last_obs_space == 'erf':
+    if last_obs_space == 'gaussian_cdf':
         assert last_obs >= 0.0
     else:
         last_obs = np.exp(last_obs)
 
     last_day = int(np.round(last_day))
-    assert last_day >= t.min() and last_day < t.max()
+    assert t.min() <= last_day < t.max()
 
-    derf_draws = data_translator(draws, draw_space, 'derf')
-    derf_draws = derf_draws[:, last_day + 1:]
+    gaussian_pdf_draws = data_translator(draws, draw_space, 'gaussian_pdf')
+    gaussian_pdf_draws = gaussian_pdf_draws[:, last_day + 1:]
 
-    if draw_space == 'derf':
-        final_draws = derf_draws
-    elif draw_space == 'log_derf':
-        final_draws = data_translator(derf_draws, 'derf', 'log_derf')
-    elif draw_space == 'erf':
-        assert last_obs_space in ['erf', 'log_erf']
-        last_obs = last_obs if last_obs_space == 'erf' else np.exp(last_obs)
-        final_draws = data_translator(derf_draws, 'derf', 'erf') + last_obs
+    if draw_space == 'gaussian_pdf':
+        final_draws = gaussian_pdf_draws
+    elif draw_space == 'ln_gaussian_pdf':
+        final_draws = data_translator(gaussian_pdf_draws, 'gaussian_pdf', 'ln_gaussian_pdf')
+    elif draw_space == 'gaussian_cdf':
+        assert last_obs_space in ['gaussian_cdf', 'ln_gaussian_cdf']
+        last_obs = last_obs if last_obs_space == 'gaussian_cdf' else np.exp(last_obs)
+        final_draws = data_translator(gaussian_pdf_draws, 'gaussian_pdf', 'gaussian_cdf') + last_obs
     else:
-        assert last_obs_space in ['erf', 'log_erf']
-        last_obs = last_obs if last_obs_space == 'erf' else np.exp(last_obs)
-        final_draws = data_translator(derf_draws, 'derf', 'erf') + last_obs
+        assert last_obs_space in ['gaussian_cdf', 'ln_gaussian_cdf']
+        last_obs = last_obs if last_obs_space == 'gaussian_cdf' else np.exp(last_obs)
+        final_draws = data_translator(gaussian_pdf_draws, 'gaussian_pdf', 'gaussian_cdf') + last_obs
         final_draws = np.log(final_draws)
 
     if draw_ndim == 1:
         final_draws = final_draws.ravel()
 
     return final_draws
+
+
+def convolve_sum(mat, radius=None):
+    """Convolve sum a 2D matrix by given radius.
+
+    Args:
+        mat (numpy.ndarray):
+            Matrix of interest.
+        radius (arraylike{int} | None, optional):
+            Given radius, if None assume radius = (0, 0).
+
+    Returns:
+        numpy.ndarray:
+            The convolved sum, with the same shape with original matrix.
+    """
+    mat = np.array(mat).astype(float)
+    assert mat.ndim == 2
+    if radius is None:
+        return mat
+    assert hasattr(radius, '__iter__')
+    radius = np.array(radius).astype(int)
+    assert radius.size == 2
+    assert all([r >= 0 for r in radius])
+    # import pdb; pdb.set_trace()
+    shape = np.array(mat.shape)
+    window_shape = tuple(radius*2 + 1)
+
+    mat = np.pad(mat, ((radius[0],),
+                       (radius[1],)), 'constant', constant_values=np.nan)
+    view_shape = tuple(np.subtract(mat.shape, window_shape) + 1) + window_shape
+    strides = mat.strides*2
+    sub_mat = np.lib.stride_tricks.as_strided(mat, view_shape, strides)
+    sub_mat = sub_mat.reshape(*shape, np.prod(window_shape))
+
+    return np.nansum(sub_mat, axis=2)
+
+
+def df_to_mat(df, col_val, col_axis, return_indices=False):
+    """Convert columns in data frame to matrix.
+
+    Args:
+        df (pandas.DataFrame): Given data frame.
+        col_val (str): Value column.
+        col_axis (list{str}): Axis column.
+        return_indices (bool, optional):
+            If True, return indices of the original values and the corresponding
+            axis values in the data frame.
+
+    Returns:
+        numpy.ndarray: Converted matrix.
+    """
+    assert col_val in df
+    assert all([c in df for c in col_axis])
+
+    vals = df[col_val].values
+    axis = df[col_axis].values.astype(int)
+    indices = (axis - axis.min(axis=0)).astype(int)
+    shape = tuple(indices.max(axis=0).astype(int) + 1)
+
+    mat = np.empty(shape)
+    mat.fill(np.nan)
+    mat[indices[:, 0], indices[:, 1]] = vals
+
+    if return_indices:
+        return mat, indices, axis
+    else:
+        return mat
 
 
 def smooth_draws(mat, radius=0, sort=False):
@@ -695,10 +729,12 @@ def split_by_group(df, col_group):
 
 def filter_death_rate(df, col_t, col_death_rate):
     """Filter cumulative death rate. Remove non-monotonically increasing points.
+
     Args:
         df (pd.DataFrame): Provided data frame.
         col_t (str): Column name of the independent variable.
         col_death_rate (str): Name for column that contains the death rate.
+
     Returns:
         pd.DataFrame: Filtered data frame.
     """
@@ -710,6 +746,7 @@ def filter_death_rate(df, col_t, col_death_rate):
     df = df.drop(drop_idx).reset_index(drop=True)
     return df
 
+
 def filter_death_rate_by_group(df, col_group, col_t, col_death_rate):
     """Filter cumulative death rate within each group.
     Args:
@@ -717,6 +754,7 @@ def filter_death_rate_by_group(df, col_group, col_t, col_death_rate):
         col_group (str): Column name of group definition.
         col_t (str): Column name of the independent variable.
         col_death_rate (str): Name for column that contains the death rate.
+
     Returns:
         pd.DataFrame: Filtered data frame.
     """
@@ -732,16 +770,11 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
                                    tol_after_peak=3,
                                    return_poly_fit=False):
     """Create potential peaked groups.
-
     Args:
         df (pd.DataFrame): Provided data frame.
         col_group (str): Column name of group definition.
         col_t (str): Column name of the independent variable.
         col_death_rate (str): Name for column that contains the death rate.
-        spline_konts (np.array, optional):
-            Knots for the spline fits.
-        spline_degree (int, optional):
-            Degree for the spline fits.
         tol_num_obs (int, optional):
             Only the ones with number of observation above or equal to this
             threshold will be considered as the potential peaked group.
@@ -749,7 +782,6 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
             Pick the ones already pass peaked day for this amount of time.
         return_poly_fit (bool, optional):
             If True, return the spline fits as well.
-
     Returns:
         list | tuple(list, dict):
             List of potential peaked groups or with the spline fit as well.
@@ -776,8 +808,7 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
         last_day = df['days'].max()
         num_obs = df.shape[0]
         b = np.inf if np.isclose(c[0], 0.0) else -0.5*c[1]/c[0]
-        if c[0] < 0.0 and b >= 0.0 and num_obs >= tol_num_obs and \
-            last_day - b >= tol_after_peak:
+        if c[0] < 0.0 <= b and num_obs >= tol_num_obs and last_day - b >= tol_after_peak:
             potential_groups.append(location)
 
     if return_poly_fit:
@@ -787,7 +818,9 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
 
 
 def process_input(df, col_group, col_t, col_death_rate, return_df=True):
-    """Trim filter and adding extra information to the data frame.
+    """
+    Trim filter and adding extra information to the data frame.
+
     Args:
         df (pd.DataFrame): Provided data frame.
         col_group (str): Column name of group definition.
@@ -796,6 +829,7 @@ def process_input(df, col_group, col_t, col_death_rate, return_df=True):
         return_df (bool, optional):
             If True return the combined data frame, otherwise return the
             splitted dictionary.
+
     Returns:
         pd.DataFrame: processed data frame.
     """
@@ -847,7 +881,7 @@ def peak_score(t, y, c, num_obs,
         tol_num_obs (int, optional):
             If num_obs lower than this value, then assign equal weights.
         weight_num_obs (float, optional):
-            Weight for importancy of the number of observations.
+            Weight for importance of the number of observations.
         min_score (float, optional): Minimum score, required to be positive.
         max_score (float, optional):
             Maximum score, required greater than min_score.
@@ -872,10 +906,7 @@ def peak_score(t, y, c, num_obs,
 
     b = -0.5*c[1]/c[0]
     beta = t[np.argmax(y)]
-    if np.isclose(c[0], 0.0) or \
-            c[0] > 0.0 or \
-            num_obs <= tol_num_obs or \
-            b <= 0.0:
+    if np.isclose(c[0], 0.0) or c[0] > 0.0 or num_obs <= tol_num_obs or b <= 0.0:
         return 0.5*(min_score + max_score)
 
     if min_score == max_score:
