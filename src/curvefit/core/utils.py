@@ -817,7 +817,9 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
         return potential_groups
 
 
-def process_input(df, col_group, col_t, col_death_rate, return_df=True):
+def process_input(df, col_group, col_t, col_death_rate,
+                  col_covs=None,
+                  return_df=True):
     """
     Trim filter and adding extra information to the data frame.
 
@@ -826,6 +828,7 @@ def process_input(df, col_group, col_t, col_death_rate, return_df=True):
         col_group (str): Column name of group definition.
         col_t (str): Column name of the independent variable.
         col_death_rate (str): Name for column that contains the death rate.
+        col_covs (list{str}): Names for the covariates.
         return_df (bool, optional):
             If True return the combined data frame, otherwise return the
             splitted dictionary.
@@ -836,11 +839,16 @@ def process_input(df, col_group, col_t, col_death_rate, return_df=True):
     assert col_group in df
     assert col_t in df
     assert col_death_rate in df
+    if col_covs is not None:
+        assert all([col_cov in df for col_cov in col_covs])
+    else:
+        col_covs = []
 
     # trim down the data frame
-    df = df[[col_group, col_t, col_death_rate]].reset_index(drop=True)
+    df = df[[col_group, col_t, col_death_rate] + col_covs].reset_index(
+        drop=True)
     df.sort_values([col_group, col_t], inplace=True)
-    df.columns = ['location', 'days', 'ascdr']
+    df.columns = ['location', 'days', 'ascdr'] + col_covs
 
     # check and filter and add more information
     data = split_by_group(df, col_group='location')
