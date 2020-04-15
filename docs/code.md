@@ -25,16 +25,21 @@ represent what and some model parameters.
 - `param_names (list{str})`: names of the parameters for your specific functional form (more in [functions](#functions))
 - `link_fun (list{function})`: list of link functions for each of the parameters
 - `var_link_fun (list{function})`: list of functions for the variables including fixed and random effects
+- `fun {function}`: the function to fit (see [functions](#functions))
 
 Here is an example of creating a `CurveModel` with a data frame where `time` is the independent variable,
 `death_rate` is the dependent variable, and `group` is a variable indicating which group an observation belongs to.
-In this example, we want to fit to the log erf functional form (see [functions](#functions)) with
+In this example, we want to fit to the `ln_gaussian_cdf` functional form (see [functions](#functions)) with
 identity link functions for each parameter and identity variable link functions for each parameter.
 In this example, no parameters have covariates besides an intercept column of 1's.
 
 ```python
+import pandas as pd
 from curvefit.core.model import CurveModel
-from curvefit.core.functions import log_erf
+from curvefit.core.functions import ln_gaussian_cdf
+
+df = pd.read_csv('my_data.csv')
+df['intercept'] = 1
 
 model = CurveModel(
     df=df,
@@ -45,7 +50,7 @@ model = CurveModel(
     param_names=['alpha', 'beta', 'p'],
     link_fun=[lambda x: x, lambda x: x, lambda x: x],
     var_link_fun=[lambda x: x, lambda x: x, lambda x: x],
-    fun=log_erf
+    fun=ln_gaussian_cdf
 )
 ```
 
@@ -60,15 +65,15 @@ The available built-in functions in `curvefit.functions` are:
 
 **The Error Function**
 
-- `erf`: error function (Gauss error function)
-- `derf`: derivative of the error function
-- `log_erf`: log error function
-- `log_derf`: log derivative of the erf function
+- `gaussian_cdf`: error function (Gauss error function)
+- `gaussian_pdf`: derivative of the error function
+- `ln_gaussian_cdf`: log error function
+- `ln_gaussian_pdf`: log derivative of the error function
 
 **The Expit Function** (inverse of the logit function)
 
 - `expit`: expit function
-- `log_expit`: log expit function
+- `ln_expit`: log expit function
 
 Please see the [functions](methods.md#covid-19-functional-forms) for information
 about the parametrization of these functions and how they relate to COVID-19 modeling.
