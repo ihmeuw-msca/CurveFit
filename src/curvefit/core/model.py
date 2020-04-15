@@ -11,6 +11,7 @@ from curvefit.core.utils import get_initial_params
 from curvefit.core.utils import compute_starting_params
 from curvefit.core.functions import normal_loss
 from curvefit.core.effects2params import effects2params
+from curvefit.core.effects2objective import effects2objective
 
 
 class CurveModel:
@@ -197,51 +198,22 @@ class CurveModel:
 
         return params
 
-    def objective(self, x):
-        """Objective function.
-
-        Args:
-            x (numpy.ndarray):
-                Model parameters.
-
-        Returns:
-            float:
-                Objective value.
-        """
-        fe, re = self.unzip_x(x)
-        params = effects2params(
+    def objective(self, x) :
+        return effects2objective(
             x,
-            self.order_group_sizes,
+            self.t,
+            self.obs,
+            self.obs_se,
             self.covs,
+            self.order_group_sizes,
+            self.fun,
+            self.loss_fun,
             self.link_fun,
-            self.var_link_fun
+            self.var_link_fun,
+            self.fe_gprior,
+            self.re_gprior,
+            self.fun_gprior
         )
-        residual = (self.obs - self.fun(self.t, params))/self.obs_se
-        # val = 0.5*np.sum(residual**2)
-        val = self.loss_fun(residual)
-        # gprior from fixed effects
-        val += 0.5*np.sum(
-            (fe - self.fe_gprior.T[0])**2/self.fe_gprior.T[1]**2
-        )
-        # gprior from random effects
-        val += 0.5*np.sum(
-            (re - self.re_gprior.T[0])**2/self.re_gprior.T[1]**2
-        )
-        # other functional gprior
-        if self.fun_gprior is not None:
-            params = effects2params(
-                x,
-                self.order_group_sizes,
-                self.covs,
-                self.link_fun,
-                self.var_link_fun,
-                expand=False
-            )
-            val += 0.5*np.sum(
-                (self.fun_gprior[0](params) - self.fun_gprior[1][0])**2/
-                self.fun_gprior[1][1]**2
-            )
-        return val
 
     def gradient(self, x, eps=1e-16):
         """Gradient function.
