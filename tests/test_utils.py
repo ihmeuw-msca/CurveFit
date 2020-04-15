@@ -8,6 +8,7 @@
 
 import numpy as np
 import pandas as pd
+from scipy.stats import norm
 import pytest
 from curvefit.core.functions import gaussian_pdf, dgaussian_pdf
 import curvefit.core.utils as utils
@@ -274,3 +275,23 @@ def test_process_input():
     assert np.allclose(df_result['asddr'], asddr)
     assert np.allclose(df_result['ln ascdr'], ln_ascdr)
     assert np.allclose(df_result['ln asddr'], ln_asddr)
+
+
+def test_compute_gaussian_mixture_matrix():
+    np.random.seed(123)
+    n_run = 50
+    x_dim = 20
+
+    betas = np.random.uniform(-2, 2, size=n_run)
+    stds = np.random.rand(n_run)
+    alphas = 1 / (stds * np.sqrt(2))
+    params = np.asarray([alphas, betas, [1.0] * n_run]).T
+    beta_stride = np.random.rand(n_run)
+    mixture_size = np.random.choice(np.arange(1, 10), size=n_run)
+    x = np.random.randn(n_run, x_dim)
+    
+    for i in range(n_run):
+        X, beta_vec = utils.compute_gaussian_mixture_matrix(x[i], params[i], beta_stride[i], mixture_size[i])
+        for j in range(len(beta_vec)):
+            assert np.linalg.norm(X[:, j] - norm.pdf(x[i], loc=beta_vec[j], scale=stds[i])) < 1e-5
+    
