@@ -1,22 +1,9 @@
-"""
-All classes of model generators should have a model_function that takes arguments
-df and times and returns predictions at those times.
-
-**NOTE**: This is useful for the predictive validity functions that need a fit_model
-function that takes those arguments. That callable will be generated with the model_function in these classes.
-"""
-
 from copy import deepcopy
 import numpy as np
 
-from curvefit.model import CurveModel
-from curvefit.forecaster import Forecaster
-from curvefit.pv import PVModel
-from curvefit.utils import convex_combination, model_average
-from curvefit.utils import get_initial_params
-from curvefit.utils import compute_starting_params
-from curvefit.diagnostics import plot_uncertainty
-from curvefit.utils import data_translator
+from curvefit.pv.forecaster import Forecaster
+from curvefit.pv.pv import PVModel
+from curvefit.diagnostics.plot_diagnostics import plot_fits
 
 
 class ModelPipeline:
@@ -100,7 +87,8 @@ class ModelPipeline:
         self.draw_models = None
 
     def run(self, n_draws, prediction_times, cv_lower_threshold,
-            smoothed_radius, num_smooths, exclude_groups, exclude_below=0, cv_upper_threshold=np.inf):
+            smoothed_radius, num_smooths, exclude_groups, exclude_below=0, cv_upper_threshold=np.inf,
+            max_last=None, exp_smoothing=None):
         """
         Runs the whole model with PV and forecasting residuals and creating draws.
 
@@ -120,6 +108,8 @@ class ModelPipeline:
             exclude_below: (int) exclude results from the predictive validity analysis
                 that had less than this many data points -- just for going into the regression
                 to predict the coefficient of variation (low numbers of data points makes this unstable)
+            exp_smoothing: (optional float) exponential smoothing parameter for combining time series predictions
+            max_last: (optional int) number of models from previous observations to use since the maximum time
         Returns:
         """
         assert type(n_draws) == int
@@ -129,6 +119,10 @@ class ModelPipeline:
         assert type(num_smooths) == int
         assert type(exclude_below) == int
         assert type(exclude_groups) == list
+        if exp_smoothing is not None:
+            assert type(exp_smoothing) == float
+        if max_last is not None:
+            assert type(max_last) == int
 
         # Setup the initial model (optional for some subclasses)
         self.run_init_model()
@@ -153,7 +147,9 @@ class ModelPipeline:
             std_lower_threshold=cv_lower_threshold,
             std_upper_threshold=cv_upper_threshold,
             prediction_times=prediction_times,
-            theta=self.theta
+            theta=self.theta,
+            exp_smoothing=exp_smoothing,
+            max_last=max_last
         )
 
     def setup_pipeline(self):
@@ -248,7 +244,8 @@ class ModelPipeline:
         )
 
     def create_draws(self, num_draws, prediction_times,
-                     theta=1, std_lower_threshold=1e-2, std_upper_threshold=np.inf):
+                     theta=1, std_lower_threshold=1e-2, std_upper_threshold=np.inf,
+                     exp_smoothing=None, max_last=None):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
         for far out and num data points.
@@ -259,9 +256,15 @@ class ModelPipeline:
             std_lower_threshold: (float) floor for standard deviation
             std_upper_threshold: (float) ceiling for standard deviation
             theta: (float) between 0 and 1, how much scaling of the residuals to do relative to the prediction mean
+            exp_smoothing: (optional float) amount of exponential smoothing --> higher value means more weight
+                given to the more recent models
+            max_last: (optional int) number of models from previous observations to use since the maximum time
         """
         if self.pv.all_residuals is None:
             raise RuntimeError("Need to first run predictive validity with self.run_predictive_validity.")
+
+        if max_last is not None and exp_smoothing is None:
+            raise RuntimeError("If you pass a max last, you must pass an exponential smoothing parameter.")
 
         # Get the best fit we can
         self.fit(df=self.all_data)
@@ -271,9 +274,16 @@ class ModelPipeline:
 
         for group in self.groups:
             # Get the mean prediction for each group
-            self.mean_predictions[group] = self.predict(
-                times=prediction_times, predict_space=self.predict_space, predict_group=group
-            )
+            if exp_smoothing is None:
+                self.mean_predictions[group] = self.predict(
+                    times=prediction_times, predict_space=self.predict_space, predict_group=group
+                )
+            else:
+                # will average the predictions across the last max_last forecast models
+                # based on dropping data up to the max_last[i] time point
+                self.mean_predictions[group] = self.pv.pv_groups[group].exp_smooth_preds(
+                    prediction_times=prediction_times, exp_smoothing=exp_smoothing, max_last=max_last
+                )
 
         # Loop through each group, forecasting the residuals and making draws
         for group in self.groups:
@@ -303,8 +313,8 @@ class ModelPipeline:
         """
         return self.forecaster.residual_model.smoothed.pivot('num_data', 'far_out', 'residual_std')
 
-    def plot_draws(self, prediction_times, sharex=True, sharey=False, draw_space=None,
-                   plot_obs=None, plot_draws=False):
+    def plot_results(self, prediction_times, sharex=True, sharey=False, draw_space=None,
+                     plot_obs=None, plot_uncertainty=True):
         """
         Plot the draws resulting from a model in any space. Does it for each group in the model.
 
@@ -313,13 +323,13 @@ class ModelPipeline:
             sharex: (bool) fix x-axis across plots
             sharey: (bool) fix y-axis across plots
             draw_space: (callable) curvefit.functions what space to plot draws in
-            plot_obs: (str) name of column that represents data in draw_space
-            plot_draws: (bool) plot draws or just summaries
+            plot_obs: (optional str) name of column that represents data in draw_space
+            plot_uncertainty: (optional bool) whether to plot uncertainty intervals
         """
         if draw_space is None:
             draw_space = self.predict_space
         if plot_obs is None:
             plot_obs = self.col_obs_compare
 
-        plot_uncertainty(generator=self, sharex=sharex, sharey=sharey, prediction_times=prediction_times,
-                         draw_space=draw_space, plot_obs=plot_obs, plot_draws=plot_draws)
+        plot_fits(generator=self, sharex=sharex, sharey=sharey, prediction_times=prediction_times,
+                  draw_space=draw_space, plot_obs=plot_obs, plot_uncertainty=plot_uncertainty)
