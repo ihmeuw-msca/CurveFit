@@ -341,8 +341,8 @@ class CurveModel:
                 )
             )
             fe_init, re_init = compute_starting_params(fe_dict)
-            print(f"Overriding fe_init with {fe_init}.")
-            print(f"Overriding re_init with {re_init}.")
+            # print(f"Overriding fe_init with {fe_init}.")
+            # print(f"Overriding re_init with {re_init}.")
 
         x0 = np.hstack([fe_init, re_init])
         if fe_bounds is None:

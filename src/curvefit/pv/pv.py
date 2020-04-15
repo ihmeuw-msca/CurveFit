@@ -8,7 +8,7 @@ from curvefit.core.utils import neighbor_mean_std
 
 class PVGroup:
     def __init__(self, data, col_t, col_obs, col_grp, col_obs_compare,
-                 model_generator, predict_space, look_back, predict_group):
+                 model_generator, predict_space, look_back, predict_group, pv_type):
         """
         Gets forward out of sample predictive validity for a model based on the function
         fit_model that takes arguments df and times and returns predictions at times.
@@ -27,6 +27,7 @@ class PVGroup:
             predict_group: name of group to predict for
             look_back: (tuple[int]) how far back to go like (10, 5) will do predictive validity starting
                 by removing the last 10 data points and predicting up to the last 5 data points
+            pv_type: (str) type of PV this is doing
 
         Attributes:
             self.grp_df: (pd.DataFrame) the data frame for this group only
@@ -55,6 +56,7 @@ class PVGroup:
         self.predict_space = predict_space
         self.model_generator = model_generator
         self.look_back = look_back
+        self.TYPE = pv_type
 
         assert type(self.col_t) == str
         assert type(self.col_obs) == str
@@ -133,7 +135,7 @@ class PVGroup:
         """
         Run predictive validity for all observation sequences in the available data for this group.
         """
-        print(f"Running PV for {self.predict_group} and ")
+        print(f"Running {self.TYPE} for {self.predict_group}.")
 
         self.prediction_matrix = np.empty((self.num_times, self.num_times))
         self.prediction_matrix[:] = np.nan
@@ -302,6 +304,7 @@ class PVModel:
         self.model_generator = model_generator
         self.predict_space = predict_space
         self.look_back = look_back
+        self.TYPE = 'PREDICTIVE VALIDITY'
 
         assert type(self.col_group) == str
         assert self.col_group in self.df.columns
@@ -314,7 +317,8 @@ class PVModel:
             grp: PVGroup(
                 data=self.df, col_t=self.col_t, col_obs=self.col_obs, col_grp=self.col_group,
                 col_obs_compare=self.col_obs_compare, model_generator=self.model_generator.generate(),
-                predict_space=self.predict_space, look_back=self.look_back, predict_group=grp
+                predict_space=self.predict_space, look_back=self.look_back, predict_group=grp,
+                pv_type=self.TYPE
             ) for grp in self.groups
         }
 
@@ -437,19 +441,31 @@ class PVModel:
         observations = self.pv_groups[group_name].compare_observations
         predictions = self.pv_groups[group_name].prediction_matrix
 
+        bias_analysis = []
         if bias_correction:
-            uncorrected_preds = np.empty(self.pv_groups[group_name].prediction_matrix.shape)
-            uncorrected_preds[:] = np.nan
+            residuals_added = np.empty(len(self.pv_groups[group_name].times))
+            residuals_added[:] = np.nan
+            look_back = np.empty(len(self.pv_groups[group_name].times), dtype=tuple)
 
             for i, model in enumerate(self.pv_groups[group_name].models):
                 if model.bias_corrector is None:
                     continue
                 else:
                     bp = model.bias_corrector.pv_groups[group_name].prediction_matrix[-1]
+
+                    uncorrected_preds = np.empty(self.pv_groups[group_name].prediction_matrix.shape)
+                    uncorrected_preds[:] = np.nan
                     uncorrected_preds[i, 0:bp.shape[0]] = bp
+                    bias_analysis.append(uncorrected_preds)
+
+                    residuals_added[i] = model.bias_corrector.residuals_added
+                    look_back[i] = model.bias_corrector.look_back
         else:
-            uncorrected_preds = None
+            bias_analysis = None
+            residuals_added = None
+            look_back = None
 
         plot_predictions(prediction_array=predictions, group_name=group_name,
                          times=times, observations=observations,
-                         bias=uncorrected_preds)
+                         bias=bias_analysis, residuals_added=residuals_added,
+                         look_back=look_back)

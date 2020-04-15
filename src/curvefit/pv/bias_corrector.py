@@ -6,7 +6,7 @@ class BiasCorrector(PVModel):
         super().__init__(**kwargs)
 
     def run_bias_correction(self, theta):
-        print(f"BIAS CORRECTING")
+        print("STARTING BIAS CORRECTION...")
         self.run_pv(theta=theta)
 
     def get_correction(self):
@@ -30,7 +30,7 @@ class BiasCorrector(PVModel):
         pass
 
 
-class NaiveBiasCorrector(PVModel):
+class NaiveBiasCorrector(BiasCorrector):
     """
     A bias corrector that takes the average of the residuals from the bias analysis and adds it back
     on to the predictions.
@@ -38,9 +38,11 @@ class NaiveBiasCorrector(PVModel):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self.residuals_added = None
+
     def get_correction(self):
-        print("COMPUTING BIAS CORRECTION")
         mean = self.all_residuals['residual'].mean()
+        self.residuals_added = mean
         return mean
 
     def get_corrected_predictions(self, mp, times, predict_space, predict_group, forecast_time_start):

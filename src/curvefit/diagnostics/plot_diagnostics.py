@@ -166,14 +166,18 @@ def plot_residuals(residual_array, group_name, x_label, y_label, absolute=False,
     ax.set_title(f"{group_name} residuals")
 
 
-def plot_predictions(prediction_array, group_name, times, observations, bias):
+def plot_predictions(prediction_array, group_name, times, observations, bias, residuals_added, look_back):
+    if bias is None and look_back is not None:
+        raise RuntimeError("Need to pass a bias matrix with look_back.")
+
     fig, ax = plt.subplots(prediction_array.shape[0], 1, figsize=(8, 4 * prediction_array.shape[0]))
     for i in range(prediction_array.shape[0]):
         used_to_fit = times <= times[i]
         not_used = times > times[i]
-        ax[i].scatter(times[used_to_fit], observations[used_to_fit], color='green', alpha=0.5)
-        ax[i].scatter(times[not_used], observations[not_used], color='red', alpha=0.5)
+        ax[i].scatter(times[used_to_fit], observations[used_to_fit], color='green')
+        ax[i].scatter(times[not_used], observations[not_used], color='red')
         ax[i].plot(times, prediction_array[i, :], color='green')
-        if bias is not None:
-            ax[i].plot(times, bias[i, :], color='blue')
-        ax[i].set_title(f"{group_name} predictions based on time {i}")
+        title = f"{group_name} predictions based on time {i}"
+        if residuals_added is not None:
+            title += f" with residual {round(residuals_added[i], 3)}"
+        ax[i].set_title(title)
