@@ -23,6 +23,9 @@ class APFlatAsymmetricModel(APModel):
         for group in self.groups:
             self.gaussian_mixes[group] = GaussianMixture(num_gaussians=self.num_gaussians)
 
+    def replace_peaked_groups(self):
+        self.peaked_groups = None
+
     def run_model(self, df, group):
         """Run each individual model.
         """
