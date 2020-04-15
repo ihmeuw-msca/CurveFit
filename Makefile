@@ -41,8 +41,8 @@ gh-pages: phony
 	rm -r extract_md
 	cp -r site/* .
 	git show master:.gitignore > .gitignore
-	echo 'Use the following command to return to master branch:'
-	echo 'rm .gitignore; git reset --hard; git checkout master'
+	@echo 'Use the following command to return to master branch:'
+	@echo 'rm .gitignore; git reset --hard; git checkout master'
 	
 clean:
 	find . -name "*.so*" | xargs rm -rf
