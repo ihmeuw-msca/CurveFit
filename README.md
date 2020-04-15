@@ -7,9 +7,11 @@
 https://ihmeuw-msca.github.io/CurveFit/
 
 ### Maintainers
-Aleksandr Aravkin (saravkin@uw.edu)
-Peng Zheng (zhengp@uw.edu)
-Marlena Bannick (mnorwood@uw.edu)
+- Aleksandr Aravkin (saravkin@uw.edu)
+- Peng Zheng (zhengp@uw.edu)
+- Marlena Bannick (mnorwood@uw.edu)
+- Jize Zhang (jizez@uw.edu)
+- Alexey Sholokhov (aksh@uw.edu)
 
 ### Resources
 - Current forecasts: https://covid19.healthdata.org/projections
