@@ -124,12 +124,10 @@ are also automatically included.
 ## Code Blocks
 A code block within a markdown section begins and ends with three back quotes.
 Thus there must be an even number of occurrences of three back quotes.
-The other characters on the same line as the three back quotes are not
-included in the markdown output. (This enables one to begin or end a comment
-block without having those characters in the markdown output.)
-There is one exception to this rule: if a language name directly follows
-the three back quotes that start a code block, the language name is included
-in the output.
+The first three back quotes must have a language name directly after it;
+e.g., `python`. The other characters on the same line as the three back quotes
+are not included in the markdown output. This enables one to begin or end
+a comment block without having those characters in the markdown output.
 
 ## Indentation
 If all of the extracted markdown documentation for a section is indented
@@ -209,7 +207,7 @@ corresponding_file = list()
 pattern_begin_markdown = re.compile( r'{begin_markdown \s*([A-Za-z0-9_.]*)}' )
 pattern_end_markdown   = re.compile( r'{end_markdown \s*([A-Za-z0-9_.]*)}' )
 pattern_spell_markdown = re.compile( r'{spell_markdown([^}]*)}' )
-pattern_begin_3quote   = re.compile( r'[^\n]*(```\s*\w*)[^\n]*' )
+pattern_begin_3quote   = re.compile( r'[^\n]*(```([^\s]*)[^\n]*)' )
 pattern_end_3quote     = re.compile( r'[^\n]*(```)[^\n]*' )
 pattern_newline        = re.compile( r'\n')
 pattern_word           = re.compile( r'[\\A-Za-z][a-z]*' )
@@ -222,25 +220,25 @@ for file_in in file_list :
     file_data  = file_ptr.read()
     file_ptr.close()
     #
-    # data_index is where to start search for next pattern
-    data_index  = 0
-    while data_index < len(file_data) :
+    # file_index is where to start search for next pattern in file_data
+    file_index  = 0
+    while file_index < len(file_data) :
         #
-        # match_begin
-        data_rest   = file_data[data_index : ]
-        match_begin = pattern_begin_markdown.search(data_rest)
+        # match_begin_markdown
+        data_rest   = file_data[file_index : ]
+        match_begin_markdown = pattern_begin_markdown.search(data_rest)
         #
-        if match_begin == None :
-            if data_index == 0 :
+        if match_begin_markdown == None :
+            if file_index == 0 :
                 # Use @ so does not match pattern_begin_markdown in this file.
                 msg  = 'can not find: @begin_markdown section_name}\n'
                 msg  = msg.replace('@', '{')
                 msg += 'in ' + file_in + '\n'
                 sys_exit(msg)
-            data_index = len(file_data)
+            file_index = len(file_data)
         else :
             # section_name
-            section_name = match_begin.group(1)
+            section_name = match_begin_markdown.group(1)
             if section_name == '' :
                 msg  = 'section_name after begin_markdown is empty; see file\n'
                 msg += file_in
@@ -256,27 +254,27 @@ for file_in in file_list :
             section_list.append( section_name )
             corresponding_file.append( file_in )
             #
-            # data_index
-            data_index += match_begin.end()
+            # file_index
+            file_index += match_begin_markdown.end()
             #
-            # match_end
-            data_rest = file_data[data_index : ]
-            match_end = pattern_end_markdown.search(data_rest)
+            # match_end_markdown
+            data_rest = file_data[file_index : ]
+            match_end_markdown = pattern_end_markdown.search(data_rest)
             #
-            if match_end == None :
+            if match_end_markdown == None :
                 msg  = 'can not find: "{end_markdown section_name}\n'
                 msg += 'in ' + file_in + ', section ' + section_name + '\n'
                 sys_exit(msg)
-            if match_end.group(1) != section_name :
+            if match_end_markdown.group(1) != section_name :
                 msg = 'in file ' + file_in + '\nsection names do not match\n'
                 msg += 'begin_markdown section name = '+section_name + '\n'
                 msg += 'end_markdown section name   = '
-                msg += match_end.group(1) + '\n'
+                msg += match_end_markdown.group(1) + '\n'
                 sys_exit(msg)
             #
             # output_data
-            output_start = data_index
-            output_end   = data_index + match_end.start()
+            output_start = file_index
+            output_end   = file_index + match_end_markdown.start()
             output_data  = file_data[ output_start : output_end ]
             #
             # process spell command
@@ -290,29 +288,35 @@ for file_in in file_list :
                 output_data = output_data[: start] + output_data[end :]
             #
             # remove characters on same line as triple back quote
-            data_index  = 0
-            match_begin = pattern_begin_3quote.search(output_data)
-            while match_begin != None :
-                begin_start = match_begin.start() + data_index
-                begin_end   = match_begin.end() + data_index
+            output_index  = 0
+            match_begin_3quote = pattern_begin_3quote.search(output_data)
+            while match_begin_3quote != None :
+                if match_begin_3quote.group(2) == '' :
+                    msg  = 'language missing directly after first'
+                    msg += ' ``` for a code block\n'
+                    msg += 'in ' + file_in
+                    msg += ', section ' + section_name + '\n'
+                    sys.exit(msg)
+                begin_start = match_begin_3quote.start() + output_index
+                begin_end   = match_begin_3quote.end()   + output_index
                 output_rest = output_data[ begin_end : ]
-                match_end   = pattern_end_3quote.search( output_rest )
-                if match_end == None :
+                match_end_3quote   = pattern_end_3quote.search( output_rest )
+                if match_end_3quote == None :
                     msg  = 'number of triple backquotes is not even in '
-                    msg += file_in + '\n'
+                    msg += file_in + ', section ' + section_name + '\n'
                     sys_exit(msg)
-                end_start = match_end.start() + begin_end
-                end_end   = match_end.end()   + begin_end
+                end_start = match_end_3quote.start() + begin_end
+                end_end   = match_end_3quote.end()   + begin_end
                 #
                 data_left   = output_data[: begin_start ]
-                data_left  += match_begin.group(1)
+                data_left  += match_begin_3quote.group(1)
                 data_left  += output_data[ begin_end : end_start ]
-                data_left  += match_end.group(1)
+                data_left  += match_end_3quote.group(1)
                 data_right  = output_data[ end_end : ]
                 #
-                output_data = data_left + data_right
-                data_index  = len(data_left)
-                match_begin = pattern_begin_3quote.search(data_right)
+                output_data  = data_left + data_right
+                output_index = len(data_left)
+                match_begin_3quote  = pattern_begin_3quote.search(data_right)
             #
             # num_remove (for indented documentation)
             len_output   = len(output_data)
@@ -373,8 +377,8 @@ for file_in in file_list :
                 start_line = newline + 1
             file_ptr.close()
             #
-            # data_index
-            data_index += match_end.end()
+            # file_index
+            file_index += match_end_markdown.end()
 # -----------------------------------------------------------------------------
 # read mkdocs.yml
 file_in   = 'mkdocs.yml'
