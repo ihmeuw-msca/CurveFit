@@ -166,7 +166,7 @@ def plot_residuals(residual_array, group_name, x_label, y_label, absolute=False,
     ax.set_title(f"{group_name} residuals")
 
 
-def plot_predictions(prediction_array, group_name, times, observations):
+def plot_predictions(prediction_array, group_name, times, observations, bias):
     fig, ax = plt.subplots(prediction_array.shape[0], 1, figsize=(8, 4 * prediction_array.shape[0]))
     for i in range(prediction_array.shape[0]):
         used_to_fit = times <= times[i]
@@ -174,4 +174,6 @@ def plot_predictions(prediction_array, group_name, times, observations):
         ax[i].scatter(times[used_to_fit], observations[used_to_fit], color='green', alpha=0.5)
         ax[i].scatter(times[not_used], observations[not_used], color='red', alpha=0.5)
         ax[i].plot(times, prediction_array[i, :], color='green')
+        if bias is not None:
+            ax[i].plot(times, bias[i, :], color='blue')
         ax[i].set_title(f"{group_name} predictions based on time {i}")
