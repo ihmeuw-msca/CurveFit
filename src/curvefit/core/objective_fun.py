@@ -1,7 +1,7 @@
 import numpy
 from curvefit.core import effects2params
 
-def effects2objective(
+def objective_fun(
         x,
         t,
         obs,
@@ -17,13 +17,13 @@ def effects2objective(
         param_gprior,
     ) :
     """
-    {begin_markdown effects2objective}
+    {begin_markdown objective_fun}
     {spell_markdown covs gprior param params}
 
     # Curve Fitting Objective Function of Fixed and Random Effects
 
     ## Syntax
-    val = effects2objective(
+    val = objective_fun(
         x, t, obs, obs_se, covs, group_sizes,
         fun, loss_fun, link_fun, var_link_fun,
         fe_gprior, re_gprior, param_gprior,
@@ -40,8 +40,8 @@ def effects2objective(
     4. *num_group~ = `len(group_sizes)` is the number of groups
 
     5. *params* = `effects2params(x, group_sizes, covs, link_fun, var_link_fun)
-    is a *num_param* by *num_obs* matrix containing the pramaters corresponding
-    to each observation; see [effects2params](effects2params.md).
+    is a *num_param* by *num_obs* matrix containing the parameters
+    corresponding to each observation; see [effects2params](effects2params.md).
 
     6. A vector is either a `list` or a one dimension `numpy.array`.
 
@@ -80,7 +80,7 @@ def effects2objective(
     This vector valued function vector values maps parameter values,
     [params](effects2params.md) returned by `effects2params`,
     to the model for the corresponding noiseless observations.
-    The residual vector has lenght *num_obs* and is given by
+    The residual vector has length *num_obs* and is given by
     ```python
         residual = (obs - model_fun(t, params)) / obs_se
     ```
@@ -108,14 +108,14 @@ def effects2objective(
 
     ## param_gprior
     is a list with three elements. The first element is a function
-    of the *params* and its result is a numpy array. We use the notaiton
+    of the *params* and its result is a numpy array. We use the notation
     ```python
         range_gprior = param_gprior[0](params)
     ```
     The value `param_gprior[1][0]` ( `param_gprior[1][1]` ) is a numpy array
     corresponding to the mean (standard deviation) for *range_gprior*.
 
-    {end_markdown effects2objective}
+    {end_markdown objective_fun}
     """
     num_groups = len(group_sizes)
     num_fe     = len(fe_gprior)

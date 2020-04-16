@@ -11,7 +11,7 @@ from curvefit.core.utils import get_initial_params
 from curvefit.core.utils import compute_starting_params
 from curvefit.core.functions import normal_loss
 from curvefit.core.effects2params import effects2params
-from curvefit.core.effects2objective import effects2objective
+from curvefit.core.objective_fun import objective_fun
 
 
 class CurveModel:
@@ -199,7 +199,7 @@ class CurveModel:
         return params
 
     def objective(self, x) :
-        return effects2objective(
+        return objective_fun(
             x,
             self.t,
             self.obs,
