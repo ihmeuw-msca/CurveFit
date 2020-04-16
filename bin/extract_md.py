@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 # ----------------------------------------------------------------------------
-# Original *.md files are written in this directory (must start with docs/)
-output_dir = 'docs/extract_md'
+# Original *.md files are written in this sub-directory of the docs directory
+extract_dir = 'extract_md'
 # list of files that contain markdown sections in them
 file_list = [
     'example/get_started.py',
@@ -55,6 +55,8 @@ extra_special_words = [
     markdown
     md
     underbar
+    mkdocs.yml
+    nbsp
 }
 
 # Extracting Markdown Documentation From Source Code
@@ -62,11 +64,13 @@ extra_special_words = [
 ## Syntax
 `bin/extract_md.py`
 
-## output_dir
-The variable *output_dir* at top of `bin/extract_md.py`
-determines the directory where the markdown files will be written.
+## extract_dir
+The variable *extract_dir* at top of `bin/extract_md.py`
+determines the sub-directory, below the `docs` directory,
+where the markdown files will be written.
 Any files names that end in `.md` in that directory will be
-removed at the beginning (so that the extracted files can be easily recognized).
+removed at the beginning so that all the files in this directory
+have been extracted from the current version of the source code.
 
 ## file_list
 The variable *file_list* at top of `bin/extract_md.py`
@@ -83,18 +87,26 @@ The start of a markdown section of the input file is indicated by the following
 text:
 <p style="margin-left:10%">
 {begin_markdown <i>section_name</i>}
-<p/>
+</p>
 Here *section_name* is the name of output file corresponding to this section.
-This name does not include the *output_dir* or the .md extension.
 The possible characters in *section_name* are A-Z, a-z, 0-9, underbar `_`,
-and dot `.`.
+and dot `.`
+
+### mkdocs.yml
+For each *section_name* in the documentation there must be a line in the
+`mkdocs.yml` file fo the following form:
+
+&nbsp;&nbsp;&nbsp;&nbsp;- *section_name* : '*extract_dir*/*section_name*.md'
+
+where there can be any number of spaces around the dash character (-)
+and the colon character (:).
 
 ## End Section
 The end of a markdown section of the input file is indicated by the following
 text:
 <p style="margin-left:10%">
 {end_markdown <i>section_name</i>}
-<p/>
+</p>
 Here *section_name* must be the same as in the start of this markdown section.
 
 ## Spell Checking
@@ -104,7 +116,7 @@ section as follows:
 {spell_markdown
     <i>special_1 ...  special_n</i>
 }
-<p/>
+</p>
 Here *special_1*, ..., *special_n* are special words
 that are to be considered valid for this section.
 In the syntax above they are all on the same line,
@@ -192,7 +204,7 @@ if not os.path.isdir('.git') :
     sys_exit(msg)
 #
 # remove all *.md files from output directory (so only new ones remain)
-assert output_dir.startswith('docs/')
+output_dir = 'docs/' + extract_dir
 if os.path.isdir(output_dir) :
     for file_name in os.listdir(output_dir) :
         if file_name.endswith('.md') :
@@ -388,48 +400,28 @@ file_ptr  = open(file_in, 'r')
 file_data = file_ptr.read()
 file_ptr.close()
 #
-# match_nav_start
-match_nav_start   = re.search('\nnav:', file_data)
-if match_nav_start == None :
-    msg  = 'can not find: nav: at beginning of line in ' + file_in + '\n'
-    sys_exit(msg)
-#
-# match_extract
-data_index    = match_nav_start.end() + 1
-data_rest     = file_data[data_index : ]
-match_extract = re.search('\\n  - Extracted Doc:', data_rest)
-#
-# match_nav_end
-match_nav_end  = re.search('\n[^ ]', data_rest)
-if match_nav_end == None :
-    msg  = 'can not find: end of nav: before end of file in ' + file_in + '\n'
-    sys_exit(msg)
-#
-# open mkdocs.yml for writing
-file_out = file_in
-file_ptr  = open(file_in, 'w')
-#
-file_ptr.write( file_data[ : data_index ] )
-file_ptr.flush()
-if match_extract == None :
-    # write up to end of old nav section
-    file_ptr.write( data_rest[: match_nav_end.start() + 1] )
-else :
-    # write up to beginning of old Extract Documentation
-    file_ptr.write( data_rest[: match_extract.start() + 1] )
-file_ptr.flush()
-#
-# write out extracted section
-file_ptr.write( '  - Extracted Doc:\n' )
 for section_name in section_list :
-    section_path = output_dir[5 :] + '/' + section_name + '.md'
-    line      = '    - ' + section_name + ": '" + section_path + "'\n"
-    file_ptr.write(line)
-file_ptr.flush()
-#
-# write out rest of mkdocs.yml
-file_ptr.write( data_rest[ match_nav_end.start() + 1 :] )
-file_ptr.close()
+    # There should be an line in mkdocs.yml with the following contents:
+    # - section_name : 'extract_dir/section_name.md'
+    # where the spaces are optional
+    pattern  = r'\n[ \t]*-[ \t]*'
+    pattern += section_name.replace('.', '[.]')
+    pattern += r"[ \t]*:[ \t]*'"
+    pattern += extract_dir.replace('.', '[.]')
+    pattern += r'/'
+    pattern += section_name.replace('.', '[.]')
+    pattern += r"[.]md'[ \t]*\n"
+    #
+    match_line = re.search(pattern, file_data)
+    if match_line == None :
+        msg   = 'Can not find following line in ' + file_in + ':\n'
+        line  = ' - ' + section_name
+        line += " : '" + extract_dir
+        line += '/' + section_name
+        line += ".md'"
+        msg  += '    ' + line + '\n'
+        msg  += 'Spaces above are optional and can be multiple spaces\n'
+        sys.exit(msg)
 #
 print('docs/extract.py: OK')
 sys.exit(0)
