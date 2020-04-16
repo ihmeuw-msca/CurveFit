@@ -347,20 +347,27 @@ class APModel(BasicModel):
 
         return samples
 
-    def process_draws(self, t):
+    def process_draws(self, t, last_info=None):
         """Process draws.
         """
+        last_info = {} if last_info is None else last_info
         draws = {}
         for group, draw in self.draws.items():
+            if group in last_info:
+                last_day = last_info[group][0]
+                last_obs = last_info[group][1]
+            else:
+                last_day = self.models[group].t[-1]
+                last_obs = self.models[group].obs[-1]
             truncated_draws = truncate_draws(
                 t=t,
                 draws=self.draws[group],
                 draw_space=self.predict_space,
-                last_day=self.models[group].t[-1],
-                last_obs=self.models[group].obs[-1],
+                last_day=last_day,
+                last_obs=last_obs,
                 last_obs_space=self.fun
             )
-            truncated_time = t[int(np.round(self.models[group].t[-1])) + 1:]
+            truncated_time = t[int(np.round(last_day)) + 1:]
             draws.update({
                 group: (truncated_time, truncated_draws)
             })
