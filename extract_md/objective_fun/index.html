@@ -1,0 +1,874 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-4.6.3">
+    
+    
+      
+        <title>objective_fun - Curve Fit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#4caf50">
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+    
+      
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="green" data-md-color-accent="green">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#curve-fitting-objective-function-of-fixed-and-random-effects" tabindex="0" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../.." title="Curve Fit" aria-label="Curve Fit" class="md-header-nav__button md-logo">
+          
+            <i class="md-icon"></i>
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            <span class="md-header-nav__topic">
+              Curve Fit
+            </span>
+            <span class="md-header-nav__topic">
+              
+                objective_fun
+              
+            </span>
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+          
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+      </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+      <main class="md-main" role="main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../.." title="Curve Fit" class="md-nav__button md-logo">
+      
+        <i class="md-icon"></i>
+      
+    </a>
+    Curve Fit
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../methods/" title="Methods" class="md-nav__link">
+      Methods
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../code/" title="Code" class="md-nav__link">
+      Code
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../updates/" title="Release Notes" class="md-nav__link">
+      Release Notes
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+    
+    <label class="md-nav__link" for="nav-5">
+      Examples
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../get_started_xam/" title="get_started_xam" class="md-nav__link">
+      get_started_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../covariate_xam/" title="covariate_xam" class="md-nav__link">
+      covariate_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../random_effect_xam/" title="random_effect_xam" class="md-nav__link">
+      random_effect_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../sizes_to_indices_xam/" title="sizes_to_indices_xam" class="md-nav__link">
+      sizes_to_indices_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../param_time_fun_xam/" title="param_time_fun_xam" class="md-nav__link">
+      param_time_fun_xam
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" checked>
+    
+    <label class="md-nav__link" for="nav-6">
+      Developer Doc
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-6">
+        Developer Doc
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../unzip_x/" title="unzip_x" class="md-nav__link">
+      unzip_x
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../unzip_x_xam/" title="unzip_x_xam" class="md-nav__link">
+      unzip_x_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../sizes_to_indices/" title="sizes_to_indices" class="md-nav__link">
+      sizes_to_indices
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../split_by_group/" title="split_by_group" class="md-nav__link">
+      split_by_group
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../param_time_fun/" title="param_time_fun" class="md-nav__link">
+      param_time_fun
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../effects2params/" title="effects2params" class="md-nav__link">
+      effects2params
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        objective_fun
+      </label>
+    
+    <a href="./" title="objective_fun" class="md-nav__link md-nav__link--active">
+      objective_fun
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#syntax" class="md-nav__link">
+    Syntax
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notation" class="md-nav__link">
+    Notation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#x" class="md-nav__link">
+    x
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#t" class="md-nav__link">
+    t
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#obs" class="md-nav__link">
+    obs
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#obs_se" class="md-nav__link">
+    obs_se
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#covs" class="md-nav__link">
+    covs
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#group_sizes" class="md-nav__link">
+    group_sizes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model_fun" class="md-nav__link">
+    model_fun
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loss_fun" class="md-nav__link">
+    loss_fun
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#link_fun-var_link_fun" class="md-nav__link">
+    link_fun, var_link_fun
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fe_gprior" class="md-nav__link">
+    fe_gprior
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#re_gprior" class="md-nav__link">
+    re_gprior
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#param_gprior" class="md-nav__link">
+    param_gprior
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../extract_md.py/" title="extract_md.py" class="md-nav__link">
+      extract_md.py
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../get_cppad_py.py/" title="get_cppad_py.py" class="md-nav__link">
+      get_cppad_py.py
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#syntax" class="md-nav__link">
+    Syntax
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notation" class="md-nav__link">
+    Notation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#x" class="md-nav__link">
+    x
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#t" class="md-nav__link">
+    t
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#obs" class="md-nav__link">
+    obs
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#obs_se" class="md-nav__link">
+    obs_se
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#covs" class="md-nav__link">
+    covs
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#group_sizes" class="md-nav__link">
+    group_sizes
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#model_fun" class="md-nav__link">
+    model_fun
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#loss_fun" class="md-nav__link">
+    loss_fun
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#link_fun-var_link_fun" class="md-nav__link">
+    link_fun, var_link_fun
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fe_gprior" class="md-nav__link">
+    fe_gprior
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#re_gprior" class="md-nav__link">
+    re_gprior
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#param_gprior" class="md-nav__link">
+    param_gprior
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                <h1 id="curve-fitting-objective-function-of-fixed-and-random-effects">Curve Fitting Objective Function of Fixed and Random Effects</h1>
+<h2 id="syntax">Syntax</h2>
+<p>val = objective_fun(
+    x, t, obs, obs_se, covs, group_sizes,
+    fun, loss_fun, link_fun, var_link_fun,
+    fe_gprior, re_gprior, param_gprior,
+) :</p>
+<h2 id="notation">Notation</h2>
+<ol>
+<li>
+<p><em>num_obs</em> = <code>len(obs)</code> is the number of observations (measurements)</p>
+</li>
+<li>
+<p><em>num_param</em> = <code>len(covs)</code> is the number of parameters in the model.</p>
+</li>
+<li>
+<p><em>num_fe</em> = <code>len(fe_gprior)</code> is the number of fixed effects.</p>
+</li>
+<li>
+<p>*num_group~ = <code>len(group_sizes)</code> is the number of groups</p>
+</li>
+<li>
+<p><em>params</em> = `effects2params(x, group_sizes, covs, link_fun, var_link_fun)
+is a <em>num_param</em> by <em>num_obs</em> matrix containing the parameters
+corresponding to each observation; see <a href="../effects2params/">effects2params</a>.</p>
+</li>
+<li>
+<p>A vector is either a <code>list</code> or a one dimension <code>numpy.array</code>.</p>
+</li>
+</ol>
+<h2 id="x">x</h2>
+<p>is a one dimensional numpy array contain a value for the fixed effects
+followed by the random effects. The random effects are divided into
+sub-vectors with length equal to the number of fixed effects.
+The j-th sub-vector corresponds to the j-th group of observations.</p>
+<h2 id="t">t</h2>
+<p>is a vector with length <em>num_obs</em> containing the value
+of the independent variable corresponding to each observation.</p>
+<h2 id="obs">obs</h2>
+<p>is a vector with length <em>num_obs</em> containing the observations
+(i.e. measurements).</p>
+<h2 id="obs_se">obs_se</h2>
+<p>is a vector with length <em>num_obs</em> containing the standard deviation
+for the corresponding observation.</p>
+<h2 id="covs">covs</h2>
+<p>For <em>k</em> = 1, ... , <em>num_param</em>-1,
+the value <code>len(covs[k])</code> is the number of fixed effects
+corresponding to the k-th parameter.
+The vector <code>covs[k][j]</code> has length <em>num_obs</em> and is the
+j-th covariate vector corresponding to the k-th parameter.</p>
+<h2 id="group_sizes">group_sizes</h2>
+<p>The observations are divided into groups.
+The first <code>group_sizes[0]</code> observations correspond to the first group,
+the next <code>group_sizes[1]</code> corresponds to the section group, and so on.
+The the sum of the group sizes is equal to <em>num_obs</em>.</p>
+<h2 id="model_fun">model_fun</h2>
+<p>This vector valued function vector values maps parameter values,
+<a href="../effects2params/">params</a> returned by <code>effects2params</code>,
+to the model for the corresponding noiseless observations.
+The residual vector has length <em>num_obs</em> and is given by</p>
+<div class="codehilite"><pre><span></span><code>    <span class="n">residual</span> <span class="o">=</span> <span class="p">(</span><span class="n">obs</span> <span class="o">-</span> <span class="n">model_fun</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">))</span> <span class="o">/</span> <span class="n">obs_se</span>
+</code></pre></div>
+
+
+<h2 id="loss_fun">loss_fun</h2>
+<p>This scalar value function maps the residual vector to the corresponding
+contribution to the objective function. For example, a Gaussian likelihood
+corresponds to</p>
+<div class="codehilite"><pre><span></span><code>    <span class="n">loss_fun</span><span class="p">(</span><span class="n">residual</span><span class="p">)</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span> <span class="n">residual</span> <span class="o">*</span> <span class="n">residual</span> <span class="p">)</span>
+</code></pre></div>
+
+
+<h2 id="link_fun-var_link_fun">link_fun, var_link_fun</h2>
+<p>are used to compute <em>params</em>; see <a href="#notation">Notation</a></p>
+<h2 id="fe_gprior">fe_gprior</h2>
+<p>is an <em>num_fe</em> by two numpy array. The value <code>fe_gprior[i][0]</code>
+is the prior mean for the i-th fixed effect and
+<code>fe_gprior[i][1]</code> is its standard deviation.</p>
+<h2 id="re_gprior">re_gprior</h2>
+<p>is an <em>num_fe</em> by <em>num_groups</em> by two numpy array, <code>re_gprior[i,j,0]</code>
+( <code>re_gprior[i,j,1]</code> ) is the mean (standard deviation) for the
+random effect corresponding to the i-th fixed effect and the j-th group.</p>
+<h2 id="param_gprior">param_gprior</h2>
+<p>is a list with three elements. The first element is a function
+of the <em>params</em> and its result is a numpy array. We use the notation</p>
+<div class="codehilite"><pre><span></span><code>    <span class="n">range_gprior</span> <span class="o">=</span> <span class="n">param_gprior</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="n">params</span><span class="p">)</span>
+</code></pre></div>
+
+
+<p>The value <code>param_gprior[1][0]</code> ( <code>param_gprior[1][1]</code> ) is a numpy array
+corresponding to the mean (standard deviation) for <em>range_gprior</em>.</p>
+                
+                  
+                
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../effects2params/" title="effects2params" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                effects2params
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../extract_md.py/" title="extract_md.py" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                extract_md.py
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        powered by
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs</a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
+      
+      <script>app.initialize({version:"1.1",url:{base:"../.."}})</script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+      
+    
+  </body>
+</html>

@@ -1,0 +1,697 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-4.6.3">
+    
+    
+      
+        <title>param_time_fun_xam - Curve Fit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#4caf50">
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+    
+      
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="green" data-md-color-accent="green">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#example-and-test-of-predefined-parametric-functions-of-time" tabindex="0" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../.." title="Curve Fit" aria-label="Curve Fit" class="md-header-nav__button md-logo">
+          
+            <i class="md-icon"></i>
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            <span class="md-header-nav__topic">
+              Curve Fit
+            </span>
+            <span class="md-header-nav__topic">
+              
+                param_time_fun_xam
+              
+            </span>
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+          
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+      </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+      <main class="md-main" role="main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../.." title="Curve Fit" class="md-nav__button md-logo">
+      
+        <i class="md-icon"></i>
+      
+    </a>
+    Curve Fit
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../methods/" title="Methods" class="md-nav__link">
+      Methods
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../code/" title="Code" class="md-nav__link">
+      Code
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../updates/" title="Release Notes" class="md-nav__link">
+      Release Notes
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" checked>
+    
+    <label class="md-nav__link" for="nav-5">
+      Examples
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../get_started_xam/" title="get_started_xam" class="md-nav__link">
+      get_started_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../covariate_xam/" title="covariate_xam" class="md-nav__link">
+      covariate_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../random_effect_xam/" title="random_effect_xam" class="md-nav__link">
+      random_effect_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../sizes_to_indices_xam/" title="sizes_to_indices_xam" class="md-nav__link">
+      sizes_to_indices_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        param_time_fun_xam
+      </label>
+    
+    <a href="./" title="param_time_fun_xam" class="md-nav__link md-nav__link--active">
+      param_time_fun_xam
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#function-documentation" class="md-nav__link">
+    Function Documentation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-source-code" class="md-nav__link">
+    Example Source Code
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6">
+    
+    <label class="md-nav__link" for="nav-6">
+      Developer Doc
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-6">
+        Developer Doc
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../unzip_x/" title="unzip_x" class="md-nav__link">
+      unzip_x
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../unzip_x_xam/" title="unzip_x_xam" class="md-nav__link">
+      unzip_x_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../sizes_to_indices/" title="sizes_to_indices" class="md-nav__link">
+      sizes_to_indices
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../split_by_group/" title="split_by_group" class="md-nav__link">
+      split_by_group
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../param_time_fun/" title="param_time_fun" class="md-nav__link">
+      param_time_fun
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../effects2params/" title="effects2params" class="md-nav__link">
+      effects2params
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../objective_fun/" title="objective_fun" class="md-nav__link">
+      objective_fun
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../extract_md.py/" title="extract_md.py" class="md-nav__link">
+      extract_md.py
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../get_cppad_py.py/" title="get_cppad_py.py" class="md-nav__link">
+      get_cppad_py.py
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#function-documentation" class="md-nav__link">
+    Function Documentation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-source-code" class="md-nav__link">
+    Example Source Code
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                <h1 id="example-and-test-of-predefined-parametric-functions-of-time">Example and Test of Predefined Parametric Functions of Time</h1>
+<h2 id="function-documentation">Function Documentation</h2>
+<p><a href="../param_time_fun/">param_time_fun</a></p>
+<h2 id="example-source-code">Example Source Code</h2>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">scipy</span>
+<span class="kn">import</span> <span class="nn">sandbox</span>
+<span class="n">sandbox</span><span class="o">.</span><span class="n">path</span><span class="p">()</span>
+<span class="kn">import</span> <span class="nn">curvefit</span>
+<span class="c1">#</span>
+<span class="n">eps99</span>       <span class="o">=</span> <span class="mf">99.0</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+<span class="n">sqrt_eps</span>    <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">numpy</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span> <span class="p">)</span>
+<span class="n">quad_eps</span>    <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span> <span class="n">sqrt_eps</span> <span class="p">)</span>
+<span class="n">d_tolerance</span> <span class="o">=</span> <span class="mf">1e-6</span>
+<span class="c1">#</span>
+<span class="k">def</span> <span class="nf">eval_expit</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="p">:</span>
+    <span class="k">return</span> <span class="n">p</span> <span class="o">/</span> <span class="p">(</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span> <span class="p">)</span> <span class="p">)</span>
+<span class="c1">#</span>
+<span class="k">def</span> <span class="nf">eval_gaussian_cdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="p">:</span>
+    <span class="n">z</span>   <span class="o">=</span> <span class="n">alpha</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">p</span> <span class="o">*</span> <span class="p">(</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">scipy</span><span class="o">.</span><span class="n">special</span><span class="o">.</span><span class="n">erf</span><span class="p">(</span><span class="n">z</span><span class="p">)</span> <span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+<span class="c1">#</span>
+<span class="c1"># test values for t, alpha, beta, p</span>
+<span class="n">t</span>      <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="mf">5.0</span> <span class="p">,</span> <span class="mf">10.0</span> <span class="p">]</span> <span class="p">)</span>
+<span class="n">beta</span>   <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="mf">30.0</span> <span class="p">,</span> <span class="mf">20.0</span> <span class="p">]</span> <span class="p">)</span>
+<span class="n">alpha</span>  <span class="o">=</span> <span class="mf">2.0</span> <span class="o">/</span> <span class="n">beta</span>
+<span class="n">p</span>      <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="p">[</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.2</span> <span class="p">]</span> <span class="p">)</span>
+<span class="n">params</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span> <span class="p">(</span><span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span> <span class="p">)</span>
+<span class="c1">#</span>
+<span class="c1"># check expit</span>
+<span class="n">value</span>     <span class="o">=</span> <span class="n">curvefit</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">expit</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+<span class="n">check</span>     <span class="o">=</span> <span class="n">eval_expit</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<span class="n">rel_error</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">check</span> <span class="o">-</span> <span class="mf">1.0</span>
+<span class="k">assert</span> <span class="nb">all</span><span class="p">(</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">rel_error</span> <span class="p">)</span> <span class="o">&lt;</span> <span class="n">eps99</span> <span class="p">)</span>
+<span class="c1">#</span>
+<span class="c1"># check ln_expit</span>
+<span class="n">value</span>     <span class="o">=</span> <span class="n">curvefit</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">ln_expit</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+<span class="n">check</span>     <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">check</span><span class="p">)</span>
+<span class="n">rel_error</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">check</span> <span class="o">-</span> <span class="mf">1.0</span>
+<span class="k">assert</span> <span class="nb">all</span><span class="p">(</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">rel_error</span> <span class="p">)</span> <span class="o">&lt;</span> <span class="n">eps99</span> <span class="p">)</span>
+<span class="c1">#</span>
+<span class="c1"># check gaussian_cdf</span>
+<span class="n">value</span>     <span class="o">=</span> <span class="n">curvefit</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">gaussian_cdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+<span class="n">check</span>     <span class="o">=</span> <span class="n">eval_gaussian_cdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<span class="n">rel_error</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">check</span> <span class="o">-</span> <span class="mf">1.0</span>
+<span class="k">assert</span> <span class="nb">all</span><span class="p">(</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">rel_error</span> <span class="p">)</span> <span class="o">&lt;</span> <span class="n">eps99</span> <span class="p">)</span>
+<span class="c1">#</span>
+<span class="c1"># check ln_gaussian_cdf</span>
+<span class="n">value</span>     <span class="o">=</span> <span class="n">curvefit</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">ln_gaussian_cdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+<span class="n">check</span>     <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">check</span><span class="p">)</span>
+<span class="n">rel_error</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">check</span> <span class="o">-</span> <span class="mf">1.0</span>
+<span class="k">assert</span> <span class="nb">all</span><span class="p">(</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">rel_error</span> <span class="p">)</span> <span class="o">&lt;</span> <span class="n">eps99</span> <span class="p">)</span>
+<span class="c1">#</span>
+<span class="c1"># check gaussian_pdf</span>
+<span class="n">step</span>      <span class="o">=</span> <span class="n">sqrt_eps</span> <span class="o">*</span> <span class="n">beta</span>
+<span class="n">value</span>     <span class="o">=</span> <span class="n">curvefit</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">gaussian_pdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+<span class="n">check_m</span>   <span class="o">=</span> <span class="n">eval_gaussian_cdf</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">step</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<span class="n">check_p</span>   <span class="o">=</span> <span class="n">eval_gaussian_cdf</span><span class="p">(</span><span class="n">t</span> <span class="o">+</span> <span class="n">step</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<span class="n">check</span>     <span class="o">=</span> <span class="p">(</span><span class="n">check_p</span> <span class="o">-</span> <span class="n">check_m</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">step</span><span class="p">)</span>
+<span class="n">rel_error</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">check</span> <span class="o">-</span> <span class="mf">1.0</span>
+<span class="k">assert</span> <span class="nb">all</span><span class="p">(</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">rel_error</span> <span class="p">)</span> <span class="o">&lt;</span> <span class="n">d_tolerance</span> <span class="p">)</span>
+<span class="c1">#</span>
+<span class="c1"># check ln_gaussian_pdf</span>
+<span class="n">value</span>     <span class="o">=</span> <span class="n">curvefit</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">ln_gaussian_pdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+<span class="n">check</span>     <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">check</span><span class="p">)</span>
+<span class="n">rel_error</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">check</span> <span class="o">-</span> <span class="mf">1.0</span>
+<span class="k">assert</span> <span class="nb">all</span><span class="p">(</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">rel_error</span> <span class="p">)</span> <span class="o">&lt;</span> <span class="n">d_tolerance</span> <span class="p">)</span>
+<span class="c1">#</span>
+<span class="c1"># check_dgaussian_pdf</span>
+<span class="n">step</span>      <span class="o">=</span> <span class="n">quad_eps</span> <span class="o">*</span> <span class="n">beta</span>
+<span class="n">value</span>     <span class="o">=</span> <span class="n">curvefit</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">dgaussian_pdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+<span class="n">check_m</span>   <span class="o">=</span> <span class="n">eval_gaussian_cdf</span><span class="p">(</span><span class="n">t</span> <span class="o">-</span> <span class="n">step</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<span class="n">check_0</span>   <span class="o">=</span> <span class="n">eval_gaussian_cdf</span><span class="p">(</span><span class="n">t</span><span class="p">,</span>        <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<span class="n">check_p</span>   <span class="o">=</span> <span class="n">eval_gaussian_cdf</span><span class="p">(</span><span class="n">t</span> <span class="o">+</span> <span class="n">step</span><span class="p">,</span> <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span><span class="p">,</span> <span class="n">p</span><span class="p">)</span>
+<span class="n">check</span>     <span class="o">=</span> <span class="p">(</span><span class="n">check_p</span> <span class="o">-</span> <span class="mf">2.0</span> <span class="o">*</span> <span class="n">check_0</span> <span class="o">+</span> <span class="n">check_m</span><span class="p">)</span> <span class="o">/</span> <span class="n">step</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">rel_error</span> <span class="o">=</span> <span class="n">value</span> <span class="o">/</span> <span class="n">check</span> <span class="o">-</span> <span class="mf">1.0</span>
+<span class="k">assert</span> <span class="nb">all</span><span class="p">(</span> <span class="nb">abs</span><span class="p">(</span> <span class="n">rel_error</span> <span class="p">)</span> <span class="o">&lt;</span> <span class="n">d_tolerance</span> <span class="p">)</span>
+<span class="c1">#</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;param_time_fun.py: OK&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+                
+                  
+                
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../sizes_to_indices_xam/" title="sizes_to_indices_xam" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                sizes_to_indices_xam
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../unzip_x/" title="unzip_x" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                unzip_x
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        powered by
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs</a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
+      
+      <script>app.initialize({version:"1.1",url:{base:"../.."}})</script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+      
+    
+  </body>
+</html>

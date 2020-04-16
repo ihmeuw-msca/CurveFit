@@ -1,0 +1,816 @@
+
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      <meta http-equiv="x-ua-compatible" content="ie=edge">
+      
+      
+      
+      
+        <meta name="lang:clipboard.copy" content="Copy to clipboard">
+      
+        <meta name="lang:clipboard.copied" content="Copied to clipboard">
+      
+        <meta name="lang:search.language" content="en">
+      
+        <meta name="lang:search.pipeline.stopwords" content="True">
+      
+        <meta name="lang:search.pipeline.trimmer" content="True">
+      
+        <meta name="lang:search.result.none" content="No matching documents">
+      
+        <meta name="lang:search.result.one" content="1 matching document">
+      
+        <meta name="lang:search.result.other" content="# matching documents">
+      
+        <meta name="lang:search.tokenizer" content="[\s\-]+">
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-4.6.3">
+    
+    
+      
+        <title>extract_md.py - Curve Fit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#4caf50">
+      
+    
+    
+      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+      
+    
+    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
+    
+    
+    
+      
+    
+    
+  </head>
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="green" data-md-color-accent="green">
+  
+    <svg class="md-svg">
+      <defs>
+        
+        
+      </defs>
+    </svg>
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
+    
+      <a href="#extracting-markdown-documentation-from-source-code" tabindex="0" class="md-skip">
+        Skip to content
+      </a>
+    
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid">
+    <div class="md-flex">
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <a href="../.." title="Curve Fit" aria-label="Curve Fit" class="md-header-nav__button md-logo">
+          
+            <i class="md-icon"></i>
+          
+        </a>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
+      </div>
+      <div class="md-flex__cell md-flex__cell--stretch">
+        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
+          
+            <span class="md-header-nav__topic">
+              Curve Fit
+            </span>
+            <span class="md-header-nav__topic">
+              
+                extract_md.py
+              
+            </span>
+          
+        </div>
+      </div>
+      <div class="md-flex__cell md-flex__cell--shrink">
+        
+          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
+          
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
+      <label class="md-icon md-search__icon" for="__search"></label>
+      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
+        &#xE5CD;
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+        
+      </div>
+      
+    </div>
+  </nav>
+</header>
+    
+    <div class="md-container">
+      
+        
+      
+      
+      <main class="md-main" role="main">
+        <div class="md-main__inner md-grid" data-md-component="container">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" data-md-level="0">
+  <label class="md-nav__title md-nav__title--site" for="__drawer">
+    <a href="../.." title="Curve Fit" class="md-nav__button md-logo">
+      
+        <i class="md-icon"></i>
+      
+    </a>
+    Curve Fit
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../methods/" title="Methods" class="md-nav__link">
+      Methods
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../code/" title="Code" class="md-nav__link">
+      Code
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../updates/" title="Release Notes" class="md-nav__link">
+      Release Notes
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+    
+    <label class="md-nav__link" for="nav-5">
+      Examples
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../get_started_xam/" title="get_started_xam" class="md-nav__link">
+      get_started_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../covariate_xam/" title="covariate_xam" class="md-nav__link">
+      covariate_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../random_effect_xam/" title="random_effect_xam" class="md-nav__link">
+      random_effect_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../sizes_to_indices_xam/" title="sizes_to_indices_xam" class="md-nav__link">
+      sizes_to_indices_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../param_time_fun_xam/" title="param_time_fun_xam" class="md-nav__link">
+      param_time_fun_xam
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" checked>
+    
+    <label class="md-nav__link" for="nav-6">
+      Developer Doc
+    </label>
+    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+      <label class="md-nav__title" for="nav-6">
+        Developer Doc
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../unzip_x/" title="unzip_x" class="md-nav__link">
+      unzip_x
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../unzip_x_xam/" title="unzip_x_xam" class="md-nav__link">
+      unzip_x_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../sizes_to_indices/" title="sizes_to_indices" class="md-nav__link">
+      sizes_to_indices
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../split_by_group/" title="split_by_group" class="md-nav__link">
+      split_by_group
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../param_time_fun/" title="param_time_fun" class="md-nav__link">
+      param_time_fun
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../effects2params/" title="effects2params" class="md-nav__link">
+      effects2params
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../objective_fun/" title="objective_fun" class="md-nav__link">
+      objective_fun
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        extract_md.py
+      </label>
+    
+    <a href="./" title="extract_md.py" class="md-nav__link md-nav__link--active">
+      extract_md.py
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#syntax" class="md-nav__link">
+    Syntax
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extract_dir" class="md-nav__link">
+    extract_dir
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file_list" class="md-nav__link">
+    file_list
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extra_special_words" class="md-nav__link">
+    extra_special_words
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#start-section" class="md-nav__link">
+    Start Section
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mkdocsyml" class="md-nav__link">
+    mkdocs.yml
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-section" class="md-nav__link">
+    End Section
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spell-checking" class="md-nav__link">
+    Spell Checking
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-blocks" class="md-nav__link">
+    Code Blocks
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indentation" class="md-nav__link">
+    Indentation
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../get_cppad_py.py/" title="get_cppad_py.py" class="md-nav__link">
+      get_cppad_py.py
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#syntax" class="md-nav__link">
+    Syntax
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extract_dir" class="md-nav__link">
+    extract_dir
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#file_list" class="md-nav__link">
+    file_list
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#extra_special_words" class="md-nav__link">
+    extra_special_words
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#start-section" class="md-nav__link">
+    Start Section
+  </a>
+  
+    <nav class="md-nav">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mkdocsyml" class="md-nav__link">
+    mkdocs.yml
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#end-section" class="md-nav__link">
+    End Section
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spell-checking" class="md-nav__link">
+    Spell Checking
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#code-blocks" class="md-nav__link">
+    Code Blocks
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#indentation" class="md-nav__link">
+    Indentation
+  </a>
+  
+</li>
+      
+      
+      
+      
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                <h1 id="extracting-markdown-documentation-from-source-code">Extracting Markdown Documentation From Source Code</h1>
+<h2 id="syntax">Syntax</h2>
+<p><code>bin/extract_md.py</code></p>
+<h2 id="extract_dir">extract_dir</h2>
+<p>The variable <em>extract_dir</em> at top of <code>bin/extract_md.py</code>
+determines the sub-directory, below the <code>docs</code> directory,
+where the markdown files will be written.
+Any files names that end in <code>.md</code> in that directory will be
+removed at the beginning so that all the files in this directory
+have been extracted from the current version of the source code.</p>
+<h2 id="file_list">file_list</h2>
+<p>The variable <em>file_list</em> at top of <code>bin/extract_md.py</code>
+is a list of file names, relative to the top git repository directory,
+that the markdown files will be extracted from.</p>
+<h2 id="extra_special_words">extra_special_words</h2>
+<p>The variable <em>extra_special_words</em> is a list of extra words that
+the spell checker will consider correct; see
+<a href="#spell-checking">spell checking</a> below.</p>
+<h2 id="start-section">Start Section</h2>
+<p>The start of a markdown section of the input file is indicated by the following
+text:
+<p style="margin-left:10%">
+{begin_markdown <i>section_name</i>}
+</p>
+Here <em>section_name</em> is the name of output file corresponding to this section.
+The possible characters in <em>section_name</em> are A-Z, a-z, 0-9, underbar <code>_</code>,
+and dot <code>.</code></p>
+<h3 id="mkdocsyml">mkdocs.yml</h3>
+<p>For each <em>section_name</em> in the documentation there must be a line in the
+<code>mkdocs.yml</code> file fo the following form:</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;- <em>section_name</em> : '<em>extract_dir</em>/<em>section_name</em>.md'</p>
+<p>where there can be any number of spaces around the dash character (-)
+and the colon character (:).</p>
+<h2 id="end-section">End Section</h2>
+<p>The end of a markdown section of the input file is indicated by the following
+text:
+<p style="margin-left:10%">
+{end_markdown <i>section_name</i>}
+</p>
+Here <em>section_name</em> must be the same as in the start of this markdown section.</p>
+<h2 id="spell-checking">Spell Checking</h2>
+<p>Special words can be added to the correct spelling list for a particular
+section as follows:
+<p style="margin-left:10%">
+{spell_markdown
+    <i>special_1 ...  special_n</i>
+}
+</p>
+Here <em>special_1</em>, ..., <em>special_n</em> are special words
+that are to be considered valid for this section.
+In the syntax above they are all on the same line,
+but they could be on different lines.
+Each word starts with an upper case letter,
+a lower case letter, or a back slash.
+The rest of the characters in a word are lower case letters.
+The case of the first letter does not matter when checking for special words;
+e.g., if <code>abcd</code> is <em>special_1</em> then <code>Abcd</code> will be considered a valid word.
+The back slash is included at the beginning of a word
+so that latex commands are considered words.
+The latex commands corresponding to the letters in the greek alphabet
+are automatically included.
+Any latex commands in the
+<a href="#extra_special_words">extra_special_words</a>
+are also automatically included.</p>
+<h2 id="code-blocks">Code Blocks</h2>
+<p>A code block within a markdown section begins and ends with three back quotes.
+Thus there must be an even number of occurrences of three back quotes.
+The first three back quotes must have a language name directly after it.
+The language name must be a sequence of letters; e.g., <code>python</code>.
+The other characters on the same line as the three back quotes
+are not included in the markdown output. This enables one to begin or end
+a comment block without having those characters in the markdown output.</p>
+<h2 id="indentation">Indentation</h2>
+<p>If all of the extracted markdown documentation for a section is indented
+by the same number of space characters, those space characters
+are not included in the markdown output. This enables one to indent the
+markdown so it is grouped with the proper code block in the source.</p>
+                
+                  
+                
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid">
+        
+          <a href="../objective_fun/" title="objective_fun" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+            </div>
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                objective_fun
+              </span>
+            </div>
+          </a>
+        
+        
+          <a href="../get_cppad_py.py/" title="get_cppad_py.py" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
+              <span class="md-flex__ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                get_cppad_py.py
+              </span>
+            </div>
+            <div class="md-flex__cell md-flex__cell--shrink">
+              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        powered by
+        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
+        and
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs</a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/application.c33a9706.js"></script>
+      
+      <script>app.initialize({version:"1.1",url:{base:"../.."}})</script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+      
+    
+  </body>
+</html>
