@@ -56,7 +56,7 @@ and you may pass any callable function that takes in `t` (an independent variabl
 to the function to the `CurveModel` class for the `fun` argument. What you pass in for `param_names` in the 
 `CurveModel` needs to match what the `fun` callable expects.
 
-The available built-in functions in `curvefit.utils.functions` are:
+The available built-in functions in `curvefit.core.functions` are:
 
 **The Error Function**
 
