@@ -13,7 +13,9 @@ class ModelPipeline:
     put that in run_init_model
     """
     def __init__(self, all_data, col_t, col_obs, col_group,
-                 col_obs_compare, all_cov_names, fun, predict_space, obs_se_func=None):
+                 col_obs_compare, all_cov_names, fun, predict_space,
+                 obs_se_func=None,
+                 col_obs_se=None):
         """
         Base class for a model pipeline. At minimum needs the following arguments for a
         model pipeline.
@@ -29,6 +31,9 @@ class ModelPipeline:
             fun: (callable) the space to fit in, one of curvefit.functions
             predict_space: (callable) the space to do predictive validity in, one of curvefit.functions
             obs_se_func: (optional) function to get observation standard error from col_t
+            col_obs_se (str, optional):
+                Column in dataframe for observation standard deviation.
+                When `obs_se_func` is not None, it will overwrite this.
 
         Attributes:
             self.pv: (curvefit.pv.PVModel) predictive validity model
@@ -67,7 +72,7 @@ class ModelPipeline:
             self.col_obs_se = 'obs_se'
             self.all_data[self.col_obs_se] = self.all_data[self.col_t].apply(self.obs_se_func)
         else:
-            self.col_obs_se = None
+            self.col_obs_se = col_obs_se
 
         # these are the attributes that can't be used to initialize a
         # CurveModel but are needed to initialize the ModelPipeline
