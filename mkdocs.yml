@@ -15,6 +15,7 @@ nav:
     - param_time_fun: 'extract_md/param_time_fun.md'
     - unzip_x: 'extract_md/unzip_x.md'
     - effects2params: 'extract_md/effects2params.md'
+    - effects2objective: 'extract_md/effects2objective.md'
     - extract_md.py: 'extract_md/extract_md.py.md'
     - get_cppad_py.py: 'extract_md/get_cppad_py.py.md'
 theme:

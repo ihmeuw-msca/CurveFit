@@ -54,8 +54,7 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
     ## group_sizes
     The observations (measurements) are divided into groups.
     The first `group_sizes[0]` observations correspond to the first group,
-    the next `group_sizes[1]` corresponds to the section group,
-    and so on.
+    the next `group_sizes[1]` corresponds to the section group, and so on.
     The total number of observations is the sum of the group sizes.
 
     ## covs

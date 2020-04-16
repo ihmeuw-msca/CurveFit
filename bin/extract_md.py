@@ -14,6 +14,7 @@ file_list = [
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',
     'src/curvefit/core/effects2params.py',
+    'src/curvefit/core/effects2objective.py',
     'bin/extract_md.py',
     'bin/get_cppad_py.py',
 ]
