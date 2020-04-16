@@ -310,7 +310,7 @@ for file_in in file_list :
                     msg += ' ``` for a code block\n'
                     msg += 'in ' + file_in
                     msg += ', section ' + section_name + '\n'
-                    sys.exit(msg)
+                    sys_exit(msg)
                 begin_start = match_begin_3quote.start() + output_index
                 begin_end   = match_begin_3quote.end()   + output_index
                 output_rest = output_data[ begin_end : ]
@@ -376,13 +376,13 @@ for file_in in file_list :
                                 if first_spell_error :
                                     msg  = 'warning: file = ' + file_in
                                     msg += ', section = ' + section_name
-                                    print(msg)
+                                    sys_exit(msg)
                                     first_spell_error = False
                                 msg  = 'spelling = ' + word
                                 suggest = spell_checker.correction(word)
                                 if suggest != word :
                                     msg += ', suggest = ' + suggest
-                                print(msg)
+                                sys_exit(msg)
                                 spell_list.append(word.lower())
                     # ------------------------------------------------------
                     file_ptr.write( line )
@@ -421,7 +421,7 @@ for section_name in section_list :
         line += ".md'"
         msg  += '    ' + line + '\n'
         msg  += 'Spaces above are optional and can be multiple spaces\n'
-        sys.exit(msg)
+        sys_exit(msg)
 #
 print('docs/extract.py: OK')
 sys.exit(0)
