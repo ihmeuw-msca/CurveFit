@@ -37,7 +37,8 @@ class BasicModel(ModelPipeline):
 
         generator_kwargs = pipeline_kwargs
         for arg in self.pop_cols:
-            generator_kwargs.pop(arg)
+            if arg in generator_kwargs:
+                generator_kwargs.pop(arg)
 
         self.basic_model_dict.update(**generator_kwargs)
         self.mod = None
