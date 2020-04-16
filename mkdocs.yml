@@ -4,6 +4,22 @@ nav:
   - Methods: 'methods.md'
   - Code: 'code.md'
   - Release Notes: 'updates.md'
+  - Examples:
+    - get_started_xam: 'extract_md/get_started_xam.md'
+    - covariate_xam: 'extract_md/covariate_xam.md'
+    - random_effect_xam: 'extract_md/random_effect_xam.md'
+    - sizes_to_indices_xam: 'extract_md/sizes_to_indices_xam.md'
+    - param_time_fun_xam: 'extract_md/param_time_fun_xam.md'
+  - Developer Doc:
+    - unzip_x: 'extract_md/unzip_x.md'
+    - unzip_x_xam: 'extract_md/unzip_x_xam.md'
+    - sizes_to_indices: 'extract_md/sizes_to_indices.md'
+    - split_by_group: 'extract_md/split_by_group.md'
+    - param_time_fun: 'extract_md/param_time_fun.md'
+    - effects2params: 'extract_md/effects2params.md'
+    - objective_fun: 'extract_md/objective_fun.md'
+    - extract_md.py: 'extract_md/extract_md.py.md'
+    - get_cppad_py.py: 'extract_md/get_cppad_py.py.md'
 theme:
     name: 'material'
     palette:

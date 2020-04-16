@@ -55,7 +55,7 @@ that the solution is correct:
 import math
 n_time       = 21    # number of time points used in the simulation
 n_group      = 4     # number of groups
-rel_tol      = 1e-4  # relative tolerance used to check optimal solution
+rel_tol      = 5e-4  # relative tolerance used to check optimal solution
 # simulation values used for b_0, ..., b_4
 b_true       = [ 20.0 , -2.0, -1.0, +1.0, +2.0 ]
 # simulation values used for a_0, ..., a_4

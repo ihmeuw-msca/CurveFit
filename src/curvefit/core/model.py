@@ -10,6 +10,8 @@ from curvefit.core import utils
 from curvefit.core.utils import get_initial_params
 from curvefit.core.utils import compute_starting_params
 from curvefit.core.functions import normal_loss
+from curvefit.core.effects2params import effects2params
+from curvefit.core.objective_fun import objective_fun
 
 
 class CurveModel:
@@ -171,6 +173,9 @@ class CurveModel:
                 Array of parameters for the curve functional form, with shape
                 (num_params, num_obs) or (num_params, num_groups).
         """
+        # 2DO: This function is no longer being used and should be removed
+        assert False
+        #
         fe, re = self.unzip_x(x)
         covs = self.covs
         if expand:
@@ -193,38 +198,22 @@ class CurveModel:
 
         return params
 
-    def objective(self, x):
-        """Objective function.
-
-        Args:
-            x (numpy.ndarray):
-                Model parameters.
-
-        Returns:
-            float:
-                Objective value.
-        """
-        fe, re = self.unzip_x(x)
-        params = self.compute_params(x)
-        residual = (self.obs - self.fun(self.t, params))/self.obs_se
-        # val = 0.5*np.sum(residual**2)
-        val = self.loss_fun(residual)
-        # gprior from fixed effects
-        val += 0.5*np.sum(
-            (fe - self.fe_gprior.T[0])**2/self.fe_gprior.T[1]**2
+    def objective(self, x) :
+        return objective_fun(
+            x,
+            self.t,
+            self.obs,
+            self.obs_se,
+            self.covs,
+            self.order_group_sizes,
+            self.fun,
+            self.loss_fun,
+            self.link_fun,
+            self.var_link_fun,
+            self.fe_gprior,
+            self.re_gprior,
+            self.fun_gprior
         )
-        # gprior from random effects
-        val += 0.5*np.sum(
-            (re - self.re_gprior.T[0])**2/self.re_gprior.T[1]**2
-        )
-        # other functional gprior
-        if self.fun_gprior is not None:
-            params = self.compute_params(x, expand=False)
-            val += 0.5*np.sum(
-                (self.fun_gprior[0](params) - self.fun_gprior[1][0])**2/
-                self.fun_gprior[1][1]**2
-            )
-        return val
 
     def gradient(self, x, eps=1e-16):
         """Gradient function.
@@ -380,7 +369,14 @@ class CurveModel:
         )
 
         self.result = result
-        self.params = self.compute_params(self.result.x, expand=False)
+        self.params = effects2params(
+            self.result.x,
+            self.order_group_sizes,
+            self.covs,
+            self.link_fun,
+            self.var_link_fun,
+            expand=False
+        )
 
     def compute_rmse(self, x=None, use_obs_se=True):
         """Compute the Root Mean Squre Error.
@@ -399,7 +395,13 @@ class CurveModel:
             assert self.result is not None
             x = self.result.x
 
-        params = self.compute_params(x)
+        params = effects2params(
+            x,
+            self.order_group_sizes,
+            self.covs,
+            self.link_fun,
+            self.var_link_fun
+        )
         residual = self.obs - self.fun(self.t, params)
 
         if use_obs_se:
