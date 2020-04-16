@@ -4,7 +4,9 @@ import numpy as np
 from curvefit.core.utils import data_translator
 
 
-def plot_fits(generator, prediction_times, sharex, sharey, draw_space, plot_obs=None, plot_uncertainty=False):
+def plot_fits(generator, prediction_times, sharex, sharey,
+              draw_space, plot_obs=None, plot_uncertainty=False,
+              groups=None):
     """
     Plot the result and draws from a model generator at some prediction times.
 
@@ -16,12 +18,15 @@ def plot_fits(generator, prediction_times, sharex, sharey, draw_space, plot_obs=
         draw_space: (callable) which curvefit.functions space to plot the draws in
         plot_obs: (optional str) column of observations to plot
         plot_uncertainty: (optional bool) plot the uncertainty intervals
+        groups: (optional list) list of group names to plot
     """
-    fig, ax = plt.subplots(len(generator.groups), 1, figsize=(8, 4 * len(generator.groups)),
+    if groups is None:
+        groups = generator.groups
+    fig, ax = plt.subplots(len(groups), 1, figsize=(8, 4 * len(groups)),
                            sharex=sharex, sharey=sharey)
-    if len(generator.groups) == 1:
+    if len(groups) == 1:
         ax = [ax]
-    for i, group in enumerate(generator.groups):
+    for i, group in enumerate(groups):
         draws = generator.draws[group].copy()
         draws = data_translator(
             data=draws,
@@ -37,6 +42,13 @@ def plot_fits(generator, prediction_times, sharex, sharey, draw_space, plot_obs=
         mean = draws.mean(axis=0)
         ax[i].plot(prediction_times, mean, c='red', linestyle=':')
         ax[i].plot(prediction_times, mean_fit, c='black')
+        if hasattr(generator, 'gaussian_mixtures'):
+            unadjusted_fit = generator.models[group].predict(
+                prediction_times,
+                group_name=group,
+                prediction_functional_form=draw_space
+            )
+            ax[i].plot(prediction_times, unadjusted_fit, c='green')
 
         if plot_uncertainty:
             lower = np.quantile(draws, axis=0, q=0.025)

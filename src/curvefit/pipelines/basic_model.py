@@ -42,8 +42,6 @@ class BasicModel(ModelPipeline):
         self.basic_model_dict.update(**generator_kwargs)
         self.mod = None
 
-        self.setup_pipeline()
-
     def refresh(self):
         self.mod = None
 

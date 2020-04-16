@@ -40,6 +40,7 @@ class APModel(BasicModel):
 
         super().__init__(**kwargs)
         self.run_init_model()
+        self.setup_pipeline()
 
     def run_init_model(self):
         # update functional prior

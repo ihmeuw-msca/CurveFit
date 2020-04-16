@@ -793,8 +793,11 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
         df = data[location]
         t = df['days']
         y = df['ln asddr']
-
-        c = np.polyfit(t, y, 2)
+        num_obs = df.shape[0]
+        if num_obs < tol_num_obs:
+            c = np.zeros(3)
+        else:
+            c = np.polyfit(t, y, 2)
         poly_fit.update({
             location: deepcopy(c)
         })
@@ -814,7 +817,9 @@ def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
         return potential_groups
 
 
-def process_input(df, col_group, col_t, col_death_rate, return_df=True):
+def process_input(df, col_group, col_t, col_death_rate,
+                  col_covs=None,
+                  return_df=True):
     """
     Trim filter and adding extra information to the data frame.
 
@@ -823,6 +828,7 @@ def process_input(df, col_group, col_t, col_death_rate, return_df=True):
         col_group (str): Column name of group definition.
         col_t (str): Column name of the independent variable.
         col_death_rate (str): Name for column that contains the death rate.
+        col_covs (list{str}): Names for the covariates.
         return_df (bool, optional):
             If True return the combined data frame, otherwise return the
             splitted dictionary.
@@ -833,11 +839,16 @@ def process_input(df, col_group, col_t, col_death_rate, return_df=True):
     assert col_group in df
     assert col_t in df
     assert col_death_rate in df
+    if col_covs is not None:
+        assert all([col_cov in df for col_cov in col_covs])
+    else:
+        col_covs = []
 
     # trim down the data frame
-    df = df[[col_group, col_t, col_death_rate]].reset_index(drop=True)
+    df = df[[col_group, col_t, col_death_rate] + col_covs].reset_index(
+        drop=True)
     df.sort_values([col_group, col_t], inplace=True)
-    df.columns = ['location', 'days', 'ascdr']
+    df.columns = ['location', 'days', 'ascdr'] + col_covs
 
     # check and filter and add more information
     data = split_by_group(df, col_group='location')
@@ -917,3 +928,20 @@ def peak_score(t, y, c, num_obs,
     ))
 
     return score
+
+
+def compute_gaussian_mixture_matrix(x, params, beta_stride, mixture_size):
+    half_size = mixture_size // 2
+    mixture_size = half_size * 2 + 1  # making sure it's odd
+    betas = np.linspace(
+        params[1] - half_size * beta_stride, 
+        params[1] + half_size * beta_stride, 
+        num=mixture_size,
+    )
+    assert np.abs(betas[half_size] - params[1]) / np.abs(params[1]) < 1e-2
+    X = []
+    for beta in betas:
+        X.append(gaussian_pdf(x, [params[0], beta, params[2]]))
+    X = np.asarray(X).T
+    assert X.shape == (len(x), mixture_size)
+    return X, betas
