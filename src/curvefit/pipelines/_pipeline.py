@@ -50,7 +50,7 @@ class ModelPipeline:
         # If we're doing predictive validity in log space, we want absolute residuals, which
         # corresponds to theta = 0. If we're doing predictive validity in linear space, we want
         # relative residuals, which corresponds to theta = 1.
-        if self.predict_space.__name__.startswith('log'):
+        if self.predict_space.__name__.startswith('ln'):
             self.theta = 0
         else:
             self.theta = 1
@@ -61,7 +61,7 @@ class ModelPipeline:
         #
         # This flag will de-bias the draws
         # mean in linear space to match exactly the exp mean in log space.
-        self.de_bias_draws = self.predict_space.__name__.startswith('log')
+        self.de_bias_draws = self.predict_space.__name__.startswith('ln')
 
         if self.obs_se_func is not None:
             self.col_obs_se = 'obs_se'
