@@ -125,8 +125,9 @@ are also automatically included.
 ## Code Blocks
 A code block within a markdown section begins and ends with three back quotes.
 Thus there must be an even number of occurrences of three back quotes.
-The first three back quotes must have a language name directly after it;
-e.g., `python`. The other characters on the same line as the three back quotes
+The first three back quotes must have a language name directly after it.
+The language name must be a sequence of letters; e.g., `python`.
+The other characters on the same line as the three back quotes
 are not included in the markdown output. This enables one to begin or end
 a comment block without having those characters in the markdown output.
 
@@ -208,7 +209,7 @@ corresponding_file = list()
 pattern_begin_markdown = re.compile( r'{begin_markdown \s*([A-Za-z0-9_.]*)}' )
 pattern_end_markdown   = re.compile( r'{end_markdown \s*([A-Za-z0-9_.]*)}' )
 pattern_spell_markdown = re.compile( r'{spell_markdown([^}]*)}' )
-pattern_begin_3quote   = re.compile( r'[^\n]*(```([^\s]*)[^\n]*)' )
+pattern_begin_3quote   = re.compile( r'[^\n]*(```([a-zA-Z]*))[^\n]*' )
 pattern_end_3quote     = re.compile( r'[^\n]*(```)[^\n]*' )
 pattern_newline        = re.compile( r'\n')
 pattern_word           = re.compile( r'[\\A-Za-z][a-z]*' )
