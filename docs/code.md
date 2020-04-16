@@ -28,13 +28,13 @@ represent what and some model parameters.
 
 Here is an example of creating a `CurveModel` with a data frame where `time` is the independent variable,
 `death_rate` is the dependent variable, and `group` is a variable indicating which group an observation belongs to.
-In this example, we want to fit to the log erf functional form (see [functions](#functions)) with
+In this example, we want to fit to the log erf (also refrred to as log Gaussian CDF) functional form (see [functions](#functions)) with
 identity link functions for each parameter and identity variable link functions for each parameter.
 In this example, no parameters have covariates besides an intercept column of 1's.
 
 ```python
 from curvefit.core.model import CurveModel
-from curvefit.core.functions import log_erf
+from curvefit.core.functions import ln_gaussian_cdf
 
 model = CurveModel(
     df=df,
@@ -45,7 +45,7 @@ model = CurveModel(
     param_names=['alpha', 'beta', 'p'],
     link_fun=[lambda x: x, lambda x: x, lambda x: x],
     var_link_fun=[lambda x: x, lambda x: x, lambda x: x],
-    fun=log_erf
+    fun=ln_gaussian_cdf
 )
 ```
 
@@ -56,14 +56,14 @@ and you may pass any callable function that takes in `t` (an independent variabl
 to the function to the `CurveModel` class for the `fun` argument. What you pass in for `param_names` in the 
 `CurveModel` needs to match what the `fun` callable expects.
 
-The available built-in functions in `curvefit.functions` are:
+The available built-in functions in `curvefit.utils.functions` are:
 
 **The Error Function**
 
-- `erf`: error function (Gauss error function)
-- `derf`: derivative of the error function
-- `log_erf`: log error function
-- `log_derf`: log derivative of the erf function
+- `gaussian_cdf`: Gaussian cumulative distribution function
+- `gaussian_pdf`: Gaussian probability distribution function
+- `ln_gaussian_cdf`: log Gaussian cumulative distribution function
+- `ln_gaussian_pdf`: log Gaussian probability distribution function
 
 **The Expit Function** (inverse of the logit function)
 
