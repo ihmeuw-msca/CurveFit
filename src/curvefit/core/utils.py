@@ -706,17 +706,26 @@ def smooth_mat(mat, radius=None):
 
 
 def split_by_group(df, col_group):
-    """Split the data frame by the group definition.
+    """{begin_markdown split_by_group}
+    {spell_markdown dataframe}
+    # Split the dataframe by the group definition.
 
-    Args:
-        df (pd.DataFrame): Provided data frame.
-        col_group (str): Column name of group definition.
+    ## Syntax
+    `data = split_by_group(df, col_group)`
 
-    Returns:
-        dict{str, pd.DataFrame}:
-            Dictionary with key as the group definition and value as the
-            corresponding data frame.
-    """
+    ## df
+    Provided dataframe.
+
+    ## col_group
+    Column name in the dataframe contains group definition.
+
+    ## data
+    Dictionary with key as the group definition and value as the
+    corresponding dataframe.
+
+    ## Example
+
+    {end_markdown split_by_group}"""
     assert col_group in df
     data = {
         group: df[df[col_group] == group].reset_index(drop=True)
