@@ -27,7 +27,8 @@ np.random.seed(1234)
 df = pd.DataFrame()
 df['time'] = np.arange(100)
 
-df['death_rate'] = np.exp(.1*(df.time-20))/(1+np.exp(.1*(df.time-20))) + np.random.normal(0, 0.1, size=100).cumsum()
+df['death_rate'] = np.exp(.1 * (df.time - 20)) / (1 + np.exp(.1 * (df.time - 20))) + \
+                   np.random.normal(0, 0.1, size=100).cumsum()
 df['ln_death_rate'] = np.log(df['death_rate'])
 
 df['group'] = 'all'
@@ -47,7 +48,8 @@ model = CurveModel(
 )
 
 # Fit the model to estimate parameters
-model.fit_params(fe_init=[0, 0, 1.], fe_gprior=[[0, np.inf], [0, np.inf], [1., np.inf]])
+model.fit_params(fe_init=[0, 0, 1.],
+                 fe_gprior=[[0, np.inf], [0, np.inf], [1., np.inf]])
 
 # Get predictions
 y_pred = model.predict(
