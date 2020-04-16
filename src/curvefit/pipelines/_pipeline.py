@@ -93,7 +93,8 @@ class ModelPipeline:
 
     def run(self, n_draws, prediction_times, cv_lower_threshold,
             smoothed_radius, num_smooths, exclude_groups, exclude_below=0, cv_upper_threshold=np.inf,
-            max_last=None, exp_smoothing=None):
+            max_last=None, exp_smoothing=None,
+            last_info=None):
         """
         Runs the whole model with PV and forecasting residuals and creating draws.
 
@@ -115,6 +116,7 @@ class ModelPipeline:
                 to predict the coefficient of variation (low numbers of data points makes this unstable)
             exp_smoothing: (optional float) exponential smoothing parameter for combining time series predictions
             max_last: (optional int) number of models from previous observations to use since the maximum time
+            last_info (dict, optional)
         Returns:
         """
         assert type(n_draws) == int
@@ -154,7 +156,8 @@ class ModelPipeline:
             prediction_times=prediction_times,
             theta=self.theta,
             exp_smoothing=exp_smoothing,
-            max_last=max_last
+            max_last=max_last,
+            last_info=last_info
         )
 
     def setup_pipeline(self):
@@ -251,7 +254,8 @@ class ModelPipeline:
 
     def create_draws(self, num_draws, prediction_times,
                      theta=1, std_lower_threshold=1e-2, std_upper_threshold=np.inf,
-                     exp_smoothing=None, max_last=None):
+                     exp_smoothing=None, max_last=None,
+                     last_info=None):
         """
         Generate draws for a model pipeline, smoothing over a neighbor radius of residuals
         for far out and num data points.
@@ -265,6 +269,8 @@ class ModelPipeline:
             exp_smoothing: (optional float) amount of exponential smoothing --> higher value means more weight
                 given to the more recent models
             max_last: (optional int) number of models from previous observations to use since the maximum time
+            last_info (dict, optional):
+                Dictionary overwrite the last day and observation.
         """
         if self.pv.all_residuals is None:
             raise RuntimeError("Need to first run predictive validity with self.run_predictive_validity.")
@@ -300,7 +306,8 @@ class ModelPipeline:
                 group=group,
                 theta=theta,
                 std_floor=std_lower_threshold,
-                std_ceiling=std_upper_threshold
+                std_ceiling=std_upper_threshold,
+                last_info=last_info
             )
             if self.de_bias_draws:
                 draws = draws - draws.var(axis=0) / 2

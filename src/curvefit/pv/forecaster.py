@@ -269,8 +269,11 @@ class Forecaster:
         error = np.outer(standard_noise, std_residual)
         return error
 
-    def simulate(self, mp, num_simulations, prediction_times, group, std_floor=1e-2, theta=1,
-                 std_ceiling=np.inf):
+    def simulate(self, mp, num_simulations, prediction_times, group,
+                 std_floor=1e-2,
+                 theta=1,
+                 std_ceiling=np.inf,
+                 last_info=None):
         """
         Simulate the residuals based on the mean and standard deviation of predicting
         into the future.
@@ -283,13 +286,21 @@ class Forecaster:
             std_floor: (float) std floor
             std_ceiling: (float) std ceiling
             theta: (theta) scaling of residuals to do relative to prediction magnitude
+            last_info (dict | optional):
+                Over write the last information.
 
         Returns:
             List[pd.DataFrame] list of data frames for each simulation
         """
+        last_info = {} if last_info is None else last_info
         data = mp.all_data.loc[mp.all_data[mp.col_group] == group].copy()
-        max_t = int(np.round(data[mp.col_t].max()))
-        num_obs = data.loc[~data[mp.col_obs_compare].isnull()][mp.col_group].count()
+        if group in last_info:
+            last_day = last_info[group][0]
+        else:
+            last_day = data[mp.col_t].max()
+        max_t = int(np.round(last_day))
+        num_obs = data.loc[(~data[mp.col_obs_compare].isnull()) &
+                           (data[mp.col_t] <= last_day)][mp.col_group].count()
 
         predictions = mp.mean_predictions[group]
 
