@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 '''{begin_markdown param_time_fun_xam}
-{spell_markdown finfo sqrt eval expit erf param params vstack derf dderf}
+{spell_markdown finfo sqrt eval expit erf param params vstack dgaussian}
 
 # Example and Test of Predefined Parametric Functions of Time
 
@@ -24,7 +24,7 @@ d_tolerance = 1e-6
 def eval_expit(t, alpha, beta, p) :
     return p / ( 1.0 + numpy.exp( - alpha * (t - beta) ) )
 #
-def eval_erf(t, alpha, beta, p) :
+def eval_gaussian_cdf(t, alpha, beta, p) :
     z   = alpha * (t - beta)
     return p * ( 1.0 + scipy.special.erf(z) ) / 2.0
 #
@@ -41,45 +41,45 @@ check     = eval_expit(t, alpha, beta, p)
 rel_error = value / check - 1.0
 assert all( abs( rel_error ) < eps99 )
 #
-# check log_expit
-value     = curvefit.core.functions.log_expit(t, params)
+# check ln_expit
+value     = curvefit.core.functions.ln_expit(t, params)
 check     = numpy.log(check)
 rel_error = value / check - 1.0
 assert all( abs( rel_error ) < eps99 )
 #
-# check erf
-value     = curvefit.core.functions.erf(t, params)
-check     = eval_erf(t, alpha, beta, p)
+# check gaussian_cdf
+value     = curvefit.core.functions.gaussian_cdf(t, params)
+check     = eval_gaussian_cdf(t, alpha, beta, p)
 rel_error = value / check - 1.0
 assert all( abs( rel_error ) < eps99 )
 #
-# check log_erf
-value     = curvefit.core.functions.log_erf(t, params)
+# check ln_gaussian_cdf
+value     = curvefit.core.functions.ln_gaussian_cdf(t, params)
 check     = numpy.log(check)
 rel_error = value / check - 1.0
 assert all( abs( rel_error ) < eps99 )
 #
-# check derf
+# check gaussian_pdf
 step      = sqrt_eps * beta
-value     = curvefit.core.functions.derf(t, params)
-check_m   = eval_erf(t - step, alpha, beta, p)
-check_p   = eval_erf(t + step, alpha, beta, p)
+value     = curvefit.core.functions.gaussian_pdf(t, params)
+check_m   = eval_gaussian_cdf(t - step, alpha, beta, p)
+check_p   = eval_gaussian_cdf(t + step, alpha, beta, p)
 check     = (check_p - check_m) / (2.0 * step)
 rel_error = value / check - 1.0
 assert all( abs( rel_error ) < d_tolerance )
 #
-# check log_derf
-value     = curvefit.core.functions.log_derf(t, params)
+# check ln_gaussian_pdf
+value     = curvefit.core.functions.ln_gaussian_pdf(t, params)
 check     = numpy.log(check)
 rel_error = value / check - 1.0
 assert all( abs( rel_error ) < d_tolerance )
 #
-# check_dderf
+# check_dgaussian_pdf
 step      = quad_eps * beta
-value     = curvefit.core.functions.dderf(t, params)
-check_m   = eval_erf(t - step, alpha, beta, p)
-check_0   = eval_erf(t,        alpha, beta, p)
-check_p   = eval_erf(t + step, alpha, beta, p)
+value     = curvefit.core.functions.dgaussian_pdf(t, params)
+check_m   = eval_gaussian_cdf(t - step, alpha, beta, p)
+check_0   = eval_gaussian_cdf(t,        alpha, beta, p)
+check_p   = eval_gaussian_cdf(t + step, alpha, beta, p)
 check     = (check_p - 2.0 * check_0 + check_m) / step**2
 rel_error = value / check - 1.0
 assert all( abs( rel_error ) < d_tolerance )
