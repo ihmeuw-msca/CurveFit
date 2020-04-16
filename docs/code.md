@@ -62,10 +62,6 @@ plt.plot(df.time, y_pred, '-')
 plt.plot(df.time, df.ln_death_rate, '.')
 ```
 
-You should see a plot that looks like this:
-
-
-
 Now we will walk through each of the steps from above and explain how to use them in detail.
 
 ### Setting Up a Model
