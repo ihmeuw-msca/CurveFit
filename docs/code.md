@@ -8,6 +8,62 @@ over time including [pipelines](#pipelines) and [predictive validity](#predictiv
 ## Core Model
 **`curevefit.core`**
 
+Here we will walk through how to use `CurveModel`.
+
+First, here is an example that you can copy
+and paste into your Python interpreter to run start to finish.
+
+```python
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+from curvefit.core.model import CurveModel
+from curvefit.core.functions import ln_gaussian_cdf
+
+np.random.seed(1234)
+
+# Create example data -- both death rate and log death rate
+df = pd.DataFrame()
+df['time'] = np.arange(100)
+
+df['death_rate'] = np.exp(.1 * (df.time - 20)) / (1 + np.exp(.1 * (df.time - 20))) + \
+                   np.random.normal(0, 0.1, size=100).cumsum()
+df['ln_death_rate'] = np.log(df['death_rate'])
+
+df['group'] = 'all'
+df['intercept'] = 1.0
+
+# Set up the CurveModel
+model = CurveModel(
+    df=df,
+    col_t='time',
+    col_obs='ln_death_rate',
+    col_group='group',
+    col_covs=[['intercept'], ['intercept'], ['intercept']],
+    param_names=['alpha', 'beta', 'p'],
+    link_fun=[lambda x: x, lambda x: x, lambda x: x],
+    var_link_fun=[lambda x: x, lambda x: x, lambda x: x],
+    fun=ln_gaussian_cdf
+)
+
+# Fit the model to estimate parameters
+model.fit_params(fe_init=[0, 0, 1.],
+                 fe_gprior=[[0, np.inf], [0, np.inf], [1., np.inf]])
+
+# Get predictions
+y_pred = model.predict(
+    t=df.time,
+    group_name=df.group.unique()
+)
+
+# Plot results
+plt.plot(df.time, y_pred, '-')
+plt.plot(df.time, df.ln_death_rate, '.')
+```
+
+Now we will walk through each of the steps from above and explain how to use them in detail.
+
 ### Setting Up a Model
 
 The code for the core curve fitting model is `curvefit.core.model.CurveModel`.
@@ -26,26 +82,23 @@ represent what and some model parameters.
 - `link_fun (list{function})`: list of link functions for each of the parameters
 - `var_link_fun (list{function})`: list of functions for the variables including fixed and random effects
 
-Here is an example of creating a `CurveModel` with a data frame where `time` is the independent variable,
+First, we create sample data frame where `time` is the independent variable,
 `death_rate` is the dependent variable, and `group` is a variable indicating which group an observation belongs to.
-In this example, we want to fit to the log erf functional form (see [functions](#functions)) with
+In this example, we want to fit to the log erf (also referred to as log Gaussian CDF) functional form (see [functions](#functions)) with
 identity link functions for each parameter and identity variable link functions for each parameter.
 In this example, no parameters have covariates besides an intercept column of 1's.
 
 ```python
-from curvefit.core.model import CurveModel
-from curvefit.core.functions import log_erf
-
 model = CurveModel(
     df=df,
     col_t='time',
-    col_obs='death_rate',
+    col_obs='ln_death_rate',
     col_group='group',
     col_covs=[['intercept'], ['intercept'], ['intercept']],
     param_names=['alpha', 'beta', 'p'],
     link_fun=[lambda x: x, lambda x: x, lambda x: x],
     var_link_fun=[lambda x: x, lambda x: x, lambda x: x],
-    fun=log_erf
+    fun=ln_gaussian_cdf
 )
 ```
 
@@ -56,14 +109,14 @@ and you may pass any callable function that takes in `t` (an independent variabl
 to the function to the `CurveModel` class for the `fun` argument. What you pass in for `param_names` in the 
 `CurveModel` needs to match what the `fun` callable expects.
 
-The available built-in functions in `curvefit.functions` are:
+The available built-in functions in `curvefit.core.functions` are:
 
 **The Error Function**
 
-- `erf`: error function (Gauss error function)
-- `derf`: derivative of the error function
-- `log_erf`: log error function
-- `log_derf`: log derivative of the erf function
+- `gaussian_cdf`: Gaussian cumulative distribution function
+- `gaussian_pdf`: Gaussian probability distribution function
+- `ln_gaussian_cdf`: log Gaussian cumulative distribution function
+- `ln_gaussian_pdf`: log Gaussian probability distribution function
 
 **The Expit Function** (inverse of the logit function)
 
@@ -172,19 +225,17 @@ information about the optimization procedure.
 To obtain predictions from a model that has been fit, use the method `CurveModel.predict`.
 The `predict` function needs to know which values of the independent variable you want
 to predict for, which group you want to predict for, and optionally, which space
-you want to predict in. For example, you might want to predict in `log_erf` space but
-make predictions in `log_derf` space. This is only possible for functions that are
+you want to predict in. For example, you might want to predict in `ln_gaussian_cdf` space but
+make predictions in `ln_gaussian_pdf` space. This is only possible for functions that are
 related to one another (see the [functions](#functions) section).
 
 Continuing with [our example](#setting-up-a-model), the following call would
-make predictions at times 0, 1, and 2, for group `"A"`.
+make predictions at all of the times in the original data frame, for group `"all"`.
 
 ```python
-import numpy as np
-
-model.predict(
-    t=np.array([0., 1., 2.]),
-    group_name="A"
+y_pred = model.predict(
+    t=df.time,
+    group_name=df.group.unique()
 )
 ```
 

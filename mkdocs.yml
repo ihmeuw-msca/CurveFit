@@ -14,6 +14,7 @@ nav:
     - unzip_x: 'extract_md/unzip_x.md'
     - unzip_x_xam: 'extract_md/unzip_x_xam.md'
     - sizes_to_indices: 'extract_md/sizes_to_indices.md'
+    - split_by_group: 'extract_md/split_by_group.md'
     - param_time_fun: 'extract_md/param_time_fun.md'
     - effects2params: 'extract_md/effects2params.md'
     - objective_fun: 'extract_md/objective_fun.md'

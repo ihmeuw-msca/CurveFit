@@ -56,6 +56,7 @@ def get_obs_se(df, col_t, func=lambda x: 1 / (1 + x)):
     data['obs_se'] = data[col_t].apply(func)
     return data
 
+
 # TODO: replace with the data translator?
 def get_derivative_of_column_in_ln_space(df, col_obs, col_t, col_grp):
     """
@@ -124,7 +125,6 @@ def local_smoother(df,
     col_mean = '_'.join([col_val, 'mean'])
     col_std = '_'.join([col_val, 'std'])
 
-
     # group by the axis
     df = df.groupby(col_axis, as_index=False).agg({
         col_val: [np.sum, lambda x: np.sum(x**2), 'count']
@@ -192,6 +192,7 @@ def cumulative_derivative(array):
     arr = array.copy()
     return arr - np.insert(arr[:, :-1], 0, 0.0, axis=1)
 
+
 # TODO: change to use the data translator
 def convex_combination(t, pred1, pred2, pred_fun,
                        start_day=2, end_day=20):
@@ -251,6 +252,7 @@ def convex_combination(t, pred1, pred2, pred_fun,
 
     return pred
 
+
 # TODO: use data_translator
 def model_average(pred1, pred2, w1, w2, pred_fun):
     """
@@ -290,6 +292,7 @@ def model_average(pred1, pred2, w1, w2, pred_fun):
         RuntimeError('Unknown prediction functional form')
 
     return pred
+
 
 # TODO: move the test from pv to here and test it not use the old code.
 def condense_residual_matrix(matrix, sequential_diffs, data_density):
@@ -706,17 +709,26 @@ def smooth_mat(mat, radius=None):
 
 
 def split_by_group(df, col_group):
-    """Split the data frame by the group definition.
+    """{begin_markdown split_by_group}
+    {spell_markdown dataframe}
+    # Split the dataframe by the group definition.
 
-    Args:
-        df (pd.DataFrame): Provided data frame.
-        col_group (str): Column name of group definition.
+    ## Syntax
+    `data = split_by_group(df, col_group)`
 
-    Returns:
-        dict{str, pd.DataFrame}:
-            Dictionary with key as the group definition and value as the
-            corresponding data frame.
-    """
+    ## df
+    Provided dataframe.
+
+    ## col_group
+    Column name in the dataframe contains group definition.
+
+    ## data
+    Dictionary with key as the group definition and value as the
+    corresponding dataframe.
+
+    ## Example
+
+    {end_markdown split_by_group}"""
     assert col_group in df
     data = {
         group: df[df[col_group] == group].reset_index(drop=True)
@@ -745,9 +757,9 @@ def filter_death_rate(df, col_t, col_death_rate):
     df = df.drop(drop_idx).reset_index(drop=True)
     return df
 
+
 def filter_death_rate_by_group(df, col_group, col_t, col_death_rate):
     """Filter cumulative death rate within each group.
-
     Args:
         df (pd.DataFrame): Provided data frame.
         col_group (str): Column name of group definition.
@@ -765,76 +777,57 @@ def filter_death_rate_by_group(df, col_group, col_t, col_death_rate):
 
 
 def create_potential_peaked_groups(df, col_group, col_t, col_death_rate,
-                                   spline_knots=np.array([0.0, 100.0]),
-                                   spline_degree=2,
-                                   tol_der=1e-2,
                                    tol_num_obs=20,
                                    tol_after_peak=3,
-                                   return_spline_fit=False):
+                                   return_poly_fit=False):
     """Create potential peaked groups.
-
     Args:
         df (pd.DataFrame): Provided data frame.
         col_group (str): Column name of group definition.
         col_t (str): Column name of the independent variable.
         col_death_rate (str): Name for column that contains the death rate.
-        spline_konts (np.array, optional):
-            Knots for the spline fits.
-        spline_degree (int, optional):
-            Degree for the spline fits.
-        tol_der (float, optional):
-            Only the ones with minimum derivative below this threshold will be
-            considered as the potential peaked group.
         tol_num_obs (int, optional):
             Only the ones with number of observation above or equal to this
             threshold will be considered as the potential peaked group.
         tol_after_peak (int | float, optional):
             Pick the ones already pass peaked day for this amount of time.
-        return_spline_fit (bool, optional):
+        return_poly_fit (bool, optional):
             If True, return the spline fits as well.
-
     Returns:
         list | tuple(list, dict):
             List of potential peaked groups or with the spline fit as well.
     """
     data = process_input(df, col_group, col_t, col_death_rate, return_df=False)
 
-    spline_fit = {}
+    poly_fit = {}
     for location in data.keys():
         df = data[location]
         t = df['days']
         y = df['ln asddr']
 
-        spline = XSpline(spline_knots, spline_degree)
-        X = spline.design_mat(t)
-        c, *_ = np.linalg.lstsq(X.T.dot(X), X.T.dot(y), rcond=None)
-        spline_fit.update({
-            location: (deepcopy(spline), deepcopy(c))
+        c = np.polyfit(t, y, 2)
+        poly_fit.update({
+            location: deepcopy(c)
         })
 
     potential_groups = []
     for i, (location, df) in enumerate(data.items()):
-        spline, c = spline_fit[location]
-        t = np.linspace(df['days'].min(), df['days'].max(), 100)
-        dX = spline.design_dmat(t, 1)
-        ddX = spline.design_dmat(t, 2)
-
-        dy = dX.dot(c)
-        ddy = ddX.dot(c)
-        if np.abs(dy).min() < tol_der and \
-                np.all(ddy <= 0.0) and \
-                df.shape[0] >= tol_num_obs and \
-                df['days'].max() - t[np.argmin(np.abs(dy))] >= tol_after_peak:
+        c = poly_fit[location]
+        last_day = df['days'].max()
+        num_obs = df.shape[0]
+        b = np.inf if np.isclose(c[0], 0.0) else -0.5*c[1]/c[0]
+        if c[0] < 0.0 <= b and num_obs >= tol_num_obs and last_day - b >= tol_after_peak:
             potential_groups.append(location)
 
-    if return_spline_fit:
-        return potential_groups, spline_fit
+    if return_poly_fit:
+        return potential_groups, poly_fit
     else:
         return potential_groups
 
 
 def process_input(df, col_group, col_t, col_death_rate, return_df=True):
-    """Trim filter and adding extra information to the data frame.
+    """
+    Trim filter and adding extra information to the data frame.
 
     Args:
         df (pd.DataFrame): Provided data frame.
@@ -877,3 +870,61 @@ def process_input(df, col_group, col_t, col_death_rate, return_df=True):
         return pd.concat(list(data.values()))
     else:
         return data
+
+
+def peak_score(t, y, c, num_obs,
+               tol_num_obs=5,
+               weight_num_obs=1.0,
+               min_score=0.1,
+               max_score=1.0,
+               lslope=0.1,
+               rslope=0.1):
+    """Compute the peak score of give prediction.
+
+    Args:
+        t (numpy.ndarray): Time array.
+        y (numpy.ndarray): Prediction in the daily death space.
+        c (numpy.ndarray): The coefficient of the polyfit.
+        num_obs (int): Number of the observations.
+        tol_num_obs (int, optional):
+            If num_obs lower than this value, then assign equal weights.
+        weight_num_obs (float, optional):
+            Weight for importance of the number of observations.
+        min_score (float, optional): Minimum score, required to be positive.
+        max_score (float, optional):
+            Maximum score, required greater than min_score.
+        lslope (float, optional): Slope for underestimate the peak time.
+        rslope (float, optional): Slope for overestimate the peak time.
+
+    Returns:
+        float: The score.
+    """
+    assert isinstance(t, np.ndarray)
+    assert isinstance(y, np.ndarray)
+    assert isinstance(c, np.ndarray)
+    assert t.size == y.size
+    assert c.size == 3
+    assert num_obs >= 1.0
+    assert tol_num_obs >= 0.0
+    assert 0.0 <= weight_num_obs <= 1.0
+    assert min_score >= 0.0
+    assert max_score >= min_score
+    assert lslope >= 0.0
+    assert rslope >= 0.0
+
+    b = -0.5*c[1]/c[0]
+    beta = t[np.argmax(y)]
+    if np.isclose(c[0], 0.0) or c[0] > 0.0 or num_obs <= tol_num_obs or b <= 0.0:
+        return 0.5*(min_score + max_score)
+
+    if min_score == max_score:
+        return min_score
+
+    height = max_score - min_score
+
+    score = min_score + height*(1.0 - weight_num_obs/num_obs)*np.exp(-(
+        lslope*min(beta - b, 0.0)**2 +
+        rslope*max(beta - b, 0.0)**2
+    ))
+
+    return score

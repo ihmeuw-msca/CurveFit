@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 
 
 class APModel(BasicModel):
-    """Alpha prior model.
+    """
+    Alpha prior model.
     """
 
     def __init__(self, obs_bounds=None,
@@ -103,7 +104,6 @@ class APModel(BasicModel):
         fit_dict.update({
             'fe_gprior': fe_gprior
         })
-        # print(fit_dict['fe_gprior'])
         model.fit_params(**fit_dict)
         return model
 
@@ -172,8 +172,9 @@ class APModel(BasicModel):
             ax[i, 0].set_title(location)
 
             dy = gaussian_pdf(t, model.params[:, 0])
-            gaussian_pdf_obs = data_translator(model.obs,
-                                       self.basic_model_dict['fun'], 'gaussian_pdf')
+            gaussian_pdf_obs = data_translator(
+                model.obs, self.basic_model_dict['fun'], 'gaussian_pdf'
+            )
             ax[i, 1].scatter(model.t, gaussian_pdf_obs)
             ax[i, 1].plot(t, dy)
             ax[i, 1].set_title(location)
@@ -181,13 +182,12 @@ class APModel(BasicModel):
 
     def summarize_result(self):
         models = self.models
-        df_summary = pd.DataFrame({}, columns=['Location',
-                                               'RMSE ERF',
-                                               'RMSE DERF',
-                                               ])
+        df_summary = pd.DataFrame({}, columns=['Location', 'RMSE ERF', 'RMSE DERF'])
+
         location_list = []
         rmse_gaussian_cdf_list = []
         rmse_gaussian_pdf_list = []
+
         for i, (location, model) in enumerate(models.items()):
             gaussian_cdf_pred = model.fun(model.t, model.params[:, 0])
             rmse_gaussian_cdf = np.linalg.norm(gaussian_cdf_pred - model.obs) ** 2

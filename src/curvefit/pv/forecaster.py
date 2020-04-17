@@ -248,14 +248,15 @@ class Forecaster:
 
         return new_data
 
-    def create_residual_samples(self, num_simulations, forecast_out_times, num_data, epsilon):
+    def create_residual_samples(self, num_simulations, forecast_out_times, num_data, std_floor, std_ceiling=np.inf):
         """
 
         Args:
             num_simulations: (int) number of draws
             forecast_out_times: (np.array) of times
             num_data: (int) number of existing data points
-            epsilon: (float) cv floor
+            std_floor: (float) std floor
+            std_ceiling: (float) std ceiling
 
         Returns:
             (np.ndarray) with shape (num_simulations, forecast_out_times)
@@ -263,12 +264,13 @@ class Forecaster:
         residuals = self.predict(
             far_out=forecast_out_times, num_data=np.array([num_data])
         )
-        std_residual = residuals['residual_std'].apply(lambda x: max(x, epsilon)).values
+        std_residual = residuals['residual_std'].apply(lambda x: min(max(x, std_floor), std_ceiling)).values
         standard_noise = np.random.randn(num_simulations)
         error = np.outer(standard_noise, std_residual)
         return error
 
-    def simulate(self, mp, num_simulations, prediction_times, group, epsilon=1e-2, theta=1):
+    def simulate(self, mp, num_simulations, prediction_times, group, std_floor=1e-2, theta=1,
+                 std_ceiling=np.inf):
         """
         Simulate the residuals based on the mean and standard deviation of predicting
         into the future.
@@ -278,7 +280,8 @@ class Forecaster:
             prediction_times: (np.array) times to create predictions at
             num_simulations: number of simulations
             group: (str) the group to make the simulations for
-            epsilon: (epsilon) the floor for standard deviation moving out into the future
+            std_floor: (float) std floor
+            std_ceiling: (float) std ceiling
             theta: (theta) scaling of residuals to do relative to prediction magnitude
 
         Returns:
@@ -298,7 +301,8 @@ class Forecaster:
             num_simulations=num_simulations,
             forecast_out_times=forecast_out_times,
             num_data=num_obs,
-            epsilon=epsilon
+            std_floor=std_floor,
+            std_ceiling=std_ceiling
         )
         no_error = np.zeros(shape=(num_simulations, sum(no_noise)))
         all_error = np.hstack([no_error, error])

@@ -5,3 +5,4 @@ install:
   - python setup.py install
 script:
   - pytest tests
+  - make examples
