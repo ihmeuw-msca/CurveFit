@@ -898,12 +898,11 @@ def apply_function_along_array_window(array, fun, window_size):
     assert callable(fun)
     assert type(window_size) == int
 
-    result = np.empty(len(array))
-    result[:] = np.nan
+    n = array.size
 
-    for i in range(len(array)):
-        lower = max(i - window_size, 0)
-        upper = min(i + window_size, len(array))
-        result[i] = fun(array[lower:upper + 1])
+    # Get lower and upper indexes for the window for each element of array
+    l_idx = np.maximum(0, np.arange(n) - window_size)
+    u_idx = np.minimum(n, np.arange(n) + window_size)
 
-    return result
+    # Apply the function across the array windows
+    return np.array([fun(array[l:u]) for l, u in zip(l_idx, u_idx)])
