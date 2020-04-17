@@ -1,5 +1,7 @@
 from curvefit.pv.pv import PVModel
-
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import Matern
+import numpy as np
 
 class BiasCorrector(PVModel):
     def __init__(self, **kwargs):
@@ -56,3 +58,40 @@ class NaiveBiasCorrector(BiasCorrector):
         forecasted = times >= forecast_time_start
         predictions[forecasted] = predictions[forecasted] - (predictions[forecasted] ** mp.theta) * mean
         return predictions
+
+
+class GPBiasCorrector(BiasCorrector):
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.gp = GaussianProcessRegressor(Matern())
+    
+    def _adjust_prediction(self, times, residual_matrix, forecast_time_start):
+        assert residual_matrix[0] == residual_matrix[1]
+        n = residual_matrix.shape[0]
+        prediction_matrix = np.zeros((n, n))
+        if n <= forecast_time_start:
+            return prediction_matrix
+        for i in range(forecast_time_start + 1, n):
+            y = residual_matrix[:i, :i].T
+            x = np.arange(i)
+            self.gp.fit(x, y)
+            resi_mean_pred = self.gp.predict(times)
+            prediction_matrix[i - 1, :] += resi_mean_pred[:, -1]
+        return prediction_matrix
+
+    def get_corrected_predictions(self, mp, times, predict_space, predict_group, forecast_time_start):
+        residual_matrix = mp.pv.pv_groups[predict_group].residual_matrix
+        return self._adjust_prediction(times, residual_matrix, forecast_time_start)
+
+
+
+        
+
+
+    
+        
+        
+
+
+            
