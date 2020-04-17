@@ -2,7 +2,7 @@ from copy import deepcopy
 
 from curvefit.pv.forecaster import Forecaster
 from curvefit.pv.pv import PVModel
-from curvefit.pv.bias_corrector import BiasCorrector, NaiveBiasCorrector
+from curvefit.pv.bias_corrector import BiasCorrector, NaiveBiasCorrector, GPBiasCorrector
 from curvefit.diagnostics.plot_diagnostics import plot_fits
 
 
@@ -222,7 +222,7 @@ class ModelPipeline:
         self.fit(df=df, group=group)
         if self.bias_correction is not None:
             if len(group_df[self.col_t].unique()) > self.bias_correction:
-                self.bias_corrector = NaiveBiasCorrector(
+                self.bias_corrector = GPBiasCorrector(
                     data=group_df,
                     col_t=self.col_t,
                     col_group=self.col_group,
