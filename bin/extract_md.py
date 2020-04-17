@@ -10,6 +10,7 @@ file_list = [
     'example/sizes_to_indices.py',
     'example/param_time_fun.py',
     'example/unzip_x.py',
+    'example/effects2params.py',
 
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',

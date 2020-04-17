@@ -123,6 +123,9 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
     j-th fixed effect and the i-th observation, if *expand* is true,
     or i-th group, if *expand* is false.
 
+    ## Example
+    [effects2params_xam](effects2params_xam.md)
+
     {end_markdown effects2params}'''
     num_obs    = numpy.sum(group_sizes)
     num_groups = len(group_sizes)

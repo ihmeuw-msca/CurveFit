@@ -127,7 +127,8 @@ def objective_fun(
         group_sizes,
         covs,
         link_fun,
-        var_link_fun
+        var_link_fun,
+        expand=True
     )
     # residual
     residual = (obs - model_fun(t, params))/obs_se
