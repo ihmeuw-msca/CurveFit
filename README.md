@@ -12,6 +12,7 @@ https://ihmeuw-msca.github.io/CurveFit/
 - Marlena Bannick (mnorwood@uw.edu)
 - Jize Zhang (jizez@uw.edu)
 - Alexey Sholokhov (aksh@uw.edu)
+- Bradley Bell (bradbell@seanet.com)
 
 ### Resources
 - Current forecasts: https://covid19.healthdata.org/projections
