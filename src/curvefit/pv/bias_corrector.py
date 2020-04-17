@@ -127,7 +127,7 @@ class GPBiasCorrector(BiasCorrector):
             self._plot_GP(times, x, Y[:, -1], resi_mean_pred[:, -1])
         return resi_mean_pred[:, -1]
 
-    def get_corrected_predictions(self, mp, times, predict_space, predict_group, forecast_time_start, plot=True):
+    def get_corrected_predictions(self, mp, times, predict_space, predict_group, forecast_time_start, plot=False):
         residual_matrix = self.pv_groups[predict_group].residual_matrix
         predictions = mp.predict(
             times=times,
