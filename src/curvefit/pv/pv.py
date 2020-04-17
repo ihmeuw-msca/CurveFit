@@ -3,7 +3,7 @@ import pandas as pd
 import math
 
 from curvefit.diagnostics.plot_diagnostics import plot_residuals, plot_predictions, plot_residuals_1d, plot_es
-from curvefit.core.utils import neighbor_mean_std
+from curvefit.core.utils import neighbor_mean_std, apply_function_along_array_window
 
 
 class PVGroup:
@@ -197,6 +197,67 @@ class PVGroup:
             'residual': self.residuals[:, 2]
         })
 
+    def get_oos_score(self):
+        """
+        Gets an out of sample root mean squared error
+        averaged across the 'far_out' and 'num_data' indices.
+
+        Intended to be a quick check on the performance of the model
+        out of sample.
+
+        Returns:
+            (float) the out of sample RMSE
+        """
+        oos_residuals = self.residual_matrix.copy()
+
+        # Get rid of the in-sample indices
+        in_sample_indices = np.tril_indices(n=self.num_times)
+        oos_residuals[in_sample_indices] = np.nan
+
+        # Take the average of the residuals
+        return np.sqrt(np.nanmean(oos_residuals ** 2))
+
+    def get_ins_score(self, noise_window=3):
+        """
+        Gets an in-sample residual that is weighted by observation
+        standard error and the noisiness of the data.
+
+        Returns:
+            (float) the in sample weighted RMSE
+        """
+        obs_se = np.empty(self.residual_matrix.shape)
+        obs_se[:] = np.nan
+
+        # Get the observation standard error for each of the data points
+        for i, m in enumerate(self.models):
+            obs_se[i, :] = m.all_data.loc[m.all_data[m.col_group] == self.predict_group][m.col_obs_se]
+
+        # Get the noisiness of the data points
+        noise = apply_function_along_array_window(
+            array=self.compare_observations,
+            fun=lambda x: np.std(x),
+            window_size=noise_window
+        )
+        noise = np.vstack([noise] * self.num_times)
+
+        # Get rid of the out of sample indices
+        oos_indices = np.triu_indices(n=self.num_times, k=1)
+
+        # Calculate overall weight
+        weight = (obs_se ** 2 * noise ** 2) ** (-1)
+        weight[oos_indices] = np.nan
+
+        # Apply weights row-wise so that the weights are scaled to sum to
+        # 1 within rows across columns, excluding the nans
+        weighted_residuals = self.residual_matrix ** 2 * weight / np.nansum(weight, axis=1)
+
+        # Take the sum of the weighted residuals because weights sum to 1
+        model_averages = np.nansum(weighted_residuals, axis=1)
+
+        # Average each of the model averages so that we can compare
+        # across groups that have different numbers of models (of data points)
+        return np.sqrt(model_averages.mean())
+
     def get_exponential_weights(self, exp_smoothing, max_last):
         """
         Get what the exponential weighting function result is based on the parameter.
@@ -375,6 +436,22 @@ class PVModel:
             radius=radius
         )
         return smoothed_residuals
+
+    def get_pv_metrics(self, noise_window_size=3):
+        """
+        Get predictive validity metrics for each group, both in and out of sample.
+
+        Returns:
+            (pd.DataFrame) with in and out of sample metrics and group
+        """
+        metrics = pd.DataFrame()
+        for i, (k, v) in enumerate(self.pv_groups.items()):
+            metrics = metrics.append(pd.DataFrame({
+                self.col_group: k,
+                'ins_rmse': v.get_ins_score(noise_window=noise_window_size),
+                'oos_rmse': v.get_oos_score()
+            }, index=[i]))
+        return metrics
 
     def plot_simple_residuals(self, x_axis, y_axis, radius, color=None, exclude_groups=None):
         """

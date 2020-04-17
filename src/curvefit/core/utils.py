@@ -56,6 +56,7 @@ def get_obs_se(df, col_t, func=lambda x: 1 / (1 + x)):
     data['obs_se'] = data[col_t].apply(func)
     return data
 
+
 # TODO: replace with the data translator?
 def get_derivative_of_column_in_log_space(df, col_obs, col_t, col_grp):
     """
@@ -123,7 +124,6 @@ def local_smoother(df,
 
     col_mean = '_'.join([col_val, 'mean'])
     col_std = '_'.join([col_val, 'std'])
-
 
     # group by the axis
     df = df.groupby(col_axis, as_index=False).agg({
@@ -745,6 +745,7 @@ def filter_death_rate(df, col_t, col_death_rate):
     df = df.drop(drop_idx).reset_index(drop=True)
     return df
 
+
 def filter_death_rate_by_group(df, col_group, col_t, col_death_rate):
     """Filter cumulative death rate within each group.
 
@@ -877,3 +878,32 @@ def process_input(df, col_group, col_t, col_death_rate, return_df=True):
         return pd.concat(list(data.values()))
     else:
         return data
+
+
+def apply_function_along_array_window(array, fun, window_size):
+    """
+    Apply any function along an axis with += window_size.
+    Only 1D arrays.
+
+    Args:
+        array: (np.array) array to apply function to
+        fun: (callable) function to apply
+        window_size: (int) window size
+
+    Returns:
+        (np.array) of length the original array
+    """
+    assert type(array) == np.ndarray
+    assert len(array.shape) == 1
+    assert callable(fun)
+    assert type(window_size) == int
+
+    result = np.empty(len(array))
+    result[:] = np.nan
+
+    for i in range(len(array)):
+        lower = max(i - window_size, 0)
+        upper = min(i + window_size, len(array))
+        result[i] = fun(array[lower:upper + 1])
+
+    return result
