@@ -42,7 +42,8 @@ gh-pages: phony
 	cp -r site/* .
 	git show master:.gitignore > .gitignore
 	@echo 'Use the following command to return to master branch:'
-	@echo 'rm .gitignore; git reset --hard; git checkout master'
+	@echo '    rm .gitignore; git reset --hard; git checkout master'
+	@echo 'files of the form extract_md/*.md have not yet been deployed'
 
 gh-deploy: phony
 	bin/extract_md.py
