@@ -236,6 +236,7 @@ for file_in in file_list :
     #
     # file_index is where to start search for next pattern in file_data
     file_index  = 0
+    #
     while file_index < len(file_data) :
         #
         # match_begin_markdown
@@ -359,7 +360,7 @@ for file_in in file_list :
             file_out          = output_dir + '/' + section_name + '.md'
             file_ptr          = open(file_out, 'w')
             start_line        = 0
-            first_spell_error = True
+            first_spell_error = True # for this section
             for newline in newline_list :
                 tripple_back_quote = output_data[start_line:].startswith('```')
                 if not tripple_back_quote :
@@ -376,13 +377,13 @@ for file_in in file_list :
                                 if first_spell_error :
                                     msg  = 'warning: file = ' + file_in
                                     msg += ', section = ' + section_name
-                                    sys_exit(msg)
+                                    print(msg)
                                     first_spell_error = False
                                 msg  = 'spelling = ' + word
                                 suggest = spell_checker.correction(word)
                                 if suggest != word :
                                     msg += ', suggest = ' + suggest
-                                sys_exit(msg)
+                                print(msg)
                                 spell_list.append(word.lower())
                     # ------------------------------------------------------
                     file_ptr.write( line )

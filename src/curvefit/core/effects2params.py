@@ -56,7 +56,7 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
     integer `i` less than `len(v)`, and `v[i]` is its i-th element.
 
     ## group_sizes
-    is a vector of positve integers.
+    is a vector of positive integers.
     The first `group_sizes[0]` observations correspond to the first group,
     the next `group_sizes[1]` corresponds to the section group, and so on.
     The total number of observations is the sum of the group sizes.

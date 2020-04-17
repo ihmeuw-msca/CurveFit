@@ -8,15 +8,15 @@ from curvefit.core.functions import *
 
 def sizes_to_indices(sizes):
     """{begin_markdown sizes_to_indices}
-    {spell_markdown subvector subvectors xam}
+    {spell_markdown subvector subvectors iterable}
     # Converting sizes to corresponding indices.
 
     ## Syntax
     `indices = curvefit.sizes_to_indices(sizes)`
 
     ## sizes
-    The argument *sizes* is an iteratble object with integer values.
-    The i-th value in *sizes[i]* is the number of elements in the i-th
+    The argument *sizes* is an iterable object with integer values.
+    The i-th value in `sizes[i]` is the number of elements in the i-th
     subvector of a larger total vector that contains the subvectors in order.
 
     ## indices
