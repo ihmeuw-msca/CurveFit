@@ -12,7 +12,6 @@
     ftol
     gtol
     gprior
-    dtype
     disp
     maxiter
     expit

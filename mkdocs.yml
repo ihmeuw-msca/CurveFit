@@ -22,6 +22,7 @@ nav:
       - unzip_x_xam: 'extract_md/unzip_x_xam.md'
       - sizes_to_indices_xam: 'extract_md/sizes_to_indices_xam.md'
       - effects2params_xam: 'extract_md/effects2params_xam.md'
+      - objective_fun_xam: 'extract_md/objective_fun_xam.md'
 theme:
     name: 'material'
     palette:

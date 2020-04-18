@@ -47,7 +47,7 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
     # Map Vector of Fixed and Random Effects to Parameter Matrix
 
     ## Syntax
-    `params = curvefit.core.effects2params(
+    `params = curvefit.core.effects2params.effects2params(
         x, group_sizes, covs, link_fun, var_link_fun, expand=True
     )`
 

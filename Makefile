@@ -28,6 +28,7 @@ examples:
 	python example/param_time_fun.py
 	python example/unzip_x.py
 	python example/effects2params.py
+	python example/objective_fun.py
 
 cppad_py: phony
 	pytest cppad_py

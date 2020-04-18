@@ -11,6 +11,7 @@ file_list = [
     'example/param_time_fun.py',
     'example/unzip_x.py',
     'example/effects2params.py',
+    'example/objective_fun.py',
 
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',
@@ -26,6 +27,7 @@ extra_special_words = [
     'curvefit',
     'curvemodel',
     'dict',
+    'dtype',
     'initialized',
     'initialize',
     'numpy',

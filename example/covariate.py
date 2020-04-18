@@ -4,7 +4,6 @@
 {spell_markdown
     params
     param
-    dtype
     covs
     init
     ftol
