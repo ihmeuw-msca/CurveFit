@@ -3,6 +3,7 @@ import numpy
 import curvefit
 import a_functions
 import a_objective_fun
+import cppad_py
 #
 def identity_fun (x):
     return x
@@ -76,7 +77,7 @@ def test_objective() :
     )
     # -----------------------------------------------------------------------
     # call a_double objective_fun
-    ax                = a_functions.array2a_double(x)
+    ax                = cppad_py.independent(x)
     a_model_fun       = a_functions.a_gaussian_cdf
     a_loss_fun        = gaussian_loss
     a_link_fun        = [ a_functions.a_exp, identity_fun, a_functions.a_exp ]
@@ -97,8 +98,46 @@ def test_objective() :
             re_gprior,
             a_param_gprior
     )
+    # f(x) = obj_val
+    ay    = numpy.empty(1, dtype = cppad_py.a_double)
+    ay[0] = aobj_val
+    f     = cppad_py.d_fun(ax, ay)
     # -----------------------------------------------------------------------
-    # compare answers
-    rel_error = aobj_val.value() / obj_val - 1.0
+    # compare function values
+    y         = f.forward(0, x)
+    rel_error = y[0] / obj_val - 1.0
     eps99     = 99.0 * numpy.finfo(float).eps
     assert abs(rel_error) < eps99
+    # -----------------------------------------------------------------------
+    # compute derivative
+    yq      = numpy.empty((1,1), dtype = float)
+    yq[0,0] = 1.0
+    xq      = f.reverse(1, yq)
+    #
+    def objective(x) :
+        obj_val = curvefit.core.objective_fun.objective_fun(
+            x,
+            t,
+            obs,
+            obs_se,
+            covs,
+            group_sizes,
+            model_fun,
+            loss_fun,
+            link_fun,
+            var_link_fun,
+            fe_gprior,
+            re_gprior,
+            param_gprior
+        )
+        return obj_val
+    #
+    finfo = numpy.finfo(float)
+    step  = finfo.tiny / finfo.eps
+    x_c = x + 0j
+    for j in range(x.size):
+        x_c[j]    += step * 1j
+        check      = objective(x_c).imag / step
+        x_c[j]    -= step * 1j
+        rel_error  =  xq[j, 0] / check - 1.0
+        assert abs(rel_error) < eps99
