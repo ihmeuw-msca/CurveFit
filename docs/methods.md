@@ -5,7 +5,7 @@ The main application in this development is COVID-19 forecasting, so that
 the curves we consider are variants of logistic models. However the interface
 allows any user-specified parametrized family.
 
-Parametrized curves have several key features that make them useful for forecasting:  
+Parametrized curves have several key features that make them useful for forecasting:
 
 - We can capture key signals from noisy data.
 - Parameters are interpretable, and can be modeled using covariates in a transparent way.
@@ -19,7 +19,7 @@ We considered two functional forms so far when modeling the COVID-19 epidemic.
 - **Generalized Logistic:** \[f(t; \alpha, \beta, p)  = \frac{p}{1 + \exp(-\alpha(t-\beta))}\]
 
 
- - **Generalized Gaussian Error Function** \[
+ - **Generalized Gaussian Cumulative Distribution Function** \[
  f(t;  \alpha, \beta, p) = \frac{p}{2}\left(\Psi(\alpha(t-\beta)\right) = \frac{p}{2}\left(1+ \frac{2}{\sqrt{\pi}}\int_{0}^{\alpha(t-\beta)} \exp\left(-\tau^2\right)d\tau\right)
 \]
 
@@ -27,14 +27,14 @@ Each form has comparable fundamental parameters:
 
 - **Level \(p\):**  Controls the ultimate level.
 - **Slope \(\alpha\)**:  Controls speed of infection.
-- **Inflection \(\beta\)**: Time at which the  rate of change is maximal.   
+- **Inflection \(\beta\)**: Time at which the  rate of change is maximal.
 
 We can fit these parameters to data, but this by itself does not account for covariates, and cannot
 connect different locations together. The next section therefore specifies statistical models that do this.
 
 ## Statistical Model
 
-Statistical assumptions link covariates across locations. Key aspects are the following:  
+Statistical assumptions link covariates across locations. Key aspects are the following:
 
 - Parameters may be influenced by covariates, e.g. those that reflect social distancing
 
@@ -148,7 +148,7 @@ to model-based uncertainty described below.
 ### Model-Based Uncertainty
 
 We partition model-based uncertainty into estimates coming  from fixed and random components. Fixed effects capture the variation
-of the mean effects, and random effects uncertainty captures the variation across locations.  
+of the mean effects, and random effects uncertainty captures the variation across locations.
 
 - Fixed Effects
 
@@ -164,7 +164,7 @@ V(\hat \theta) = \mathcal{I}(\theta)^{-1} = \left(J_{\hat \theta}^T \Sigma^{-1} 
 \]
 where
 \[
-J_{\hat{ \theta}} := \nabla_{ \theta} f( \theta;  X)  
+J_{\hat{ \theta}} := \nabla_{ \theta} f( \theta;  X)
 \]
 is the Jacobian matrix evaluated at \(\theta = \hat \theta\). The Jacobian is also computed using the complex step method.
 

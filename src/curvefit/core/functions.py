@@ -49,7 +49,7 @@ This is the log of the generalized logistic function which is defined by
 \]
 
 ### gaussian_cdf
-This is the generalized Gaussian error function which is defined by
+This is the generalized Gaussian cumulative distribution function which is defined by
 \[
     \mbox{gaussian_cdf} ( t , \alpha , \beta , p ) = \frac{p}{2} \left[
         1.0 + \frac{2}{\pi} \int_0^{\alpha(t-\beta)}
@@ -59,7 +59,7 @@ This is the generalized Gaussian error function which is defined by
 
 ### ln_gaussian_cdf
 This is the log of the
-generalized Gaussian error function which is defined by
+generalized Gaussian cumulative distribution function which is defined by
 \[
     \mbox{ln_gaussian_cdf} ( t , \alpha , \beta , p ) =
         \log \circ \; \mbox{gaussian_cdf} ( t , \alpha , \beta , p )
@@ -67,7 +67,7 @@ generalized Gaussian error function which is defined by
 
 ### gaussian_pdf
 This is the derivative of the
-generalized Gaussian error function which is defined by
+generalized Gaussian cumulative distribution function which is defined by
 \[
     \mbox{gaussian_pdf} ( t , \alpha , \beta , p ) =
         \partial_t \; \mbox{gaussian_cdf} ( t , \alpha , \beta , p )
@@ -75,7 +75,7 @@ generalized Gaussian error function which is defined by
 
 ### ln_gaussian_pdf
 This is the log of the derivative of the
-generalized Gaussian error function which is defined by
+generalized Gaussian cumulative distribution function which is defined by
 \[
     \mbox{ln_gaussian_cdf} ( t , \alpha , \beta , p ) =
         \log \circ \; \mbox{gaussian_pdf} ( t , \alpha , \beta , p )
@@ -83,7 +83,7 @@ generalized Gaussian error function which is defined by
 
 ### dgaussian_pdf
 This is the second derivative of the
-generalized Gaussian error function which is defined by
+generalized Gaussian cumulative distribution function which is defined by
 \[
     \mbox{dgaussian_pdf} ( t , \alpha , \beta , p ) =
         \partial_t \; \mbox{gaussian_pdf} ( t , \alpha , \beta , p )

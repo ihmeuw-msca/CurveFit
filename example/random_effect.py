@@ -15,6 +15,7 @@
     dtype
     disp
     maxiter
+    expit
 }
 
 # Getting Started Using CurveFit
@@ -119,7 +120,7 @@ num_fe       = 3
 num_re       = num_fe * n_group
 #
 # f(t, alpha, beta, p)
-def generalized_logistic(t, params) :
+def expit(t, params) :
     alpha = params[0]
     beta  = params[1]
     p     = params[2]
@@ -145,7 +146,7 @@ for j in range(1, n_group + 1) :
     alpha_j  = math.exp(a_true[0] + a_true[j])
     beta_j   = b_true[0] + b_true[j]
     p_j      = math.exp(phi_true[0] + phi_true[j])
-    y_j      = generalized_logistic(time_grid, [alpha_j, beta_j, p_j])
+    y_j      = expit(time_grid, [alpha_j, beta_j, p_j])
     independent_var   = numpy.append(independent_var, time_grid)
     measurement_value = numpy.append(measurement_value, y_j)
     data_group += n_time * [ group_j ]
@@ -168,7 +169,7 @@ col_group    = 'data_group'
 param_names  = [ 'alpha', 'beta',       'p'     ]
 link_fun     = [ exp_fun, identity_fun, exp_fun ]
 var_link_fun = num_fe * [ identity_fun ]
-fun          = generalized_logistic
+fun          = expit
 col_obs_se   = 'measurement_std'
 #
 curve_model = curvefit.core.model.CurveModel(
