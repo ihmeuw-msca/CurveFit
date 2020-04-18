@@ -43,8 +43,8 @@ group_sizes     = (numpy.arange(num_group) + 1 ) * 2
 #
 x               = numpy.concatenate( (fe, re) )
 num_obs         = sum( group_sizes )
-t               = list( range(0, num_obs) )
-obs             = numpy.array( range(num_obs), dtype = float) / num_obs
+t               = numpy.arange(num_obs, dtype = float)
+obs             = numpy.arange(num_obs, dtype = float) / num_obs
 obs_se          = (obs  + 1.0 )/ 10.0
 # covs
 covs            = list()
