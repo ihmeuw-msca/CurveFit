@@ -108,7 +108,7 @@ def test_compute_rmse(test_data, param_names,
 
 
 # model for the mean of the data
-def generalized_logistic(t, params):
+def expit(t, params):
     alpha = params[0]
     beta = params[1]
     p = params[2]
@@ -147,7 +147,7 @@ def test_curve_model(alpha_true, beta_true, p_true, n_data):
     independent_var = np.array(range(n_data)) * beta_true / (n_data - 1)
     df = pd.DataFrame({
             'independent_var': independent_var,
-            'measurement_value': generalized_logistic(independent_var, params_true),
+            'measurement_value': expit(independent_var, params_true),
             'measurement_std': n_data * [0.1],
             'constant_one': n_data * [1.0],
             'data_group': n_data * ['world'],
@@ -163,7 +163,7 @@ def test_curve_model(alpha_true, beta_true, p_true, n_data):
         param_names=['alpha', 'beta', 'p'],
         link_fun=[exp_fun, identity_fun, exp_fun],
         var_link_fun=[exp_fun, identity_fun, exp_fun],
-        fun=generalized_logistic,
+        fun=expit,
         col_obs_se='measurement_std'
     )
     inv_link_fun = [ln_fun, identity_fun, ln_fun]

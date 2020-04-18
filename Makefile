@@ -27,12 +27,14 @@ examples:
 	python example/sizes_to_indices.py
 	python example/param_time_fun.py
 	python example/unzip_x.py
+	python example/effects2params.py
+	python example/objective_fun.py
 
 cppad_py: phony
 	pytest cppad_py
 
 # Use mkdocs gh-deploy to make changes to the gh-pages branch.
-# This is for running extract_md.py and checking the differences before 
+# This is for running extract_md.py and checking the differences before
 # deploying.
 gh-pages: phony
 	bin/extract_md.py
@@ -42,8 +44,13 @@ gh-pages: phony
 	cp -r site/* .
 	git show master:.gitignore > .gitignore
 	@echo 'Use the following command to return to master branch:'
-	@echo 'rm .gitignore; git reset --hard; git checkout master'
-	
+	@echo '    rm .gitignore; git reset --hard; git checkout master'
+	@echo 'files of the form extract_md/*.md have not yet been deployed'
+
+gh-deploy: phony
+	bin/extract_md.py
+	mkdocs gh-deploy
+
 clean:
 	find . -name "*.so*" | xargs rm -rf
 	find . -name "*.pyc" | xargs rm -rf

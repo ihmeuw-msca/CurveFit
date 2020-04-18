@@ -10,6 +10,8 @@ file_list = [
     'example/sizes_to_indices.py',
     'example/param_time_fun.py',
     'example/unzip_x.py',
+    'example/effects2params.py',
+    'example/objective_fun.py',
 
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',
@@ -25,6 +27,7 @@ extra_special_words = [
     'curvefit',
     'curvemodel',
     'dict',
+    'dtype',
     'initialized',
     'initialize',
     'numpy',
@@ -236,6 +239,7 @@ for file_in in file_list :
     #
     # file_index is where to start search for next pattern in file_data
     file_index  = 0
+    #
     while file_index < len(file_data) :
         #
         # match_begin_markdown
@@ -310,7 +314,7 @@ for file_in in file_list :
                     msg += ' ``` for a code block\n'
                     msg += 'in ' + file_in
                     msg += ', section ' + section_name + '\n'
-                    sys.exit(msg)
+                    sys_exit(msg)
                 begin_start = match_begin_3quote.start() + output_index
                 begin_end   = match_begin_3quote.end()   + output_index
                 output_rest = output_data[ begin_end : ]
@@ -359,7 +363,7 @@ for file_in in file_list :
             file_out          = output_dir + '/' + section_name + '.md'
             file_ptr          = open(file_out, 'w')
             start_line        = 0
-            first_spell_error = True
+            first_spell_error = True # for this section
             for newline in newline_list :
                 tripple_back_quote = output_data[start_line:].startswith('```')
                 if not tripple_back_quote :
@@ -421,7 +425,7 @@ for section_name in section_list :
         line += ".md'"
         msg  += '    ' + line + '\n'
         msg  += 'Spaces above are optional and can be multiple spaces\n'
-        sys.exit(msg)
+        sys_exit(msg)
 #
 print('docs/extract.py: OK')
 sys.exit(0)

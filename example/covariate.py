@@ -4,7 +4,6 @@
 {spell_markdown
     params
     param
-    dtype
     covs
     init
     ftol
@@ -14,7 +13,7 @@
 
 # Using Covariates
 
-## Generalized Error Function
+## Generalized Gaussian Cumulative Distribution Function
 The model for the mean of the data for this example is:
 \[
     f(t; \alpha, \beta, p) =
@@ -103,7 +102,7 @@ import curvefit
 from curvefit.core.model import CurveModel
 #
 # model for the mean of the data
-def generalized_error_function(t, params) :
+def gaussian_cdf(t, params) :
     alpha = params[0]
     beta  = params[1]
     p     = params[2]
@@ -136,7 +135,7 @@ for i in range(n_data) :
     beta_true          = b_true + c_true * social_distance[i]
     params_true[i]     = [alpha_true, beta_true, p_true ]
 params_true       = numpy.transpose(params_true)
-measurement_value = generalized_error_function(independent_var, params_true)
+measurement_value = gaussian_cdf(independent_var, params_true)
 measurement_std   = n_data * [ 0.1 ]
 cov_one           = n_data * [ 1.0 ]
 data_group        = n_data * [ 'world' ]
@@ -158,7 +157,7 @@ col_group    = 'data_group'
 param_names  = [ 'alpha', 'beta',       'p'     ]
 link_fun     = [ exp_fun, identity_fun, exp_fun ]
 var_link_fun = num_fe * [ identity_fun ]
-fun          = generalized_error_function
+fun          = gaussian_cdf
 col_obs_se   = 'measurement_std'
 #
 curve_model = curvefit.core.model.CurveModel(
