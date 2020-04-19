@@ -171,7 +171,7 @@ def test_local_smoother(radius):
                           ('ln_gaussian_cdf', 'ln_gaussian_pdf')])
 def test_data_translator_diff(data, input_space, output_space):
     result = utils.data_translator(data, input_space, output_space)
-    if 'log' in input_space:
+    if 'ln' in input_space:
         assert np.allclose(np.exp(data), np.cumsum(np.exp(result), axis=1))
     else:
         assert np.allclose(data, np.cumsum(result, axis=1))
