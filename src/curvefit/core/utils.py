@@ -364,16 +364,16 @@ def data_translator(data, input_space, output_space,
     elif input_space == 'ln_' + output_space:
         output_data = np.exp(data)
     elif 'gaussian_pdf' in input_space:
-        if 'log' in input_space:
+        if 'ln' in input_space:
             data = np.exp(data)
         output_data = np.cumsum(data, axis=1)
-        if 'log' in output_space:
+        if 'ln' in output_space:
             output_data = np.log(output_data)
     else:
-        if 'log' in input_space:
+        if 'ln' in input_space:
             data = np.exp(data)
         output_data = data - np.insert(data[:, :-1], 0, 0.0, axis=1)
-        if 'log' in output_space:
+        if 'ln' in output_space:
             output_data = np.log(output_data)
 
     # reverting the shape back if necessary
