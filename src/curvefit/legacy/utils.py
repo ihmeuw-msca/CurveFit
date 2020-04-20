@@ -7,8 +7,7 @@ def neighbor_mean_std_v1(df,
                       col_group,
                       col_axis,
                       axis_offset=None,
-                      radius=None,
-                      compute_mad=False):
+                      radius=None):
     """Compute the neighbor mean and std of the residual matrix.
 
     Args:
@@ -20,8 +19,6 @@ def neighbor_mean_std_v1(df,
             List of offset for each axis to make it suitable as numpy array.
         radius (list{int} | None, optional):
             List of the neighbor radius for each dimension.
-        compute_mad (bool, optional):
-            If compute_mad, also compute median absolute deviation.
 
     Returns:
         pd.DataFrame:

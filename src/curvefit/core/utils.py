@@ -975,3 +975,28 @@ def compute_gaussian_mixture_matrix(x, params, beta_stride, mixture_size):
     X = np.asarray(X).T
     assert X.shape == (len(x), mixture_size)
     return X, betas
+
+
+def perturb_array(x, offsets):
+    """Perturb array.
+
+    Args:
+        x (numpy.ndarray):
+            1D array need to be perturbed.
+        offsets (list{list{number}}):
+            Offset for each element in array.
+
+    Returns:
+        numpy.ndarray: Perturbed array.
+    """
+    assert hasattr(x, '__iter__')
+    assert isinstance(offsets, list)
+    assert len(x) == len(offsets)
+
+    n = len(x)
+    x = np.array(list(x))
+    y = [
+        x[i] + np.array(dx)
+        for i, dx in enumerate(offsets)
+    ]
+    return np.array(np.meshgrid(*y)).T.reshape(-1, n)
