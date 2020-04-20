@@ -9,6 +9,7 @@ import pandas as pd
 import itertools
 from curvefit.core.utils import data_translator
 from curvefit.core.utils import neighbor_mean_std
+from curvefit.legacy.utils import neighbor_mean_std_v1
 
 
 class ResidualModel:
@@ -132,7 +133,7 @@ class LocalSmoothSimpleExtrapolateRM(ResidualModel):
         df = self.data.copy()
         df['group'] = 'All'
         # smooth
-        self.smoothed = neighbor_mean_std(
+        self.smoothed = neighbor_mean_std_v1(
             df=df, col_val=self.outcome,
             col_group='group',
             col_axis=self.covariates,
