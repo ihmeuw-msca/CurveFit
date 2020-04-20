@@ -105,6 +105,12 @@ class APModel(BasicModel):
         fit_dict.update({
             'fe_gprior': fe_gprior
         })
+        if self.pv is not None:
+            # Initialize with the last PV model with one data point deleted
+            last_group_model = self.pv.pv_groups[group].models[-2].models[group]
+            fit_dict.update({
+                'fe_init': last_group_model.result.x[0:last_group_model.num_fe]
+            })
         model.fit_params(**fit_dict)
         return model
 
