@@ -295,3 +295,9 @@ def test_compute_gaussian_mixture_matrix():
         for j in range(len(beta_vec)):
             assert np.linalg.norm(X[:, j] - norm.pdf(x[i], loc=beta_vec[j], scale=stds[i])) < 1e-5
     
+
+@pytest.mark.parametrize('x', [np.array([0.0, 1.0, 2.0])])
+@pytest.mark.parametrize('offsets', [[[0.0], [1.0, 0.0, -1.0], [0.0]]])
+def test_perturb_array(x, offsets):
+    result = utils.perturb_array(x, offsets)
+    assert len(result) == 3
