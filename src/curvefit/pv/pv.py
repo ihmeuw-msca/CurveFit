@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from curvefit.diagnostics.plot_diagnostics import plot_residuals, plot_predictions, plot_residuals_1d, plot_es
-from curvefit.core.utils import neighbor_mean_std, get_initial_starting_points
+from curvefit.core.utils import neighbor_mean_std, perturb_array
 
 
 class PVGroup:
@@ -130,7 +130,7 @@ class PVGroup:
                 # Loop through a list of initial values and pick then one
                 # that obtains the lowest objective function value
                 if initial_scalars is not None:
-                    starting_points = get_initial_starting_points(initial_scalars)
+                    starting_points = perturb_array(initial_scalars)
 
                     best_starting_point = starting_points[0]
                     lowest_objective = None
