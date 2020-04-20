@@ -94,7 +94,7 @@ class ModelPipeline:
     def run(self, n_draws, prediction_times, cv_lower_threshold,
             smoothed_radius, num_smooths, exclude_groups, exclude_below=0, cv_upper_threshold=np.inf,
             max_last=None, exp_smoothing=None,
-            last_info=None):
+            last_info=None, initial_scalars=None):
         """
         Runs the whole model with PV and forecasting residuals and creating draws.
 
@@ -117,6 +117,10 @@ class ModelPipeline:
             exp_smoothing: (optional float) exponential smoothing parameter for combining time series predictions
             max_last: (optional int) number of models from previous observations to use since the maximum time
             last_info (dict, optional)
+            initial_scalars: (List[List[float]]) list of list of multipliers
+                to the initial values for each parameter. This is used to
+                try multiple initial values first before fitting the model and
+                picking the one with lowest objective function value.
         Returns:
         """
         assert type(n_draws) == int
@@ -136,7 +140,7 @@ class ModelPipeline:
 
         # Run predictive validity with a theta = 1, means everything is in relative space
         # -- relative mean bias, relative standard deviation (coefficient of variation)
-        self.run_predictive_validity(theta=self.theta)
+        self.run_predictive_validity(theta=self.theta, initial_scalars=initial_scalars)
 
         # Excludes Wuhan from the residual fitting.
         # Right now only std_covariates are used.
@@ -215,14 +219,18 @@ class ModelPipeline:
         """
         pass
 
-    def run_predictive_validity(self, theta):
+    def run_predictive_validity(self, theta, initial_scalars):
         """
         Run predictive validity for the full model.
 
         Args:
             theta: amount of scaling for residuals relative to prediction.
+            initial_scalars: (List[List[float]]) list of list of multipliers
+                to the initial values for each parameter. This is used to
+                try multiple initial values first before fitting the model and
+                picking the one with lowest objective function value.
         """
-        self.pv.run_pv(theta=theta)
+        self.pv.run_pv(theta=theta, initial_scalars=initial_scalars)
 
     def fit_residuals(self, smoothed_radius, num_smooths, covariates,
                       exclude_below, exclude_groups):

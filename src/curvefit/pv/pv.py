@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from curvefit.diagnostics.plot_diagnostics import plot_residuals, plot_predictions, plot_residuals_1d, plot_es
-from curvefit.core.utils import neighbor_mean_std
+from curvefit.core.utils import neighbor_mean_std, get_initial_starting_points
 
 
 class PVGroup:
@@ -114,7 +114,7 @@ class PVGroup:
         r_matrix = np.vstack([far_out, num_data, robs]).T
         return r_matrix
 
-    def run_pv(self, theta):
+    def run_pv(self, theta, initial_scalars):
         """
         Run predictive validity for all observation sequences in the available data for this group.
         """
@@ -126,7 +126,38 @@ class PVGroup:
             # remove the rows for this group that are greater than the available times
             remove_rows = (self.df[self.col_t] > time) & (self.df[self.col_grp] == self.predict_group)
             df = self.df[~remove_rows].copy()
+            if i == 0:
+                # Loop through a list of initial values and pick then one
+                # that obtains the lowest objective function value
+                if initial_scalars is not None:
+                    starting_points = get_initial_starting_points(initial_scalars)
+
+                    best_starting_point = starting_points[0]
+                    lowest_objective = None
+
+                    for sp in starting_points:
+                        self.models[i].fit_dict.update({
+                            'fe_init': sp
+                        })
+                        self.models[i].fit(df=df, group=self.predict_group)
+
+                        objective = self.models[i].models[self.predict_group].result.fun
+
+                        if lowest_objective is None:
+                            lowest_objective = objective
+                        else:
+                            if objective < lowest_objective:
+                                lowest_objective = objective
+                                best_starting_point = sp
+
+                    self.models[i].fit_dict.update({
+                        'fe_init': best_starting_point
+                    })
+
+                self.models[i].fit(df=df, group=self.predict_group)
+
             if i != 0:
+                # Use the previous fit as the initial values for the next fit
                 mod = self.models[i-1].models[self.predict_group]
                 self.models[i].fit_dict.update({
                     'fe_init': mod.result.x[0:mod.num_fe]
@@ -299,7 +330,7 @@ class PVModel:
             grp.residual_df() for grp in self.pv_groups.values()
         ])
 
-    def run_pv(self, theta):
+    def run_pv(self, theta, initial_scalars):
         """
         Run predictive validity for all of the groups.
 
@@ -307,9 +338,13 @@ class PVModel:
             theta: (float) from 0 to 1 indicating how much scaling to
                 do of the residuals relative to the prediction magnitude
                 theta of 0 means no scaling, theta of 1 means max scaling
+            initial_scalars: (List[List[float]]) list of list of multipliers
+                to the initial values for each parameter. This is used to
+                try multiple initial values first before fitting the model and
+                picking the one with lowest objective function value.
         """
         for group in self.groups:
-            self.pv_groups[group].run_pv(theta=theta)
+            self.pv_groups[group].run_pv(theta=theta, initial_scalars=initial_scalars)
         self.get_all_residuals()
 
     def recompute_residuals(self, theta):
