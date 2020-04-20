@@ -130,7 +130,7 @@ class PVGroup:
                 # Loop through a list of initial values and pick then one
                 # that obtains the lowest objective function value
                 if initial_scalars is not None:
-                    starting_points = perturb_array(initial_scalars)
+                    starting_points = perturb_array(x=self.models[i].fit_dict['fe_init'], offsets=initial_scalars)
 
                     best_starting_point = starting_points[0]
                     lowest_objective = None
