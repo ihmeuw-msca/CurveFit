@@ -126,6 +126,11 @@ class PVGroup:
             # remove the rows for this group that are greater than the available times
             remove_rows = (self.df[self.col_t] > time) & (self.df[self.col_grp] == self.predict_group)
             df = self.df[~remove_rows].copy()
+            if i != 0:
+                mod = self.models[i-1].models[self.predict_group]
+                self.models[i].fit_dict.update({
+                    'fe_init': mod.result.x[0:mod.num_fe]
+                })
             self.models[i].fit(df=df, group=self.predict_group)
             predictions.append(
                 self.models[i].predict(
