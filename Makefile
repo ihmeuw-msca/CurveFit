@@ -18,7 +18,7 @@ sdist: setup.py
 	python setup.py sdist
 
 tests:
-	pytest tests
+	pytest tests cppad_py
 
 examples:
 	python example/get_started.py
@@ -29,9 +29,6 @@ examples:
 	python example/unzip_x.py
 	python example/effects2params.py
 	python example/objective_fun.py
-
-cppad_py: phony
-	pytest cppad_py
 
 # Use mkdocs gh-deploy to make changes to the gh-pages branch.
 # This is for running extract_md.py and checking the differences before
