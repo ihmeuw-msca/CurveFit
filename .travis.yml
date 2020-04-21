@@ -4,5 +4,6 @@ python:
 install:
   - python setup.py install
 script:
+  - pip pip install -i https://test.pypi.org/simple/ cppad-py
   - pytest tests
   - make examples
