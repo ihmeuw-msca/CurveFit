@@ -7,3 +7,4 @@ script:
   - pytest tests
   - bin/extract_md.py
   - make examples
+  - mkdocs build
