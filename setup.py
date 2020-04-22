@@ -18,7 +18,7 @@ setup(
         'xspline',
         'scikit-learn',
         'pyspellchecker',
-        'mkdocs',
+        'mkdocs==0.16.3',
         'mkdocs-material',
         'mkautodoc',
         'pymdown-extensions',
