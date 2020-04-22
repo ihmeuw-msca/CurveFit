@@ -4,32 +4,32 @@
 phony:
 
 build: setup.py
-	python setup.py build
+	python3 setup.py build
 
 # make install with optional prefix=directory on command line
 install: setup.py
 ifdef prefix
-	python setup.py install --prefix=$(prefix)
+	python3 setup.py install --prefix=$(prefix)
 else
-	python setup.py install
+	python3 setup.py install
 endif
 
 sdist: setup.py
-	python setup.py sdist
+	python3 setup.py sdist
 
 tests:
 	pytest tests cppad_py
 
 examples:
-	python example/get_started.py
-	python example/covariate.py
-	python example/random_effect.py
-	python example/sizes_to_indices.py
-	python example/loss.py
-	python example/param_time_fun.py
-	python example/unzip_x.py
-	python example/effects2params.py
-	python example/objective_fun.py
+	example/get_started.py
+	example/covariate.py
+	example/random_effect.py
+	example/sizes_to_indices.py
+	example/loss.py
+	example/param_time_fun.py
+	example/unzip_x.py
+	example/effects2params.py
+	example/objective_fun.py
 
 # Use mkdocs gh-deploy to make changes to the gh-pages branch.
 # This is for running extract_md.py and checking the differences before
