@@ -5,7 +5,7 @@ class Parameter:
     """
     {begin_markdown Parameter}
 
-    {spell_markdown }
+    {spell_markdown metadata param init gprior}
 
     # `curvefit.core.parameter.Parameter`
     ## Parameter metadata including priors, bounds, and initial values
@@ -140,7 +140,7 @@ class ParameterSet:
     """
     {begin_markdown ParameterSet}
 
-    {spell_markdown }
+    {spell_markdown params param init}
 
     # `curvefit.core.parameter.ParameterSet`
     ## Set of Parameters that will be used in a model

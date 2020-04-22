@@ -12,6 +12,8 @@ nav:
   - Developer Doc:
     - core:
       - Data: 'extract_md/Data.md'
+      - Parameter: 'extract_md/Parameter.md'
+      - ParameterSet: 'extract_md/ParameterSet.md'
     - utils:
       - unzip_x: 'extract_md/unzip_x.md'
       - sizes_to_indices: 'extract_md/sizes_to_indices.md'

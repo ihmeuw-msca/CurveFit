@@ -21,6 +21,7 @@ file_list = [
     'bin/get_cppad_py.py',
     
     'src/curvefit/core/data.py',
+    'src/curvefit/core/parameter.py'
 ]
 # list of extra words that the spell checker will consider correct
 extra_special_words = [
