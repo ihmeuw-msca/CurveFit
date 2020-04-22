@@ -17,6 +17,7 @@ setup(
         'matplotlib',
         'xspline',
         'scikit-learn',
+        'pyspellchecker'
     ],
     zip_safe=False,
 )
