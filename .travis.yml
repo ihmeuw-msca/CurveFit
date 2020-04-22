@@ -6,5 +6,5 @@ install:
   - pip install -i https://test.pypi.org/simple/ cppad-py
   - python setup.py install
 script:
-  - pytest tests
+  - pytest tests cppad_py
   - make examples
