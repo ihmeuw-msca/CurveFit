@@ -17,7 +17,12 @@ setup(
         'matplotlib',
         'xspline',
         'scikit-learn',
-        'pyspellchecker'
+        'pyspellchecker',
+        'mkdocs',
+        'mkdocs-material',
+        'mkautodoc',
+        'pymdown-extensions',
+        'python-markdown-math'
     ],
     zip_safe=False,
 )
