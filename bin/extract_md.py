@@ -8,6 +8,7 @@ file_list = [
     'example/covariate.py',
     'example/random_effect.py',
     'example/sizes_to_indices.py',
+    'example/loss.py',
     'example/param_time_fun.py',
     'example/unzip_x.py',
     'example/effects2params.py',
@@ -24,6 +25,7 @@ file_list = [
 extra_special_words = [
     'covariates',
     'covariate',
+    'cppad',
     'curvefit',
     'curvemodel',
     'dict',
@@ -50,6 +52,7 @@ extra_special_words = [
     r'\mbox',
     r'\partial',
     r'\right',
+    r'\sqrt',
     r'\sum',
 ]
 # ----------------------------------------------------------------------------

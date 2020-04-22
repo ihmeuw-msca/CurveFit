@@ -25,6 +25,7 @@ examples:
 	python example/covariate.py
 	python example/random_effect.py
 	python example/sizes_to_indices.py
+	python example/loss.py
 	python example/param_time_fun.py
 	python example/unzip_x.py
 	python example/effects2params.py
