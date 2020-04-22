@@ -1,9 +1,9 @@
 language: cpp
 install:
   - sudo apt-get install -y cmake git python3 python3-pip swig
-  - pip3 install numpy pytest setuptools
-  - pip3 install -i https://test.pypi.org/simple/ cppad-py
-  - python3 setup.py install
+  - pip3 install numpy pytest setuptools --user
+  - pip3 install -i https://test.pypi.org/simple/ cppad-py --user
+  - python3 setup.py install --user
 script:
   - pytest tests cppad_py
   - make examples
