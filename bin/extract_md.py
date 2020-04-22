@@ -19,6 +19,8 @@ file_list = [
     'src/curvefit/core/objective_fun.py',
     'bin/extract_md.py',
     'bin/get_cppad_py.py',
+    
+    'src/curvefit/core/data.py',
 ]
 # list of extra words that the spell checker will consider correct
 extra_special_words = [

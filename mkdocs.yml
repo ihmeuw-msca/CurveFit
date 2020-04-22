@@ -10,6 +10,8 @@ nav:
     - random_effect_xam: 'extract_md/random_effect_xam.md'
     - param_time_fun_xam: 'extract_md/param_time_fun_xam.md'
   - Developer Doc:
+    - core:
+        - Data: 'extract_md/Data.md'
     - unzip_x: 'extract_md/unzip_x.md'
     - sizes_to_indices: 'extract_md/sizes_to_indices.md'
     - split_by_group: 'extract_md/split_by_group.md'
