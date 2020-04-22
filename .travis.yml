@@ -2,7 +2,7 @@ language: python
 python:
   - "3.7"
 install:
-  - apt-get install -y swig
+  - sudo apt-get install -y swig
   - pip install -i https://test.pypi.org/simple/ cppad-py
   - python setup.py install
 script:
