@@ -3,6 +3,9 @@ python:
   - "3.7"
 install:
   - python setup.py install
+  - pip install mkdocs mkdocs-material mkautodoc
+  - pip install pymdown-extensions python-markdown-math
+  - pip install pyspellchecker
 script:
   - pytest tests
   - bin/extract_md.py

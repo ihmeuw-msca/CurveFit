@@ -16,13 +16,7 @@ setup(
         'pytest',
         'matplotlib',
         'xspline',
-        'scikit-learn',
-        'pyspellchecker',
-        'mkdocs==0.16.3',
-        'mkdocs-material',
-        'mkautodoc',
-        'pymdown-extensions',
-        'python-markdown-math'
+        'scikit-learn'
     ],
     zip_safe=False,
 )
