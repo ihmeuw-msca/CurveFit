@@ -149,8 +149,10 @@ class SmoothResidualModel(_ResidualModel):
 
     ## Attributes
 
-    - `self.smoothed_residual_matrix (np.array)`: a smooth surface of residual standard deviations across the covariate
+    - `self.smoothed_residual_data (np.array)`: a smooth surface of residual standard deviations across the covariate
         axes, only populated after `fit_residuals()` is called
+    - `self.covariate_names (List[str])`: list of covariate names
+        (keys of `self.covariates`)
 
     ## Methods
 
@@ -183,6 +185,8 @@ class SmoothResidualModel(_ResidualModel):
         self.smooth_radius = smooth_radius
         self.robust = robust
 
+        self.covariate_names = list(self.covariates.keys())
+
         assert type(self.num_smooth_iterations) == int
         assert self.num_smooth_iterations > 0
 
@@ -193,16 +197,19 @@ class SmoothResidualModel(_ResidualModel):
 
         assert type(self.robust) == bool
 
-        self.smoothed_residual_matrix = None
+        self.smoothed_residual_data = None
 
     def fit_residuals(self, residual_df):
         df = residual_df.copy()
+        for k, v in self.covariates.items():
+            if v is not None:
+                df = df.query(v)
 
         # Calculate the standard deviation within a window
         smoothed = local_deviations(
             df=df,
             col_val='residual',
-            col_axis=self.covariates,
+            col_axis=self.covariate_names,
             radius=self.smooth_radius,
             robust=self.robust
         )
@@ -214,13 +221,13 @@ class SmoothResidualModel(_ResidualModel):
                 smoothed = local_smoother(
                     df=smoothed,
                     col_val='residual_std',
-                    col_axis=self.covariates,
+                    col_axis=self.covariate_names,
                     radius=self.smooth_radius
                 )
                 smoothed.rename(columns={'residual_std_mean': 'residual_std'}, inplace=True)
                 i += 1
 
-        self.smoothed_residual_matrix = smoothed
+        self.smoothed_residual_data = smoothed
 
     def _predict_residuals(self, covariate_specs):
         pass

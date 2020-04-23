@@ -67,7 +67,7 @@ def local_deviations(df, col_val,
         subset = np.all(new_df[col_axis] == j, axis=1).values
         new_df.loc[subset, 'residual_std'] = std
 
-    return df
+    return new_df
 
 
 def local_smoother(df,

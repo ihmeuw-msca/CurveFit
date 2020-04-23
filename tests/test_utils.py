@@ -13,62 +13,6 @@ from curvefit.core.functions import gaussian_pdf, dgaussian_pdf
 import curvefit.core.utils as utils
 
 
-@pytest.fixture()
-def testing_problem(locations=("USA", "Europe", "Asia"),
-                    timelines=(10, 20, 30),
-                    seed=42):
-    """ Generates sample problem for testing utils.neighbor_mean_std function.
-    The columns are:
-        - 'group': group parameter,
-        - 'far_out': first axis,
-        - 'num_data': second axis,
-        - 'residual': value to aggregate, generated from U[0, 1]
-
-    Args:
-        locations: Set{String}
-            Locations, group parameter.
-        timelines: Set{int}
-            How many data points to generate per location
-        seed: int
-            Random seed
-
-    Returns:
-        new_df: pd.DataFrame
-            Random dataset suitable for testing neighbor_mean_std function.
-    """
-    far_out = []
-    num_data = []
-    location = []
-    residual = []
-    np.random.seed(seed)
-    for t, place in zip(timelines, locations):
-        for horizon in np.arange(1, t):
-            far_out += [horizon] * (t - horizon)
-            num_data += np.arange(1, t - horizon + 1).tolist()
-            location += [place] * (t - horizon)
-            residual += np.random.rand(t - horizon).tolist()
-    new_df = pd.DataFrame({
-        'group': location,
-        'far_out': far_out,
-        'num_data': num_data,
-        'residual': residual,
-    })
-    return new_df
-
-
-def test_neighbor_mean_std(testing_problem):
-    data = testing_problem
-    my_result = utils.neighbor_mean_std(
-        data,
-        col_axis=['far_out', 'num_data'],
-        col_val='residual',
-        col_group='group',
-        radius=[2, 2]
-    )
-    cols = ['far_out', 'num_data', 'group', 'residual_mean', 'residual_std']
-    assert all([c in my_result for c in cols])
-
-
 @pytest.mark.parametrize(('sizes', 'indices'),
                          [(np.array([1, 1, 1]), [np.array([0]),
                                                  np.array([1]),
@@ -120,48 +64,6 @@ def test_convex_combination(t, mat1, mat2, pred_fun, start_day, end_day,
 def test_model_average(mat1, mat2, w1, w2, pred_fun, result):
     my_result = utils.model_average(mat1, mat2, w1, w2, pred_fun)
     assert np.allclose(result, my_result)
-
-
-@pytest.mark.parametrize('mat', [np.arange(9).reshape(3, 3)])
-@pytest.mark.parametrize(('radius', 'result'),
-                         [((0, 0), np.arange(9).reshape(3, 3)),
-                          ((1, 1), np.array([[ 8, 15, 12],
-                                            [21, 36, 27],
-                                            [20, 33, 24]]))])
-def test_convolve_sum(mat, radius, result):
-    my_result = utils.convolve_sum(mat, radius=radius)
-    assert np.allclose(result, my_result)
-
-
-def test_df_to_mat():
-    df = pd.DataFrame({
-        'val': np.ones(5),
-        'axis0': np.arange(5, dtype=float),
-        'axis1': np.arange(5, dtype=float)
-    })
-
-    my_result, indices, axis = utils.df_to_mat(df, 'val', ['axis0', 'axis1'],
-                                               return_indices=True)
-    assert np.allclose(my_result[indices[:, 0], indices[:, 1]], 1.0)
-
-
-@pytest.mark.parametrize('radius', [[1, 1]])
-def test_local_smoother(radius):
-    data = pd.DataFrame({
-        'val': np.arange(5),
-        'axis0': np.arange(5),
-        'axis1': np.arange(5)
-    })
-    result = utils.local_smoother(data, 'val', ['axis0', 'axis1'],
-                                  radius=radius)
-    assert np.allclose(result['val_' + 'mean'].values,
-                       np.array([0.5, 1.0, 2.0, 3.0, 3.5]))
-    assert np.allclose(result['val_' + 'std'].values,
-                       np.array([np.std([0.0, 1.0]),
-                                 np.std([0.0, 1.0, 2.0]),
-                                 np.std([1.0, 2.0, 3.0]),
-                                 np.std([2.0, 3.0, 4.0]),
-                                 np.std([3.0, 4.0])]))
 
 
 @pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
