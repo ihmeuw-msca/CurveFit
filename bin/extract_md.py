@@ -109,12 +109,17 @@ and the colon character (:).
 
 ## Suspend Markdown
 It is possible do suspend the markdown output during a section.
-One begins the suspension with the command {`suspend_markdown`}
-and resumes the output with the command {`resume_markdown`}.
+One begins the suspension with the command
+<p style="margin-left:10%">
+{<i></i>suspend_markdown}
+</p>
+and resumes the output with the command
+<p style="margin-left:10%">
+{<i></i>resume_markdown}
+</p>
 Note that this will also suspend the markdown processing; e.g., spell checking.
-Each {`suspend_markdown`} must have a corresponding {`resume_markdown`}
-in same section (between the corresponding {`begin_markdown`} and
-{`end_markdown`}).
+Each suspend markdown must have a corresponding resume markdown in same
+section (between the corresponding begin markdown and end markdown commands).
 
 ## End Section
 The end of a markdown section of the input file is indicated by the following
@@ -128,7 +133,7 @@ Here *section_name* must be the same as in the start of this markdown section.
 Special words can be added to the correct spelling list for a particular
 section as follows:
 <p style="margin-left:10%">
-{spell_markdown
+{<i></i>spell_markdown
     <i>special_1 ...  special_n</i>
 }
 </p>
@@ -240,8 +245,12 @@ spell_checker.word_frequency.load_words(extra_special_words)
 # ---------------------------------------------------------------------------
 #
 # add program name to system error call
-def sys_exit(msg) :
-    sys.exit( 'bin/extract_md.py: ' + msg )
+def sys_exit(msg, file_in=None, section_name=None) :
+    if file_in != None :
+        msg += '\nfile = ' + file_in
+        if section_name != None :
+            msg += ', section = ' + section_name
+    sys.exit( 'bin/extract_md.py:\n' + msg )
 #
 # check working directory
 if not os.path.isdir('.git') :
@@ -338,7 +347,7 @@ for file_in in file_list :
             output_start = file_index
             output_end   = file_index + match_end_markdown.start()
             output_data  = file_data[ output_start : output_end ]
-            #
+            # ----------------------------------------------------------------
             # process suspend markdown commands
             match_suspend = pattern_suspend_markdown.search(output_data)
             while match_suspend != None :
@@ -346,27 +355,42 @@ for file_in in file_list :
                 suspend_end   = match_suspend.end()
                 output_rest   = output_data[ suspend_end : ]
                 match_resume  = pattern_resume_markdown.search(output_rest)
+                match_suspend = pattern_suspend_markdown.search(output_rest)
                 if match_resume == None :
                     msg  = 'there is a {suspend_markdown} without a '
                     msg += 'corresponding {resume_markdown} '
                     msg += 'in ' + file_in
                     msg += ', section ' + section_name + '\n'
                     sys_exit(msg)
+                if match_suspend != None :
+                    if match_suspend.start() < match_resume.start() :
+                        pdb.set_trace()
+                        msg  = 'there are two {suspend_markdown} without a '
+                        msg += '{resume_markdown} between them'
+                        sys_exit(msg, file_in, section_name)
                 resume_end  = match_resume.end() + suspend_end
                 output_rest = output_data[ resume_end :]
                 output_data = output_data[: suspend_start] + output_rest
-                match_suspend = pattern_suspend_markdown.search(output_rest)
-            #
+                # redo match_suppend so relative to new output_data
+                match_suspend = pattern_suspend_markdown.search(output_data)
+            # ----------------------------------------------------------------
             # process spell command
             match_spell = pattern_spell_markdown.search(output_data)
             spell_list  = list()
             if match_spell != None :
+                output_rest   = output_data[ match_spell.end() : ]
+                match_another = pattern_spell_markdown.search(output_rest)
+                if match_another :
+                    msg  = 'there are two spell markdonw commands\n'
+                    msg += 'in ' + file_in
+                    msg += ', section ' + section_name + '\n'
+                    sys_exit(msg)
                 for itr in pattern_word.finditer( match_spell.group(1) ) :
                     spell_list.append( itr.group(0).lower() )
                 start       = match_spell.start()
                 end         = match_spell.end()
                 output_data = output_data[: start] + output_data[end :]
-            #
+            # ----------------------------------------------------------------
             # remove characters on same line as triple back quote
             output_index  = 0
             match_begin_3quote = pattern_begin_3quote.search(output_data)
@@ -397,7 +421,7 @@ for file_in in file_list :
                 output_data  = data_left + data_right
                 output_index = len(data_left)
                 match_begin_3quote  = pattern_begin_3quote.search(data_right)
-            #
+            # ---------------------------------------------------------------
             # num_remove (for indented documentation)
             len_output   = len(output_data)
             num_remove   = len(output_data)
@@ -420,7 +444,7 @@ for file_in in file_list :
                     tripple_back_quote = output_data[next_:].startswith('```')
                     if ch != '\n' and ch != ' ' and not tripple_back_quote :
                         num_remove = min(num_remove, next_ - start - 1)
-            #
+            # ---------------------------------------------------------------
             # write file for this section
             file_out          = output_dir + '/' + section_name + '.md'
             file_ptr          = open(file_out, 'w')
