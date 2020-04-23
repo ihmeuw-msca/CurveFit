@@ -21,7 +21,7 @@ file_list = [
     'bin/get_cppad_py.py',
     
     'src/curvefit/core/data.py',
-    'src/curvefit/core/parameter.py'
+    'src/curvefit/core/parameter.py',
     'src/curvefit/core/residual_model.py'
 ]
 # list of extra words that the spell checker will consider correct

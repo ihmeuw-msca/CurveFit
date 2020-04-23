@@ -6,7 +6,7 @@ class _ResidualModel:
     """
     {begin_markdown _ResidualModel}
 
-    {spell_markdown }
+    {spell_markdown subclassed}
 
     # `curvefit.core.residual_model._ResidualModel`
     ## A model for describing the out of sample residuals
@@ -96,7 +96,7 @@ class SmoothResidualModel(_ResidualModel):
     """
     {begin_markdown SmoothResidualModel}
 
-    {spell_markdown }
+    {spell_markdown bool prioritizes}
 
     # `curvefit.core.residual_model.SmoothResidualModel`
     ## A local smoother for the coefficient of variation in forecasts
@@ -109,7 +109,8 @@ class SmoothResidualModel(_ResidualModel):
     The specific covariates for this residual model are num_data and far_out: how much data did the
     prediction model have and how far out into the future was it predicting.
     To extrapolate to unobserved values of the covariates in order to predict the
-    residuals for those observations, it prioritizes num_data
+    residuals for those observations, it prioritizes num_data and then far_out in
+    a simple "carry forward" extrapolation.
 
     ## Syntax
     ```python
