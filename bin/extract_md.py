@@ -304,16 +304,14 @@ for file_in in file_list :
                 # Use @ so does not match pattern_begin_markdown in this file.
                 msg  = 'can not find: @begin_markdown section_name}\n'
                 msg  = msg.replace('@', '{')
-                msg += 'in ' + file_in + '\n'
-                sys_exit(msg)
+                sys_exit(msg, file_in)
             file_index = len(file_data)
         else :
             # section_name
             section_name = match_begin_markdown.group(1)
             if section_name == '' :
-                msg  = 'section_name after begin_markdown is empty; see file\n'
-                msg += file_in
-                sys_exit(msg)
+                msg  = 'section_name after begin_markdown is empty'
+                sys_exit(msg, file_in)
             #
             if section_name in section_list :
                 # this section appears multiple times
@@ -333,9 +331,8 @@ for file_in in file_list :
             match_end_markdown = pattern_end_markdown.search(data_rest)
             #
             if match_end_markdown == None :
-                msg  = 'can not find: "{end_markdown section_name}\n'
-                msg += 'in ' + file_in + ', section ' + section_name + '\n'
-                sys_exit(msg)
+                msg  = 'can not find: "{end_markdown section_name}'
+                sys_exit(msg, file_in, section_name)
             if match_end_markdown.group(1) != section_name :
                 msg = 'in file ' + file_in + '\nsection names do not match\n'
                 msg += 'begin_markdown section name = '+section_name + '\n'
@@ -358,10 +355,8 @@ for file_in in file_list :
                 match_suspend = pattern_suspend_markdown.search(output_rest)
                 if match_resume == None :
                     msg  = 'there is a {suspend_markdown} without a '
-                    msg += 'corresponding {resume_markdown} '
-                    msg += 'in ' + file_in
-                    msg += ', section ' + section_name + '\n'
-                    sys_exit(msg)
+                    msg += 'corresponding {resume_markdown}'
+                    sys_exit(msg, file_in, section_name)
                 if match_suspend != None :
                     if match_suspend.start() < match_resume.start() :
                         pdb.set_trace()
@@ -381,10 +376,8 @@ for file_in in file_list :
                 output_rest   = output_data[ match_spell.end() : ]
                 match_another = pattern_spell_markdown.search(output_rest)
                 if match_another :
-                    msg  = 'there are two spell markdonw commands\n'
-                    msg += 'in ' + file_in
-                    msg += ', section ' + section_name + '\n'
-                    sys_exit(msg)
+                    msg  = 'there are two spell markdonw commands'
+                    sys_exit(msg, file_in, section_name)
                 for itr in pattern_word.finditer( match_spell.group(1) ) :
                     spell_list.append( itr.group(0).lower() )
                 start       = match_spell.start()
@@ -397,18 +390,15 @@ for file_in in file_list :
             while match_begin_3quote != None :
                 if match_begin_3quote.group(2) == '' :
                     msg  = 'language missing directly after first'
-                    msg += ' ``` for a code block\n'
-                    msg += 'in ' + file_in
-                    msg += ', section ' + section_name + '\n'
-                    sys_exit(msg)
+                    msg += ' ``` for a code block'
+                    sys_exit(msg, file_in, section_name)
                 begin_start = match_begin_3quote.start() + output_index
                 begin_end   = match_begin_3quote.end()   + output_index
                 output_rest = output_data[ begin_end : ]
                 match_end_3quote   = pattern_end_3quote.search( output_rest )
                 if match_end_3quote == None :
-                    msg  = 'number of triple backquotes is not even in '
-                    msg += file_in + ', section ' + section_name + '\n'
-                    sys_exit(msg)
+                    msg  = 'number of triple backquotes is not even'
+                    sys_exit(msg, file_in, section_name)
                 end_start = match_end_3quote.start() + begin_end
                 end_end   = match_end_3quote.end()   + begin_end
                 #
@@ -437,10 +427,8 @@ for file_in in file_list :
                         next_ += 1
                         ch = output_data[next_]
                     if ch == '\t' :
-                        msg  = 'tab in white space at begining of a line\n'
-                        msg += 'in ' + file_in
-                        msg +=+ ', section ' + section_name + '\n'
-                        sys_exit(msg)
+                        msg  = 'tab in white space at begining of a line'
+                        sys_exit(msg, file_in, section_name)
                     tripple_back_quote = output_data[next_:].startswith('```')
                     if ch != '\n' and ch != ' ' and not tripple_back_quote :
                         num_remove = min(num_remove, next_ - start - 1)
