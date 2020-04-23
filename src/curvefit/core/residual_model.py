@@ -39,12 +39,14 @@ class _ResidualModel:
     ## Methods
 
     `fit_residuals`
+
     Fits the residual model to the residual data frame passed in.
 
     - `residual_df (pd.DataFrame)`: a data frame that contains all of the covariates and a residual observation
         that will be used for fitting the model (the design matrix)
 
     `simulate_residuals`
+
     Simulates residuals from the fitted residual model for particular covariate values.
 
     - `covariate_specs (Dict[str: np.array])`: a dictionary of covariate values to create
@@ -101,7 +103,7 @@ class SmoothResidualModel(_ResidualModel):
     # `curvefit.core.residual_model.SmoothResidualModel`
     ## A local smoother for the coefficient of variation in forecasts
 
-    This is a residual model (see [_ResidualModel](#extract_md/_ResidualModel.md for a description).
+    This is a residual model (see [_ResidualModel](_ResidualModel.md) for a description).
     This particular residual model creates a smoothed standard deviation over the residual data.
     It calculates the standard deviation of the residuals with a moving window
     over neighboring covariate values.
@@ -150,7 +152,7 @@ class SmoothResidualModel(_ResidualModel):
 
     ## Methods
 
-    See [_ResidualModel](#extract_md/_ResidualModel.md for descriptions of the class methods
+    See [_ResidualModel](_ResidualModel.md) for descriptions of the class methods
     for a _ResidualModel.
 
     ## Usage
