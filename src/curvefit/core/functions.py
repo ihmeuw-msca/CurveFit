@@ -231,7 +231,7 @@ def st_loss(r, nu=1.0):
     \]
 
     ## Example
-    [loss_xam](extract_md/loss_xam.md]
+    [loss_xam](loss_xam.md)
 
     {end_markdown st_loss}
     '''
@@ -274,9 +274,10 @@ def normal_loss(r):
         \frac{1}{2} \sum_{i=1}^{n-1} r_i^2
     \]
     where \( r_i = ( x_i - \mu)) / \sigma \).
-    {end_markdown normal_loss}
 
     ## Example
-    [loss_xam](extract_md/loss_xam.md]
+    [loss_xam](loss_xam.md)
+
+    {end_markdown normal_loss}
     '''
     return 0.5 * np.sum(r * r)
