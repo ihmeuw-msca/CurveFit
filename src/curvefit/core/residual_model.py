@@ -1,5 +1,6 @@
 import itertools
 import pandas as pd
+import numpy as np
 
 from curvefit.utils.smoothing import local_deviations, local_smoother
 
@@ -49,7 +50,10 @@ class _ResidualModel:
 
     `simulate_residuals`
 
-    Simulates residuals from the fitted residual model for particular covariate values.
+    Simulates residuals from the fitted residual model for particular covariate values. Returns an array
+    of simulated residuals of size (`num_simulations`, `num_covs`) where `num_covs` is
+    the product of the length of the values in `covariate_specs` (get this by doing `_ResidualModel._expand_grid`
+    to get all covariate value combinations).
 
     - `covariate_specs (Dict[str: np.array])`: a dictionary of covariate values to create
         residual simulations for
@@ -229,8 +233,48 @@ class SmoothResidualModel(_ResidualModel):
 
         self.smoothed_residual_data = smoothed
 
+    def _extrapolate(self, num_data):
+        df = self.smoothed_residual_data.copy()
+
+        # What is the residual standard deviation for the greatest number of data points
+        # Called the "corner" value because it's at the corner of one end of the triangular residual matrix
+        corner_value = df[df['num_data'] == df['num_data'].max()]['residual_std'].mean()
+
+        selection = df[df['num_data'] == num_data].copy()
+        if selection.empty:
+            ext_value = corner_value
+        else:
+            # Get the maximum value for how far out we have observations for
+            max_far_out = selection[~selection['residual_std'].isnull()]['far_out'].max()
+            ext_value = np.nanmean(selection[selection['far_out'] == max_far_out]['residual_std'][-1:])
+        return ext_value
+
     def _predict_residuals(self, covariate_specs):
-        pass
+        df = self._expand_grid(covariate_specs=covariate_specs)
+
+        # Merge on the smoothed residual std matrix with the data we want to predict residuals for
+        index = df.index
+        df = df.merge(
+            self.smoothed_residual_data,
+            on=self.covariate_names, how='left', sort=False
+        )
+        df = df.iloc[index]
+
+        # Extrapolate where necessary
+        for i, row in df.iterrows():
+            if np.isnan(row['residual_std']):
+                df.at[i, 'residual_std'] = self._extrapolate(num_data=row['num_data'])
+        
+        return df
 
     def simulate_residuals(self, covariate_specs, num_simulations):
-        pass
+        pred_res_std = self._predict_residuals(covariate_specs=covariate_specs)
+
+        # Bound the residual standard deviation (or CV) between the upper and lower bounds set
+        pred_res_std['residual_std'] = pred_res_std['residual_std'].apply(
+            lambda x: min(max(x, self.cv_bounds[0]), self.cv_bounds[1])
+        )
+
+        random_error = np.random.randn(num_simulations)
+        error = np.outer(random_error, pred_res_std['residual_std'])
+        return error

@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 from curvefit.core.residual_model import _ResidualModel, SmoothResidualModel
-from curvefit.utils.smoothing import local_deviations
+from curvefit.utils.smoothing import local_deviations, local_smoother
 
 
 def test_residual_model():
@@ -53,13 +53,17 @@ def test_smooth_residual_model(smooth_rm):
     assert smooth_rm.robust
 
 
-def test_smooth_residual_model_smooth(smooth_rm):
+@pytest.fixture(scope='module')
+def residual_data():
     np.random.seed(10)
-    residual_data = pd.DataFrame({
+    return pd.DataFrame({
         'num_data': np.array([1, 1, 1, 2, 2, 2, 3, 3, 3]),
         'far_out': np.array([1, 2, 3, 1, 2, 3, 1, 2, 3]),
         'residual': np.random.randn(9)
     })
+
+
+def test_smooth_residual_model_smooth(smooth_rm, residual_data):
     smooth_rm.fit_residuals(residual_data)
     by_hand = local_deviations(
         df=residual_data[residual_data.num_data >= 2],
@@ -72,3 +76,30 @@ def test_smooth_residual_model_smooth(smooth_rm):
         by_hand.sort_values(['far_out', 'num_data']).reset_index()
     )
 
+
+def test_smooth_residual_model_extra_smooth(smooth_rm, residual_data):
+    smooth_rm.num_smooth_iterations = 2
+    smooth_rm.fit_residuals(residual_data)
+    by_hand = local_deviations(
+        df=residual_data[residual_data.num_data >= 2],
+        col_val='residual',
+        col_axis=['far_out', 'num_data'],
+        radius=[1, 1]
+    )
+    by_hand = local_smoother(
+        df=by_hand,
+        col_val='residual_std',
+        col_axis=['far_out', 'num_data'],
+        radius=[1, 1]
+    )
+    by_hand.rename(columns={
+        'residual_std_mean': 'residual_std'
+    }, inplace=True)
+    pd.testing.assert_frame_equal(
+        smooth_rm.smoothed_residual_data.sort_values(['far_out', 'num_data']).reset_index(),
+        by_hand.sort_values(['far_out', 'num_data']).reset_index()
+    )
+
+
+def test_smooth_residual_predictions(smooth_rm, residual_data):
+    smooth_rm.fit_residuals(residual_data)
