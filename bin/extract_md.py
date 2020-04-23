@@ -22,6 +22,7 @@ file_list = [
     
     'src/curvefit/core/data.py',
     'src/curvefit/core/parameter.py'
+    'src/curvefit/core/residual_model.py'
 ]
 # list of extra words that the spell checker will consider correct
 extra_special_words = [

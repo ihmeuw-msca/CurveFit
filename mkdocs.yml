@@ -11,9 +11,14 @@ nav:
     - param_time_fun_xam: 'extract_md/param_time_fun_xam.md'
   - Developer Doc:
     - core:
-      - Data: 'extract_md/Data.md'
-      - Parameter: 'extract_md/Parameter.md'
-      - ParameterSet: 'extract_md/ParameterSet.md'
+      - data:
+          - Data: 'extract_md/Data.md'
+      - parameter:
+        - Parameter: 'extract_md/Parameter.md'
+        - ParameterSet: 'extract_md/ParameterSet.md'
+      - residual models:
+        - _ResidualModel: 'extract_md/_ResidualModel.md'
+        - SmoothResidualModel: 'extract_md/SmoothResidualModel.md'
     - utils:
       - unzip_x: 'extract_md/unzip_x.md'
       - sizes_to_indices: 'extract_md/sizes_to_indices.md'
