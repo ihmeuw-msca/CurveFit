@@ -47,6 +47,7 @@ check      = curvefit.core.functions.normal_loss(r)
 rel_error  = y[0] / check - 1.0
 assert abs( rel_error ) < eps99
 # -----------------------------------------------------------------------
+print('loss.py: OK')
 sys.exit(0)
 '''```
 {end_markdown loss_xam}'''
