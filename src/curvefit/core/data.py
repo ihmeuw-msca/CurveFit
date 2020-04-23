@@ -1,4 +1,17 @@
+from dataclasses import dataclass
+from typing import List
 from curvefit.core.utils import data_translator
+
+@dataclass
+class DataSpecs:
+    col_t: str
+    col_obs: str 
+    col_covs: List[str]
+    col_group: str 
+    col_obs_se: str = None
+    obs_space: callable
+    obs_se_fun: callable = None
+
 
 
 class Data:
@@ -56,16 +69,16 @@ class Data:
 
     {end_markdown Data}
     """
-    def __init__(self, df, col_t, col_obs, col_covs, col_group, obs_space,
-                 obs_se_func=None, col_obs_se=None):
+    def __init__(self, df, data_specs):
 
         self.df = df.copy()
-        self.col_t = col_t
-        self.col_obs = col_obs
-        self.col_covs = col_covs
-        self.col_group = col_group
-        self.obs_space = obs_space
-        self.obs_se_func = obs_se_func
+        self.data_specs = data_specs
+        self.col_t = data_specs.col_t
+        self.col_obs = data_specs.col_obs
+        self.col_covs = data_specs.col_covs
+        self.col_group = data_specs.col_group
+        self.obs_space = data_specs.obs_space
+        self.obs_se_func = data_specs.obs_se_func
 
         self.df.sort_values([self.col_group, self.col_t], inplace=True)
 
@@ -73,11 +86,11 @@ class Data:
             self.col_obs_se = 'obs_se'
             self.df[self.col_obs_se] = self.df[self.col_t].apply(self.obs_se_func)
         else:
-            self.col_obs_se = col_obs_se
+            self.col_obs_se = data_specs.col_obs_se
 
         self.groups = self.df[self.col_group].unique()
 
-    def get_df(self, group=None, copy=False):
+    def get_df(self, group=None, copy=False, return_specs=False):
         if group is not None:
             df = self.df.loc[self.df[self.col_group] == group]
         else:
@@ -87,6 +100,9 @@ class Data:
             return df.copy()
         else:
             return df
+
+        if return_specs:
+            return df, self.data_specs
 
     def get_translated_observations(self, group, space):
         values = self.get_df(group=group)[self.col_obs].values
