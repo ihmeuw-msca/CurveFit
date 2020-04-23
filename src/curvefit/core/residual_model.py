@@ -1,6 +1,8 @@
 import itertools
 import pandas as pd
 
+from curvefit.utils.smoothing import local_deviations, local_smoother
+
 
 class _ResidualModel:
     """
@@ -147,7 +149,7 @@ class SmoothResidualModel(_ResidualModel):
 
     ## Attributes
 
-    - `self.residual_std_matrix (np.array)`: a smooth surface of residual standard deviations across the covariate
+    - `self.smoothed_residual_matrix (np.array)`: a smooth surface of residual standard deviations across the covariate
         axes, only populated after `fit_residuals()` is called
 
     ## Methods
@@ -191,10 +193,34 @@ class SmoothResidualModel(_ResidualModel):
 
         assert type(self.robust) == bool
 
-        self.residual_std_matrix = None
+        self.smoothed_residual_matrix = None
 
     def fit_residuals(self, residual_df):
-        pass
+        df = residual_df.copy()
+
+        # Calculate the standard deviation within a window
+        smoothed = local_deviations(
+            df=df,
+            col_val='residual',
+            col_axis=self.covariates,
+            radius=self.smooth_radius,
+            robust=self.robust
+        )
+        # Smooth over the resulting standard deviation within
+        # the same window by using a local smoother
+        if self.num_smooth_iterations > 1:
+            i = 1
+            while i < self.num_smooth_iterations:
+                smoothed = local_smoother(
+                    df=smoothed,
+                    col_val='residual_std',
+                    col_axis=self.covariates,
+                    radius=self.smooth_radius
+                )
+                smoothed.rename(columns={'residual_std_mean': 'residual_std'}, inplace=True)
+                i += 1
+
+        self.smoothed_residual_matrix = smoothed
 
     def _predict_residuals(self, covariate_specs):
         pass
