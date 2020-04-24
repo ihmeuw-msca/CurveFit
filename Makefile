@@ -18,7 +18,7 @@ sdist: setup.py
 	python3 setup.py sdist
 
 tests:
-	pytest tests
+	pytest tests cppad_py
 
 examples:
 	example/get_started.py
@@ -29,11 +29,6 @@ examples:
 	example/unzip_x.py
 	example/effects2params.py
 	example/objective_fun.py
-
-# 2DO: Move example/loss.py examples: group once the install of cppad_py
-# works on travis.
-cppad_py: phony
-	pytest cppad_py
 	example/loss.py
 
 # Use mkdocs gh-deploy to make changes to the gh-pages branch.
