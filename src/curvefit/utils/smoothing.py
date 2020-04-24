@@ -8,7 +8,7 @@ def local_deviations(df, col_val,
     """
     {begin_markdown local_deviations}
 
-    {spell_markdown utils}
+    {spell_markdown utils bool}
 
     # `curvefit.utils.smoothing.local_deviations`
     ## Computes standard deviation within a neighborhood of covariate values
@@ -26,6 +26,8 @@ def local_deviations(df, col_val,
         List of offset for each axis to make it suitable as numpy array.
     - `radius (List[int] | None, optional)`:
         List of the neighbor radius for each dimension.
+    - `robust (bool)`: use the median absolute deviation * 1.4826 as a robust estimator for the standard
+        deviation
 
     ## Returns
 
