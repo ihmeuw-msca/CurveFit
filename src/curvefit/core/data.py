@@ -96,12 +96,12 @@ class Data:
         else:
             df = self.df
 
-        if copy:
-            return df.copy()
+        if not return_specs:
+            if copy:
+                return df.copy()
+            else:
+                return df
         else:
-            return df
-
-        if return_specs:
             return df, self.data_specs
 
     def get_translated_observations(self, group, space):

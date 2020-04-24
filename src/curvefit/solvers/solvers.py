@@ -14,9 +14,13 @@ class Base:
         self.model = model_instance
         self.x_opt = None
         self.fun_val_opt = None
-    
-    def set_model_instance(self, model_instance):
-        self.model = model_instance
+
+    def add_model_instance(self, model_instance):
+        if self.model is not None:
+            self.model = model_instance
+
+    def remove_model_instance(self):
+        self.model = None
 
     def fit(self, data, x_init=None, options=None):
         raise NotImplementedError()
@@ -52,12 +56,17 @@ class Composite(Base):
     def update_solver(self, solver):
         self.solver = solver
         if self.model is not None:
-            self.solver.set_model_instance(self.model)
+            self.solver.add_model_instance(self.model)
 
-    def set_model_instance(self, model_instance):
+    def add_model_instance(self, model_instance):
         self.model = model_instance
         if self.solver is not None:
-            self.solver.set_model_instance(self.model)
+            self.solver.add_model_instance(self.model)
+
+    def remove_model_instance(self):
+        self.model = None
+        if self.solver is not None:
+            self.solver.remove_model_instance()
         
     def is_solver_defined(self):
         if self.solver is not None:
@@ -95,6 +104,7 @@ class GaussianMixturesIntegration(Composite):
     def fit(self, data, x_init=None, options=None):
         if self.is_solver_defined():
             self.solver.fit(data, x_init, options)
+            self.x_opt = self.solver.x_opt
             params = effects2params(
                 self.solver.x_opt, 
                 self.model.group_size, 
@@ -107,6 +117,16 @@ class GaussianMixturesIntegration(Composite):
             w_init = np.zeros(self.gm_model.size)
             w_init[self.gm_model.size // 2] = 1.0
             gm_solver.fit(data, w_init)
+            self.gm_weights = gm_solver.x_opt 
+    
+    def predict(self, data):
+        df = data[0]
+        data_specs = data[1]
+        t = df[data_specs.col_t]
+        matrix = self.gm_model.compute_design_matrix(t)
+        return np.dot(matrix, self.gm_weights)
+
+            
 
 
     
