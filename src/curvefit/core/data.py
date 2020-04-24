@@ -1,4 +1,17 @@
+from dataclasses import dataclass
+from typing import List
+
 from curvefit.utils.data import data_translator
+
+@dataclass
+class DataSpecs:
+    col_t: str
+    col_obs: str
+    col_covs: List[str]
+    col_group: str
+    obs_space: callable
+    col_obs_se: str = None
+    obs_se_fun: callable = None
 
 
 class Data:
@@ -67,6 +80,8 @@ class Data:
         self.obs_space = obs_space
         self.obs_se_func = obs_se_func
 
+        self.data_specs = DataSpecs(col_t, col_obs, col_covs, col_group, col_obs_se, obs_space, obs_se_func)
+
         self.df.sort_values([self.col_group, self.col_t], inplace=True)
 
         if self.obs_se_func is not None:
@@ -77,14 +92,18 @@ class Data:
 
         self.groups = self.df[self.col_group].unique()
 
-    def get_df(self, group=None, copy=False):
+    def get_df(self, group=None, copy=False, return_specs=False):
         if group is not None:
             df = self.df.loc[self.df[self.col_group] == group]
         else:
             df = self.df
 
-        if copy:
+        if copy and return_specs:
+            return df.copy(), self.data_specs
+        elif copy and not return_specs:
             return df.copy()
+        elif not copy and return_specs:
+            return df, self.data_specs
         else:
             return df
 
