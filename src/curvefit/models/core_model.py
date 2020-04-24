@@ -12,9 +12,11 @@ class DataInputs:
     obs_se: np.ndarray
     covariates_matrices: List[np.ndarray]
     group_sizes: List[int]
+    link_fun: List[Callable]
+    var_link_fun: List[Callable]
     fe_gprior: np.ndarray
     re_gprior: np.ndarray
-    param_gprior_info: Tuple[Callable, List[float], List[float]]
+    param_gprior_info: Tuple[Callable, List[float], List[float]] = None
 
 
 class Model:
@@ -38,6 +40,8 @@ class Model:
         for covs in self.param_set.covariate:
             covs_mat.append(df[covs].to_numpy())
         group_sizes = [df.shape[0]]
+
+        var_link_fun = np.array(reduce(iconcat, self.param_set.var_link_fun, []))
         
         fe_gprior = np.array(reduce(iconcat, self.param_set.fe_gprior, []))
         assert fe_gprior.shape == (self.param_set.num_fe, 2)
@@ -50,15 +54,18 @@ class Model:
         assert re_gprior.shape == (self.param_set.num_fe, 1, 2)
 
         param_gprior = [[], [], []]
-        for fun in self.param_set.parameter_functions:
-            param_gprior[0].append(fun[0])
-            param_gprior[1].append(fun[1][0])
-            param_gprior[2].append(fun[1][1])
+        if self.param_set.parameter_functions is not None:
+            for fun in self.param_set.parameter_functions:
+                param_gprior[0].append(fun[0])
+                param_gprior[1].append(fun[1][0])
+                param_gprior[2].append(fun[1][1])
 
-        def param_gprior_fun(p):
-            return [f(p) for f in param_gprior[0]]
-        
-        param_fun = [param_gprior_fun, param_gprior[1], param_gprior[2]]
+            def param_gprior_fun(p):
+                return [f(p) for f in param_gprior[0]]
+            
+            param_fun = [param_gprior_fun, param_gprior[1], param_gprior[2]]
+        else:
+            param_fun = None
 
         self.data_inputs = DataInputs(
             t=t,
@@ -66,6 +73,8 @@ class Model:
             obs_se=obs_se,
             covariates_matrices=covs_mat,
             group_sizes=group_sizes,
+            link_fun=self.param_set.link_fun,
+            var_link_fun=var_link_fun,
             fe_gprior=fe_gprior,
             re_gprior=re_gprior,
             param_gprior_info=param_fun,
@@ -83,8 +92,8 @@ class Model:
             self.data_inputs.group_sizes, 
             self.curve_fun, 
             self.loss_fun,
-            self.param_set.link_fun,
-            self.param_set.var_link_fun,
+            self.data_inputs.link_fun,
+            self.data_inputs.var_link_fun,
             self.data_inputs.fe_gprior,
             self.data_inputs.re_gprior,
             self.data_inputs.param_gprior_info,
