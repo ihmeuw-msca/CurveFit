@@ -34,6 +34,7 @@ class Parameter:
     param_name: str
     link_fun: Callable
     variables: InitVar[List[Variable]]
+    num_fe: int = field(init=False)
     covariate: List[str] = field(init=False)
     var_link_fun: List[Callable] = field(init=False)
     fe_init: List[float] = field(init=False)
@@ -47,15 +48,17 @@ class Parameter:
         assert isinstance(variables, list)
         assert len(variables) > 0
         assert isinstance(variables[0], Variable)
+        self.num_fe = len(variables)
         for k, v in consolidate(Variable, variables).items():
             self.__setattr__(k, v)
 
 
 @dataclass
 class ParameterSet:
-    parameters: List[Parameter]
+    parameters: InitVar[List[Parameter]]
     parameter_functions: List[Tuple[Callable, List[float]]] = None
     param_name: List[str] = field(init=False)
+    num_fe: int = field(init=False)
     link_fun: List[Callable] = field(init=False)
     covariate: List[List[str]] = field(init=False)
     var_link_fun: List[List[Callable]] = field(init=False)
@@ -66,14 +69,17 @@ class ParameterSet:
     fe_bounds: List[List[List[float]]] = field(init=False)
     re_bounds: List[List[List[float]]] = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self, parameters):
         if self.parameter_functions is not None:
             for fun in self.parameter_functions:
                 assert len(fun[1]) == 2
                 assert isinstance(fun[0], Callable)
 
-        for k, v in consolidate(Parameter, self.parameters).items():
+        for k, v in consolidate(Parameter, parameters, exclude=['num_fe']).items():
             self.__setattr__(k, v)
+        self.num_fe = 0
+        for param in parameters:
+            self.num_fe += param.num_fe
 
 
 def consolidate(cls, instance_list, exclude=None):
