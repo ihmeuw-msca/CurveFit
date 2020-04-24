@@ -4,7 +4,7 @@ from copy import deepcopy
 from curvefit.pipelines.ap_model import APModel
 from curvefit.diagnostics.preconditioners import BetaBoundsPreConditioner
 from curvefit.core.model import CurveModel
-from curvefit.core.utils import data_translator
+from curvefit.utils.data import data_translator
 from curvefit.core.functions import gaussian_pdf
 
 

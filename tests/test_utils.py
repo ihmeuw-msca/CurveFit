@@ -11,6 +11,7 @@ import pandas as pd
 import pytest
 from curvefit.core.functions import gaussian_pdf, dgaussian_pdf
 import curvefit.core.utils as utils
+from curvefit.utils.data import data_translator
 
 
 @pytest.mark.parametrize(('sizes', 'indices'),
@@ -71,7 +72,7 @@ def test_model_average(mat1, mat2, w1, w2, pred_fun, result):
                          [('gaussian_cdf', 'gaussian_pdf'),
                           ('ln_gaussian_cdf', 'ln_gaussian_pdf')])
 def test_data_translator_diff(data, input_space, output_space):
-    result = utils.data_translator(data, input_space, output_space)
+    result = data_translator(data, input_space, output_space)
     if input_space.startswith('ln'):
         assert np.allclose(np.exp(data), np.cumsum(np.exp(result), axis=1))
     else:
@@ -83,7 +84,7 @@ def test_data_translator_diff(data, input_space, output_space):
                          [('gaussian_cdf', 'ln_gaussian_cdf'),
                           ('gaussian_pdf', 'ln_gaussian_pdf')])
 def test_data_translator_exp(data, input_space, output_space):
-    result = utils.data_translator(data, input_space, output_space)
+    result = data_translator(data, input_space, output_space)
     assert np.allclose(data, np.exp(result))
 
 
@@ -94,7 +95,7 @@ def test_data_translator_exp(data, input_space, output_space):
                           ('ln_gaussian_cdf', 'ln_gaussian_cdf'),
                           ('ln_gaussian_pdf', 'ln_gaussian_pdf')])
 def test_data_translator_exp(data, input_space, output_space):
-    result = utils.data_translator(data, input_space, output_space)
+    result = data_translator(data, input_space, output_space)
     assert np.allclose(data, result)
 
 

@@ -1,4 +1,4 @@
-from curvefit.core.utils import data_translator
+from curvefit.utils.data import data_translator
 
 
 class Data:
