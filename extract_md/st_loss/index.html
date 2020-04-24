@@ -15,7 +15,7 @@
     
     
       
-        <title>unzip_x - Curve Fit</title>
+        <title>st_loss - Curve Fit</title>
       
     
     
@@ -56,7 +56,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#extract-fixed-and-random-effects-from-single-vector-form" class="md-skip">
+        <a href="#students-t-loss-function" class="md-skip">
           Skip to content
         </a>
       
@@ -84,7 +84,7 @@
           </span>
           <span class="md-header-nav__topic md-ellipsis">
             
-              unzip_x
+              st_loss
             
           </span>
         </div>
@@ -309,6 +309,30 @@
           
           
 
+
+  <li class="md-nav__item">
+    <a href="../unzip_x/" title="unzip_x" class="md-nav__link">
+      unzip_x
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../sizes_to_indices/" title="sizes_to_indices" class="md-nav__link">
+      sizes_to_indices
+    </a>
+  </li>
+
+        
+          
+          
+          
+
   
 
 
@@ -320,14 +344,14 @@
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
-        unzip_x
+        st_loss
         <span class="md-nav__icon md-icon">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,9H17V7H3V9M3,13H17V11H3V13M3,17H17V15H3V17M19,17H21V15H19V17M19,7V9H21V7H19M19,13H21V11H19V13Z" /></svg>
         </span>
       </label>
     
-    <a href="./" title="unzip_x" class="md-nav__link md-nav__link--active">
-      unzip_x
+    <a href="./" title="st_loss" class="md-nav__link md-nav__link--active">
+      st_loss
     </a>
     
       
@@ -353,36 +377,36 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#num_groups" class="md-nav__link">
-    num_groups
+  <a href="#t" class="md-nav__link">
+    t
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#num_fe" class="md-nav__link">
-    num_fe
+  <a href="#nu" class="md-nav__link">
+    nu
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#x" class="md-nav__link">
-    x
+  <a href="#distribution" class="md-nav__link">
+    Distribution
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#fe" class="md-nav__link">
-    fe
+  <a href="#negative-log" class="md-nav__link">
+    Negative log
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#re" class="md-nav__link">
-    re
+  <a href="#loss" class="md-nav__link">
+    loss
   </a>
   
 </li>
@@ -398,30 +422,6 @@
   
 </nav>
     
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../sizes_to_indices/" title="sizes_to_indices" class="md-nav__link">
-      sizes_to_indices
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
-    <a href="../st_loss/" title="st_loss" class="md-nav__link">
-      st_loss
-    </a>
   </li>
 
         
@@ -637,36 +637,36 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#num_groups" class="md-nav__link">
-    num_groups
+  <a href="#t" class="md-nav__link">
+    t
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#num_fe" class="md-nav__link">
-    num_fe
+  <a href="#nu" class="md-nav__link">
+    nu
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#x" class="md-nav__link">
-    x
+  <a href="#distribution" class="md-nav__link">
+    Distribution
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#fe" class="md-nav__link">
-    fe
+  <a href="#negative-log" class="md-nav__link">
+    Negative log
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#re" class="md-nav__link">
-    re
+  <a href="#loss" class="md-nav__link">
+    loss
   </a>
   
 </li>
@@ -694,29 +694,38 @@
                   
                 
                 
-                <h1 id="extract-fixed-and-random-effects-from-single-vector-form">Extract Fixed and Random Effects from Single Vector Form</h1>
+                <h1 id="students-t-loss-function">Student's t Loss Function</h1>
 <h2 id="syntax">Syntax</h2>
-<p><code>fe, re = curvefit.core.effects2params.unzip_x(x, num_groups, num_fe)</code></p>
-<h2 id="num_groups">num_groups</h2>
-<p>is the number of data groups.</p>
-<h2 id="num_fe">num_fe</h2>
-<p>is the number of fixed effects.</p>
-<h2 id="x">x</h2>
-<p>is a numpy vector with length equal to <code>(num_groups + 1)*num_fe</code></p>
-<h2 id="fe">fe</h2>
-<p>this return value
-is a numpy vector containing the fist <em>num_fe</em> elements of <em>x</em>.</p>
-<h2 id="re">re</h2>
-<p>this return value
-is a numpy two dimensional array with row dimension <em>num_groups</em>
-and column dimension <em>num_fe</em>.
-The i-th row of <em>re</em> contains the following sub-vector of <em>x</em></p>
-<div class="codehilite"><pre><span></span><code>    <span class="n">re</span><span class="p">[</span><span class="n">i</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">x</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">*</span><span class="n">num_fe</span> <span class="p">:</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">num_fe</span><span class="p">]</span>
-</code></pre></div>
-
-
+<p><code>loss = curvefit.core.loss_fun.st_loss(r, nu = 1.0)</code></p>
+<h2 id="t">t</h2>
+<p>is a numpy vector of residual values. We use <script type="math/tex"> n </script>
+for the length of the vector.
+The elements of this vector can be <code>float</code> or <code>a_double</code> values.</p>
+<h2 id="nu">nu</h2>
+<p>is the number of degrees of freedom in the t distribution <script type="math/tex"> \nu </script>.
+This can be a <code>float</code> or <code>a_double</code> value.</p>
+<h2 id="distribution">Distribution</h2>
+<p>The student's t-distribution is
+<script type="math/tex; mode=display">
+    f(r) = ( 1 + r^2 / \nu )^{- (\nu + 1) / 2 }
+         \Gamma[ ( \nu + 1) / 2 ] / [ \sqrt{ \nu \pi } \Gamma( \nu / 2 ) ]
+</script>
+where <script type="math/tex"> \nu </script> is the number of degrees of freedom and
+<script type="math/tex"> \Gamma </script> is the gamma function.</p>
+<h2 id="negative-log">Negative log</h2>
+<p>Taking the negative log of the distribution function we get
+<script type="math/tex; mode=display">
+    - \log [ f(r) ] = \log ( 1 + r^2 / \nu ) (\nu + 1) / 2  + c
+</script>
+where <script type="math/tex"> c </script> is constant w.r.t. <script type="math/tex"> r </script>.</p>
+<h2 id="loss">loss</h2>
+<p>The return value <code>loss</code> is a scalar equal to
+<script type="math/tex; mode=display">
+    \frac{\nu + 1}{2} \sum_{i=0}^{n-1} \log( 1 + r_i^2 / \nu )
+</script>
+</p>
 <h2 id="example">Example</h2>
-<p><a href="../unzip_x_xam/">unzip_x_xam</a></p>
+<p><a href="../loss_xam/">loss_xam</a></p>
                 
               
               
@@ -735,7 +744,7 @@ The i-th row of <em>re</em> contains the following sub-vector of <em>x</em></p>
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../param_time_fun_xam/" title="param_time_fun_xam" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../sizes_to_indices/" title="sizes_to_indices" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
             </div>
@@ -744,19 +753,19 @@ The i-th row of <em>re</em> contains the following sub-vector of <em>x</em></p>
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                param_time_fun_xam
+                sizes_to_indices
               </div>
             </div>
           </a>
         
         
-          <a href="../sizes_to_indices/" title="sizes_to_indices" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../normal_loss/" title="normal_loss" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                sizes_to_indices
+                normal_loss
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">

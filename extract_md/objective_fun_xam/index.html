@@ -1,0 +1,797 @@
+
+
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-5.1.1">
+    
+    
+      
+        <title>objective_fun_xam - Curve Fit</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.a676eddb.min.css">
+      
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.b302131d.min.css">
+      
+      
+        
+        
+        <meta name="theme-color" content="#4caf50">
+      
+    
+    
+    
+      
+        <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+      
+    
+    
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    <body dir="ltr" data-md-color-primary="green" data-md-color-accent="green">
+  
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#example-and-test-of-objective_fun" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="../.." title="Curve Fit" class="md-header-nav__button md-logo" aria-label="Curve Fit">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      
+        <div class="md-header-nav__ellipsis">
+          <span class="md-header-nav__topic md-ellipsis">
+            Curve Fit
+          </span>
+          <span class="md-header-nav__topic md-ellipsis">
+            
+              objective_fun_xam
+            
+          </span>
+        </div>
+      
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Type to start searching
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+        
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Curve Fit" class="md-nav__button md-logo" aria-label="Curve Fit">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
+    </a>
+    Curve Fit
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../.." title="Home" class="md-nav__link">
+      Home
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../methods/" title="Methods" class="md-nav__link">
+      Methods
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../code/" title="Code" class="md-nav__link">
+      Code
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item">
+    <a href="../../updates/" title="Release Notes" class="md-nav__link">
+      Release Notes
+    </a>
+  </li>
+
+    
+      
+      
+      
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+    
+    <label class="md-nav__link" for="nav-5">
+      Examples
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
+    </label>
+    <nav class="md-nav" aria-label="Examples" data-md-level="1">
+      <label class="md-nav__title" for="nav-5">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
+        Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../get_started_xam/" title="get_started_xam" class="md-nav__link">
+      get_started_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../covariate_xam/" title="covariate_xam" class="md-nav__link">
+      covariate_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../random_effect_xam/" title="random_effect_xam" class="md-nav__link">
+      random_effect_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../param_time_fun_xam/" title="param_time_fun_xam" class="md-nav__link">
+      param_time_fun_xam
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+      
+      
+      
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" checked>
+    
+    <label class="md-nav__link" for="nav-6">
+      Developer Doc
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
+    </label>
+    <nav class="md-nav" aria-label="Developer Doc" data-md-level="1">
+      <label class="md-nav__title" for="nav-6">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
+        Developer Doc
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../unzip_x/" title="unzip_x" class="md-nav__link">
+      unzip_x
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../sizes_to_indices/" title="sizes_to_indices" class="md-nav__link">
+      sizes_to_indices
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../st_loss/" title="st_loss" class="md-nav__link">
+      st_loss
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../normal_loss/" title="normal_loss" class="md-nav__link">
+      normal_loss
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../split_by_group/" title="split_by_group" class="md-nav__link">
+      split_by_group
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../param_time_fun/" title="param_time_fun" class="md-nav__link">
+      param_time_fun
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../effects2params/" title="effects2params" class="md-nav__link">
+      effects2params
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../objective_fun/" title="objective_fun" class="md-nav__link">
+      objective_fun
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../extract_md.py/" title="extract_md.py" class="md-nav__link">
+      extract_md.py
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../get_cppad_py.py/" title="get_cppad_py.py" class="md-nav__link">
+      get_cppad_py.py
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-11" type="checkbox" id="nav-6-11" checked>
+    
+    <label class="md-nav__link" for="nav-6-11">
+      Developer Examples
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
+    </label>
+    <nav class="md-nav" aria-label="Developer Examples" data-md-level="2">
+      <label class="md-nav__title" for="nav-6-11">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
+        Developer Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../unzip_x_xam/" title="unzip_x_xam" class="md-nav__link">
+      unzip_x_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../sizes_to_indices_xam/" title="sizes_to_indices_xam" class="md-nav__link">
+      sizes_to_indices_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../loss_xam/" title="loss_xam" class="md-nav__link">
+      loss_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../effects2params_xam/" title="effects2params_xam" class="md-nav__link">
+      effects2params_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+  
+
+
+  <li class="md-nav__item md-nav__item--active">
+    
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    
+      
+    
+    
+      <label class="md-nav__link md-nav__link--active" for="__toc">
+        objective_fun_xam
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,9H17V7H3V9M3,13H17V11H3V13M3,17H17V15H3V17M19,17H21V15H19V17M19,7V9H21V7H19M19,13H21V11H19V13Z" /></svg>
+        </span>
+      </label>
+    
+    <a href="./" title="objective_fun_xam" class="md-nav__link md-nav__link--active">
+      objective_fun_xam
+    </a>
+    
+      
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#function-documentation" class="md-nav__link">
+    Function Documentation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-source-code" class="md-nav__link">
+    Example Source Code
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+    
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc">
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#function-documentation" class="md-nav__link">
+    Function Documentation
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#example-source-code" class="md-nav__link">
+    Example Source Code
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                  
+                
+                
+                <h1 id="example-and-test-of-objective_fun">Example and Test of objective_fun</h1>
+<h2 id="function-documentation">Function Documentation</h2>
+<p>[objective_fun][objective_fun.md]</p>
+<h2 id="example-source-code">Example Source Code</h2>
+<div class="codehilite"><pre><span></span><code><span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">import</span> <span class="nn">sandbox</span>
+<span class="n">sandbox</span><span class="o">.</span><span class="n">path</span><span class="p">()</span>
+<span class="kn">import</span> <span class="nn">curvefit</span>
+<span class="c1"># -----------------------------------------------------------------------</span>
+<span class="c1"># Test parameters</span>
+<span class="n">num_param</span>    <span class="o">=</span> <span class="mi">3</span>
+<span class="n">num_group</span>    <span class="o">=</span> <span class="mi">2</span>
+<span class="c1"># -----------------------------------------------------------------------</span>
+<span class="c1"># arguments to objective_fun</span>
+<span class="k">def</span> <span class="nf">identity_fun</span> <span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">x</span>
+<span class="k">def</span> <span class="nf">gaussian_loss</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="p">:</span>
+    <span class="k">return</span> <span class="n">numpy</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span> <span class="n">x</span> <span class="o">*</span> <span class="n">x</span> <span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span>
+<span class="c1">#</span>
+<span class="n">num_fe</span>          <span class="o">=</span> <span class="n">num_param</span>
+<span class="n">num_re</span>          <span class="o">=</span> <span class="n">num_group</span> <span class="o">*</span> <span class="n">num_fe</span>
+<span class="n">fe</span>              <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_fe</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span> <span class="p">)</span> <span class="o">/</span> <span class="n">num_fe</span>
+<span class="n">re</span>              <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">array</span><span class="p">(</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_re</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span> <span class="p">)</span> <span class="o">/</span> <span class="n">num_re</span>
+<span class="n">group_sizes</span>     <span class="o">=</span> <span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_group</span><span class="p">)</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span> <span class="o">*</span> <span class="mi">2</span>
+<span class="c1">#</span>
+<span class="n">x</span>               <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span> <span class="p">(</span><span class="n">fe</span><span class="p">,</span> <span class="n">re</span><span class="p">)</span> <span class="p">)</span>
+<span class="n">num_obs</span>         <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span> <span class="n">group_sizes</span> <span class="p">)</span>
+<span class="n">t</span>               <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_obs</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span><span class="p">)</span>
+<span class="n">obs</span>             <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">num_obs</span><span class="p">,</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span><span class="p">)</span> <span class="o">/</span> <span class="n">num_obs</span>
+<span class="n">obs_se</span>          <span class="o">=</span> <span class="p">(</span><span class="n">obs</span>  <span class="o">+</span> <span class="mf">1.0</span> <span class="p">)</span><span class="o">/</span> <span class="mf">10.0</span>
+<span class="c1"># covs</span>
+<span class="n">covs</span>            <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+<span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_param</span><span class="p">)</span> <span class="p">:</span>
+    <span class="n">covs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span> <span class="p">(</span><span class="n">num_obs</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span> <span class="p">)</span> <span class="p">)</span>
+<span class="c1">#</span>
+<span class="n">model_fun</span>       <span class="o">=</span> <span class="n">curvefit</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">gaussian_cdf</span>
+<span class="n">loss_fun</span>        <span class="o">=</span> <span class="n">gaussian_loss</span>
+<span class="n">link_fun</span>        <span class="o">=</span> <span class="p">[</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span><span class="p">,</span> <span class="n">identity_fun</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">exp</span> <span class="p">]</span>
+<span class="n">var_link_fun</span>    <span class="o">=</span> <span class="n">num_param</span> <span class="o">*</span> <span class="p">[</span> <span class="n">identity_fun</span> <span class="p">]</span>
+<span class="c1"># fe_gprior</span>
+<span class="n">fe_gprior</span>       <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span> <span class="p">(</span><span class="n">num_fe</span><span class="p">,</span><span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span> <span class="p">)</span>
+<span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_fe</span><span class="p">)</span> <span class="p">:</span>
+    <span class="n">fe_gprior</span><span class="p">[</span><span class="n">j</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="n">num_fe</span><span class="p">)</span>
+<span class="n">fe_gprior</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">+</span> <span class="n">fe_gprior</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1.2</span>
+<span class="c1">#</span>
+<span class="c1"># re_gprior, param_gprior</span>
+<span class="n">re_gprior</span>         <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span> <span class="p">(</span><span class="n">num_fe</span><span class="p">,</span> <span class="n">num_group</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span> <span class="p">)</span>
+<span class="n">param_gprior_mean</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span> <span class="p">(</span><span class="n">num_param</span><span class="p">,</span> <span class="n">num_group</span><span class="p">),</span> <span class="n">dtype</span> <span class="o">=</span> <span class="nb">float</span> <span class="p">)</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_group</span><span class="p">)</span> <span class="p">:</span>
+    <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_fe</span><span class="p">)</span> <span class="p">:</span>
+        <span class="c1"># the matrix re_gprior[:,:,0] is the transposed from the order in re</span>
+        <span class="n">re_gprior</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span> <span class="p">,</span><span class="mi">0</span><span class="p">]</span>     <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">2.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_fe</span> <span class="o">+</span> <span class="n">num_re</span><span class="p">))</span>
+        <span class="n">k</span>                      <span class="o">=</span> <span class="n">j</span>
+        <span class="n">param_gprior_mean</span><span class="p">[</span><span class="n">k</span><span class="p">,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">k</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">3.0</span> <span class="o">*</span> <span class="p">(</span><span class="n">num_fe</span> <span class="o">+</span> <span class="n">num_re</span><span class="p">))</span>
+<span class="n">re_gprior</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">re_gprior</span><span class="p">[:,</span> <span class="p">:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="mf">3.0</span> <span class="p">)</span>
+<span class="n">param_gprior_std</span>   <span class="o">=</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">param_gprior_mean</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="p">)</span>
+<span class="n">param_gprior_fun</span>   <span class="o">=</span> <span class="n">identity_fun</span>
+<span class="n">param_gprior</span>       <span class="o">=</span> <span class="p">[</span> <span class="n">param_gprior_fun</span><span class="p">,</span> <span class="n">param_gprior_mean</span><span class="p">,</span> <span class="n">param_gprior_std</span> <span class="p">]</span>
+<span class="c1"># -----------------------------------------------------------------------</span>
+<span class="c1"># call to objective_fun</span>
+<span class="n">obj_val</span> <span class="o">=</span> <span class="n">curvefit</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">objective_fun</span><span class="o">.</span><span class="n">objective_fun</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span>
+        <span class="n">t</span><span class="p">,</span>
+        <span class="n">obs</span><span class="p">,</span>
+        <span class="n">obs_se</span><span class="p">,</span>
+        <span class="n">covs</span><span class="p">,</span>
+        <span class="n">group_sizes</span><span class="p">,</span>
+        <span class="n">model_fun</span><span class="p">,</span>
+        <span class="n">loss_fun</span><span class="p">,</span>
+        <span class="n">link_fun</span><span class="p">,</span>
+        <span class="n">var_link_fun</span><span class="p">,</span>
+        <span class="n">fe_gprior</span><span class="p">,</span>
+        <span class="n">re_gprior</span><span class="p">,</span>
+        <span class="n">param_gprior</span>
+<span class="p">)</span>
+<span class="c1"># -----------------------------------------------------------------------</span>
+<span class="c1"># check objective_fun return value</span>
+<span class="n">expand</span>  <span class="o">=</span> <span class="kc">True</span>
+<span class="n">effects2params</span> <span class="o">=</span> <span class="n">curvefit</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">effects2params</span><span class="o">.</span><span class="n">effects2params</span>
+<span class="n">unzip_x</span>        <span class="o">=</span> <span class="n">curvefit</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">effects2params</span><span class="o">.</span><span class="n">unzip_x</span>
+<span class="n">param</span>   <span class="o">=</span> <span class="n">effects2params</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">group_sizes</span><span class="p">,</span> <span class="n">covs</span><span class="p">,</span> <span class="n">link_fun</span><span class="p">,</span> <span class="n">var_link_fun</span><span class="p">,</span> <span class="n">expand</span><span class="p">)</span>
+<span class="n">fe</span><span class="p">,</span> <span class="n">re</span>  <span class="o">=</span> <span class="n">unzip_x</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">num_group</span><span class="p">,</span> <span class="n">num_fe</span><span class="p">)</span>
+<span class="n">obs_res</span> <span class="o">=</span> <span class="p">(</span><span class="n">obs</span> <span class="o">-</span> <span class="n">model_fun</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">param</span><span class="p">))</span> <span class="o">/</span> <span class="n">obs_se</span>
+<span class="n">fe_res</span>  <span class="o">=</span> <span class="p">(</span><span class="n">fe</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">fe_gprior</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">fe_gprior</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">re_res</span>  <span class="o">=</span> <span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">re_gprior</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">re_gprior</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">expand</span>  <span class="o">=</span> <span class="kc">False</span>
+<span class="n">param</span>   <span class="o">=</span> <span class="n">effects2params</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">group_sizes</span><span class="p">,</span> <span class="n">covs</span><span class="p">,</span> <span class="n">link_fun</span><span class="p">,</span> <span class="n">var_link_fun</span><span class="p">,</span> <span class="n">expand</span><span class="p">)</span>
+<span class="n">range_gprior</span> <span class="o">=</span> <span class="n">param_gprior</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="n">param</span><span class="p">)</span>
+<span class="n">param_res</span> <span class="o">=</span> <span class="p">(</span><span class="n">range_gprior</span> <span class="o">-</span> <span class="n">param_gprior</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="n">param_gprior</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+<span class="n">check</span>     <span class="o">=</span> <span class="n">loss_fun</span><span class="p">(</span><span class="n">obs_res</span><span class="p">)</span> <span class="o">+</span> <span class="n">gaussian_loss</span><span class="p">(</span><span class="n">fe_res</span><span class="p">)</span>
+<span class="n">check</span>    <span class="o">+=</span> <span class="n">gaussian_loss</span><span class="p">(</span><span class="n">re_res</span><span class="p">)</span> <span class="o">+</span> <span class="n">gaussian_loss</span><span class="p">(</span><span class="n">param_res</span><span class="p">)</span>
+<span class="n">rel_error</span> <span class="o">=</span> <span class="n">obj_val</span> <span class="o">/</span> <span class="n">check</span> <span class="o">-</span> <span class="mf">1.0</span>
+<span class="n">eps99</span>     <span class="o">=</span> <span class="mf">99.0</span> <span class="o">*</span> <span class="n">numpy</span><span class="o">.</span><span class="n">finfo</span><span class="p">(</span><span class="nb">float</span><span class="p">)</span><span class="o">.</span><span class="n">eps</span>
+<span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">rel_error</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">eps99</span>
+<span class="c1">#</span>
+<span class="nb">print</span><span class="p">(</span><span class="s1">&#39;objective_fun.py: OK&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</code></pre></div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+        
+          <a href="../effects2params_xam/" title="effects2params_xam" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+            </div>
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                effects2params_xam
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../assets/javascripts/vendor.c51dfa35.min.js"></script>
+      <script src="../../assets/javascripts/bundle.eaaa3931.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
+      
+      <script>
+        app = initialize({
+          base: "../..",
+          features: [],
+          search: Object.assign({
+            worker: "../../assets/javascripts/worker/search.58d22e8e.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+      
+    
+  </body>
+</html>

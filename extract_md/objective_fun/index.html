@@ -1,38 +1,17 @@
 
 
 
-
 <!doctype html>
 <html lang="en" class="no-js">
   <head>
     
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width,initial-scale=1">
-      <meta http-equiv="x-ua-compatible" content="ie=edge">
       
       
-      
-      
-        <meta name="lang:clipboard.copy" content="Copy to clipboard">
-      
-        <meta name="lang:clipboard.copied" content="Copied to clipboard">
-      
-        <meta name="lang:search.language" content="en">
-      
-        <meta name="lang:search.pipeline.stopwords" content="True">
-      
-        <meta name="lang:search.pipeline.trimmer" content="True">
-      
-        <meta name="lang:search.result.none" content="No matching documents">
-      
-        <meta name="lang:search.result.one" content="1 matching document">
-      
-        <meta name="lang:search.result.other" content="# matching documents">
-      
-        <meta name="lang:search.tokenizer" content="[\s\-]+">
       
       <link rel="shortcut icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.1, mkdocs-material-4.6.3">
+      <meta name="generator" content="mkdocs-1.1, mkdocs-material-5.1.1">
     
     
       
@@ -40,9 +19,9 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/application.adb8469c.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.a676eddb.min.css">
       
-        <link rel="stylesheet" href="../../assets/stylesheets/application-palette.a8b3c06d.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.b302131d.min.css">
       
       
         
@@ -51,16 +30,13 @@
       
     
     
-      <script src="../../assets/javascripts/modernizr.86422ebf.js"></script>
-    
     
       
         <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>body,input{font-family:"Roboto","Helvetica Neue",Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono","Courier New",Courier,monospace}</style>
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
       
     
-    <link rel="stylesheet" href="../../assets/fonts/material-icons.css">
     
     
     
@@ -69,69 +45,72 @@
     
   </head>
   
+  
     
     
     <body dir="ltr" data-md-color-primary="green" data-md-color-accent="green">
   
-    <svg class="md-svg">
-      <defs>
-        
-        
-      </defs>
-    </svg>
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
-    <label class="md-overlay" data-md-component="overlay" for="__drawer"></label>
-    
-      <a href="#curve-fitting-objective-function-of-fixed-and-random-effects" tabindex="0" class="md-skip">
-        Skip to content
-      </a>
-    
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#curve-fitting-objective-function-of-fixed-and-random-effects" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
     
       <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid">
-    <div class="md-flex">
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <a href="../.." title="Curve Fit" aria-label="Curve Fit" class="md-header-nav__button md-logo">
-          
-            <i class="md-icon"></i>
-          
-        </a>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        <label class="md-icon md-icon--menu md-header-nav__button" for="__drawer"></label>
-      </div>
-      <div class="md-flex__cell md-flex__cell--stretch">
-        <div class="md-flex__ellipsis md-header-nav__title" data-md-component="title">
-          
-            <span class="md-header-nav__topic">
-              Curve Fit
-            </span>
-            <span class="md-header-nav__topic">
-              
-                objective_fun
-              
-            </span>
-          
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="../.." title="Curve Fit" class="md-header-nav__button md-logo" aria-label="Curve Fit">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,6H21V8H3V6M3,11H21V13H3V11M3,16H21V18H3V16Z" /></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      
+        <div class="md-header-nav__ellipsis">
+          <span class="md-header-nav__topic md-ellipsis">
+            Curve Fit
+          </span>
+          <span class="md-header-nav__topic md-ellipsis">
+            
+              objective_fun
+            
+          </span>
         </div>
-      </div>
-      <div class="md-flex__cell md-flex__cell--shrink">
-        
-          <label class="md-icon md-icon--search md-header-nav__button" for="__search"></label>
-          
+      
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+      </label>
+      
 <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" aria-label="search" name="query" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="query" data-md-state="active">
-      <label class="md-icon md-search__icon" for="__search"></label>
-      <button type="reset" class="md-icon md-search__icon" data-md-component="reset" tabindex="-1">
-        &#xE5CD;
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active">
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z" /></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z" /></svg>
       </button>
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
-        <div class="md-search-result" data-md-component="result">
+        <div class="md-search-result" data-md-component="search-result">
           <div class="md-search-result__meta">
             Type to start searching
           </div>
@@ -141,31 +120,32 @@
     </div>
   </div>
 </div>
-        
-      </div>
-      
-    </div>
+    
+    
   </nav>
 </header>
     
-    <div class="md-container">
+    <div class="md-container" data-md-component="container">
       
         
       
       
-      <main class="md-main" role="main">
-        <div class="md-main__inner md-grid" data-md-component="container">
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
           
             
               <div class="md-sidebar md-sidebar--primary" data-md-component="navigation">
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
-                    <nav class="md-nav md-nav--primary" data-md-level="0">
-  <label class="md-nav__title md-nav__title--site" for="__drawer">
-    <a href="../.." title="Curve Fit" class="md-nav__button md-logo">
+                    <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="Curve Fit" class="md-nav__button md-logo" aria-label="Curve Fit">
       
-        <i class="md-icon"></i>
-      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,8A3,3 0 0,0 15,5A3,3 0 0,0 12,2A3,3 0 0,0 9,5A3,3 0 0,0 12,8M12,11.54C9.64,9.35 6.5,8 3,8V19C6.5,19 9.64,20.35 12,22.54C14.36,20.35 17.5,19 21,19V8C17.5,8 14.36,9.35 12,11.54Z" /></svg>
+
     </a>
     Curve Fit
   </label>
@@ -227,13 +207,19 @@
 
   <li class="md-nav__item md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5">
     
     <label class="md-nav__link" for="nav-5">
       Examples
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Examples" data-md-level="1">
       <label class="md-nav__title" for="nav-5">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Examples
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -281,18 +267,6 @@
 
 
   <li class="md-nav__item">
-    <a href="../sizes_to_indices_xam/" title="sizes_to_indices_xam" class="md-nav__link">
-      sizes_to_indices_xam
-    </a>
-  </li>
-
-        
-          
-          
-          
-
-
-  <li class="md-nav__item">
     <a href="../param_time_fun_xam/" title="param_time_fun_xam" class="md-nav__link">
       param_time_fun_xam
     </a>
@@ -313,13 +287,19 @@
 
   <li class="md-nav__item md-nav__item--active md-nav__item--nested">
     
-      <input class="md-toggle md-nav__toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" checked>
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" checked>
     
     <label class="md-nav__link" for="nav-6">
       Developer Doc
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
     </label>
-    <nav class="md-nav" data-md-component="collapsible" data-md-level="1">
+    <nav class="md-nav" aria-label="Developer Doc" data-md-level="1">
       <label class="md-nav__title" for="nav-6">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
         Developer Doc
       </label>
       <ul class="md-nav__list" data-md-scrollfix>
@@ -343,8 +323,8 @@
 
 
   <li class="md-nav__item">
-    <a href="../unzip_x_xam/" title="unzip_x_xam" class="md-nav__link">
-      unzip_x_xam
+    <a href="../sizes_to_indices/" title="sizes_to_indices" class="md-nav__link">
+      sizes_to_indices
     </a>
   </li>
 
@@ -355,8 +335,20 @@
 
 
   <li class="md-nav__item">
-    <a href="../sizes_to_indices/" title="sizes_to_indices" class="md-nav__link">
-      sizes_to_indices
+    <a href="../st_loss/" title="st_loss" class="md-nav__link">
+      st_loss
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../normal_loss/" title="normal_loss" class="md-nav__link">
+      normal_loss
     </a>
   </li>
 
@@ -406,13 +398,16 @@
 
   <li class="md-nav__item md-nav__item--active">
     
-    <input class="md-toggle md-nav__toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+    <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
     
       
     
     
       <label class="md-nav__link md-nav__link--active" for="__toc">
         objective_fun
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3,9H17V7H3V9M3,13H17V11H3V13M3,17H17V15H3V17M19,17H21V15H19V17M19,7V9H21V7H19M19,13H21V11H19V13Z" /></svg>
+        </span>
       </label>
     
     <a href="./" title="objective_fun" class="md-nav__link md-nav__link--active">
@@ -420,13 +415,18 @@
     </a>
     
       
-<nav class="md-nav md-nav--secondary">
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -527,9 +527,19 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#obj_val" class="md-nav__link">
+    obj_val
+  </a>
+  
+</li>
       
-      
-      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
       
     </ul>
   
@@ -562,6 +572,96 @@
   </li>
 
         
+          
+          
+          
+
+
+  <li class="md-nav__item md-nav__item--nested">
+    
+      <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-11" type="checkbox" id="nav-6-11">
+    
+    <label class="md-nav__link" for="nav-6-11">
+      Developer Examples
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z" /></svg>
+      </span>
+    </label>
+    <nav class="md-nav" aria-label="Developer Examples" data-md-level="2">
+      <label class="md-nav__title" for="nav-6-11">
+        <span class="md-nav__icon md-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+        </span>
+        Developer Examples
+      </label>
+      <ul class="md-nav__list" data-md-scrollfix>
+        
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../unzip_x_xam/" title="unzip_x_xam" class="md-nav__link">
+      unzip_x_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../sizes_to_indices_xam/" title="sizes_to_indices_xam" class="md-nav__link">
+      sizes_to_indices_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../loss_xam/" title="loss_xam" class="md-nav__link">
+      loss_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../effects2params_xam/" title="effects2params_xam" class="md-nav__link">
+      effects2params_xam
+    </a>
+  </li>
+
+        
+          
+          
+          
+
+
+  <li class="md-nav__item">
+    <a href="../objective_fun_xam/" title="objective_fun_xam" class="md-nav__link">
+      objective_fun_xam
+    </a>
+  </li>
+
+        
+      </ul>
+    </nav>
+  </li>
+
+        
       </ul>
     </nav>
   </li>
@@ -578,13 +678,18 @@
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
-<nav class="md-nav md-nav--secondary">
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
     
   
   
-    <label class="md-nav__title" for="__toc">Table of contents</label>
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
+      </span>
+      Table of contents
+    </label>
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
@@ -685,9 +790,19 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#obj_val" class="md-nav__link">
+    obj_val
+  </a>
+  
+</li>
       
-      
-      
+        <li class="md-nav__item">
+  <a href="#example" class="md-nav__link">
+    Example
+  </a>
+  
+</li>
       
     </ul>
   
@@ -702,12 +817,14 @@
               
                 
                 
+                  
+                
+                
                 <h1 id="curve-fitting-objective-function-of-fixed-and-random-effects">Curve Fitting Objective Function of Fixed and Random Effects</h1>
 <h2 id="syntax">Syntax</h2>
-<p>val = objective_fun(
-    x, t, obs, obs_se, covs, group_sizes,
-    fun, loss_fun, link_fun, var_link_fun,
-    fe_gprior, re_gprior, param_gprior,
+<p>obj_val = curvefit.core.objective_fun.objective_fun(
+    x, t, obs, obs_se, covs, group_sizes, model_fun, loss_fun,
+    link_fun, var_link_fun, fe_gprior, re_gprior, param_gprior,
 ) :</p>
 <h2 id="notation">Notation</h2>
 <ol>
@@ -718,14 +835,14 @@
 <p><em>num_param</em> = <code>len(covs)</code> is the number of parameters in the model.</p>
 </li>
 <li>
-<p><em>num_fe</em> = <code>len(fe_gprior)</code> is the number of fixed effects.</p>
+<p><em>num_fe</em> = <code>fe_gprior.shape[0]</code> is the number of fixed effects.</p>
 </li>
 <li>
-<p>*num_group~ = <code>len(group_sizes)</code> is the number of groups</p>
+<p><em>num_group</em> = <code>len(group_sizes)</code> is the number of groups</p>
 </li>
 <li>
 <p><em>params</em> = `effects2params(x, group_sizes, covs, link_fun, var_link_fun)
-is a <em>num_param</em> by <em>num_obs</em> matrix containing the parameters
+is a <em>num_param</em> by <em>num_obs</em> numpy array containing the parameters
 corresponding to each observation; see <a href="../effects2params/">effects2params</a>.</p>
 </li>
 <li>
@@ -733,25 +850,27 @@ corresponding to each observation; see <a href="../effects2params/">effects2para
 </li>
 </ol>
 <h2 id="x">x</h2>
-<p>is a one dimensional numpy array contain a value for the fixed effects
+<p>is a one dimension numpy array contain a value for the fixed effects
 followed by the random effects. The random effects are divided into
 sub-vectors with length equal to the number of fixed effects.
-The j-th sub-vector corresponds to the j-th group of observations.</p>
+The i-th sub-vector corresponds to the i-th group of observations.</p>
 <h2 id="t">t</h2>
-<p>is a vector with length <em>num_obs</em> containing the value
+<p>is a one dimension numpy array with length <em>num_obs</em> containing the value
 of the independent variable corresponding to each observation.</p>
 <h2 id="obs">obs</h2>
-<p>is a vector with length <em>num_obs</em> containing the observations
-(i.e. measurements).</p>
+<p>is a one dimension numpy array with length <em>num_obs</em> containing the
+observations (i.e. measurements).</p>
 <h2 id="obs_se">obs_se</h2>
-<p>is a vector with length <em>num_obs</em> containing the standard deviation
-for the corresponding observation.</p>
+<p>is a one dimension numpy array with length <em>num_obs</em> containing the
+standard deviation for the corresponding observation.</p>
 <h2 id="covs">covs</h2>
-<p>For <em>k</em> = 1, ... , <em>num_param</em>-1,
-the value <code>len(covs[k])</code> is the number of fixed effects
-corresponding to the k-th parameter.
-The vector <code>covs[k][j]</code> has length <em>num_obs</em> and is the
-j-th covariate vector corresponding to the k-th parameter.</p>
+<p>Is a <code>list</code> with length equal to the number of parameters and <code>covs[k]</code>
+is a two dimension numpy array with the following contents:</p>
+<p>-- <code>covs[k].shape[0]</code> is the number of observations</p>
+<p>-- <code>covs[k].shape[1]</code> is the number of fixed effects corresponding to the
+k-th parameter.</p>
+<p>-- <code>covs[k][i, ell]</code> is the covariate value corresponding to the
+i-th observation and ell-th covariate for the k-th parameter.</p>
 <h2 id="group_sizes">group_sizes</h2>
 <p>The observations are divided into groups.
 The first <code>group_sizes[0]</code> observations correspond to the first group,
@@ -761,29 +880,43 @@ The the sum of the group sizes is equal to <em>num_obs</em>.</p>
 <p>This vector valued function vector values maps parameter values,
 <a href="../effects2params/">params</a> returned by <code>effects2params</code>,
 to the model for the corresponding noiseless observations.
-The residual vector has length <em>num_obs</em> and is given by</p>
-<div class="codehilite"><pre><span></span><code>    <span class="n">residual</span> <span class="o">=</span> <span class="p">(</span><span class="n">obs</span> <span class="o">-</span> <span class="n">model_fun</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">))</span> <span class="o">/</span> <span class="n">obs_se</span>
+The observation residual vector has length <em>num_obs</em> and is given by</p>
+<div class="codehilite"><pre><span></span><code>    <span class="n">obs_res</span> <span class="o">=</span> <span class="p">(</span><span class="n">obs</span> <span class="o">-</span> <span class="n">model_fun</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">params</span><span class="p">))</span> <span class="o">/</span> <span class="n">obs_se</span>
 </code></pre></div>
 
 
 <h2 id="loss_fun">loss_fun</h2>
-<p>This scalar value function maps the residual vector to the corresponding
-contribution to the objective function. For example, a Gaussian likelihood
-corresponds to</p>
-<div class="codehilite"><pre><span></span><code>    <span class="n">loss_fun</span><span class="p">(</span><span class="n">residual</span><span class="p">)</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span> <span class="n">residual</span> <span class="o">*</span> <span class="n">residual</span> <span class="p">)</span>
+<p>This scalar value function maps the observation residual vector to the
+corresponding contribution to the objective function.
+For example, if <em>loss_fun</em> corresponds to a Gaussian likelihood,
+it is equal to</p>
+<div class="codehilite"><pre><span></span><code>    <span class="n">gaussian_loss</span><span class="p">(</span><span class="n">obs_res</span><span class="p">)</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="nb">sum</span><span class="p">(</span> <span class="n">obs_res</span> <span class="o">*</span> <span class="n">obs_res</span> <span class="p">)</span>
 </code></pre></div>
 
 
 <h2 id="link_fun-var_link_fun">link_fun, var_link_fun</h2>
 <p>are used to compute <em>params</em>; see <a href="#notation">Notation</a></p>
 <h2 id="fe_gprior">fe_gprior</h2>
-<p>is an <em>num_fe</em> by two numpy array. The value <code>fe_gprior[i][0]</code>
-is the prior mean for the i-th fixed effect and
-<code>fe_gprior[i][1]</code> is its standard deviation.</p>
+<p>is an <em>num_fe</em> by two numpy array. The value <code>fe_gprior[j][0]</code>
+is the prior mean for the j-th fixed effect and
+<code>fe_gprior[j][1]</code> is its standard deviation.
+If <code>fe</code> is the fixed effect sub-vector of <code>x</code>, the prior residual
+for the fixed effects is</p>
+<div class="codehilite"><pre><span></span><code>    <span class="n">fe_res</span> <span class="o">=</span> <span class="p">(</span> <span class="n">fe</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">fe_gprior</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="n">fe_gprior</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]</span>
+</code></pre></div>
+
+
+<p>were <code>fe.T</code> denotes the transpose of <code>fe</code>.</p>
 <h2 id="re_gprior">re_gprior</h2>
-<p>is an <em>num_fe</em> by <em>num_groups</em> by two numpy array, <code>re_gprior[i,j,0]</code>
-( <code>re_gprior[i,j,1]</code> ) is the mean (standard deviation) for the
-random effect corresponding to the i-th fixed effect and the j-th group.</p>
+<p>is an <em>num_fe</em> by <em>num_groups</em> by by two numpy array, <code>re_gprior[j,i,0]</code>
+( <code>re_gprior[j,i,1]</code> ) is the mean (standard deviation) for the
+random effect corresponding to the j-th fixed effect and the i-th group.
+If <code>re</code> is the matrix of random effect corresponding to<code>x</code>,
+the prior residual for the random effects is</p>
+<div class="codehilite"><pre><span></span><code>    <span class="n">re_res</span> <span class="o">=</span> <span class="p">(</span> <span class="n">re</span><span class="o">.</span><span class="n">T</span> <span class="o">-</span> <span class="n">re_gprior</span><span class="p">[:,:,</span><span class="mi">0</span><span class="p">]</span> <span class="p">)</span> <span class="o">/</span> <span class="n">re_gprior</span><span class="p">[:,:,</span><span class="mi">1</span><span class="p">]</span>
+</code></pre></div>
+
+
 <h2 id="param_gprior">param_gprior</h2>
 <p>is a list with three elements. The first element is a function
 of the <em>params</em> and its result is a numpy array. We use the notation</p>
@@ -791,11 +924,24 @@ of the <em>params</em> and its result is a numpy array. We use the notation</p>
 </code></pre></div>
 
 
-<p>The value <code>param_gprior[1][0]</code> ( <code>param_gprior[1][1]</code> ) is a numpy array
-corresponding to the mean (standard deviation) for <em>range_gprior</em>.</p>
-                
-                  
-                
+<p>There is a subtlety here, column dimension of the <em>params</em> above
+is <em>num_groups</em> (not <em>num_obs).
+The value <code>param_gprior[1][0]</code> ( <code>param_gprior[1][1]</code> ) is a numpy array
+corresponding to the mean (standard deviation) for </em>range_gprior*.
+The prior residual for the parameters is</p>
+<div class="codehilite"><pre><span></span><code>    <span class="n">param_res</span> <span class="o">=</span> <span class="p">(</span><span class="n">range_gprior</span> <span class="o">-</span> <span class="n">param_gprior</span><span class="p">[</span><span class="mi">1</span><span class="p">][[</span><span class="mi">0</span><span class="p">]])</span> <span class="o">/</span> <span class="n">param_gprior</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span>
+</code></pre></div>
+
+
+<h2 id="obj_val">obj_val</h2>
+<p>The return <em>val</em> is a <code>float</code> equal to the objective function</p>
+<div class="codehilite"><pre><span></span><code>    <span class="n">obj_val</span> <span class="o">=</span> <span class="n">loss_fun</span><span class="p">(</span><span class="n">obs_res</span><span class="p">)</span> <span class="o">+</span> <span class="n">gaussian_loss</span><span class="p">(</span><span class="n">fe_res</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">gaussian_loss</span><span class="p">(</span><span class="n">re_res</span><span class="p">)</span> <span class="o">+</span> <span class="n">gaussian_loss</span><span class="p">(</span><span class="n">param_res</span><span class="p">)</span>
+</code></pre></div>
+
+
+<h2 id="example">Example</h2>
+<p><a href="../objective_fun_xam/">objective_fun_xam</a></p>
                 
               
               
@@ -812,34 +958,34 @@ corresponding to the mean (standard deviation) for <em>range_gprior</em>.</p>
 <footer class="md-footer">
   
     <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../effects2params/" title="effects2params" class="md-flex md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-back md-footer-nav__button"></i>
+          <a href="../effects2params/" title="effects2params" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,11V13H8L13.5,18.5L12.08,19.92L4.16,12L12.08,4.08L13.5,5.5L8,11H20Z" /></svg>
             </div>
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
                 effects2params
-              </span>
+              </div>
             </div>
           </a>
         
         
-          <a href="../extract_md.py/" title="extract_md.py" class="md-flex md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-flex__cell md-flex__cell--stretch md-footer-nav__title">
-              <span class="md-flex__ellipsis">
+          <a href="../extract_md.py/" title="extract_md.py" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
                 extract_md.py
-              </span>
+              </div>
             </div>
-            <div class="md-flex__cell md-flex__cell--shrink">
-              <i class="md-icon md-icon--arrow-forward md-footer-nav__button"></i>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4,11V13H16L10.5,18.5L11.92,19.92L19.84,12L11.92,4.08L10.5,5.5L16,11H4Z" /></svg>
             </div>
           </a>
         
@@ -850,11 +996,10 @@ corresponding to the mean (standard deviation) for <em>range_gprior</em>.</p>
     <div class="md-footer-meta__inner md-grid">
       <div class="md-footer-copyright">
         
-        powered by
-        <a href="https://www.mkdocs.org" target="_blank" rel="noopener">MkDocs</a>
-        and
+        Made with
         <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-          Material for MkDocs</a>
+          Material for MkDocs
+        </a>
       </div>
       
     </div>
@@ -863,9 +1008,18 @@ corresponding to the mean (standard deviation) for <em>range_gprior</em>.</p>
       
     </div>
     
-      <script src="../../assets/javascripts/application.c33a9706.js"></script>
+      <script src="../../assets/javascripts/vendor.c51dfa35.min.js"></script>
+      <script src="../../assets/javascripts/bundle.eaaa3931.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents"}</script>
       
-      <script>app.initialize({version:"1.1",url:{base:"../.."}})</script>
+      <script>
+        app = initialize({
+          base: "../..",
+          features: [],
+          search: Object.assign({
+            worker: "../../assets/javascripts/worker/search.58d22e8e.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML"></script>
       
