@@ -98,4 +98,16 @@ class Model:
             self.data_inputs.re_gprior,
             self.data_inputs.param_gprior_info,
         ) 
-    
+
+    @property
+    def bounds(self):
+        all_bounds = []
+
+        fe_bounds = np.array(reduce(iconcat, self.param_set.fe_bounds, []))
+        re_bounds = np.array(reduce(iconcat, self.param_set.re_bounds, []))
+
+        for fb, rb in zip(fe_bounds, re_bounds):
+            all_bounds.append(fb)
+            all_bounds.append(rb)
+
+        return np.array(all_bounds)
