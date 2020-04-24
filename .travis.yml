@@ -2,7 +2,7 @@ language: python
 python:
   - "3.7"
 install:
-  - conda install swig
+  - apt-get install swig
   - python setup.py install
   - pip install -i https://test.pypi.org/simple/ cppad_py
 script:
