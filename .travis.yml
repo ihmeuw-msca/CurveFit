@@ -3,6 +3,7 @@ python:
   - "3.7"
 install:
   - python setup.py install
+  - pip install -i https://test.pypi.org/simple/ cppad_py
 script:
   - pytest tests
   - make examples
