@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from curvefit.diagnostics.plot_diagnostics import plot_residuals, plot_predictions, plot_residuals_1d, plot_es
-from curvefit.core.utils import neighbor_mean_std
+from curvefit.utils.smoothing import local_smoother
 
 
 class PVGroup:
@@ -327,14 +327,15 @@ class PVModel:
         Returns:
             smoothed_residuals: (pd.DataFrame)
         """
-        smoothed_residuals = neighbor_mean_std(
-            df=self.all_residuals,
-            col_val='residual',
-            col_group=self.col_group,
-            col_axis=['far_out', 'num_data'],
-            radius=radius
-        )
-        return smoothed_residuals
+        smoothed_residuals = []
+        for group in self.groups:
+            smoothed_residuals.append(local_smoother(
+                df=self.all_residuals.loc[self.all_residuals[self.col_group] == group],
+                col_val='residual',
+                col_axis=['far_out', 'num_data'],
+                radius=radius
+            ))
+        return pd.concat(smoothed_residuals)
 
     def plot_simple_residuals(self, x_axis, y_axis, radius, color=None, exclude_groups=None):
         """
