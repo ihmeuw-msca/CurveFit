@@ -78,6 +78,7 @@ class _ResidualModel:
         for i in self.cv_bounds:
             assert type(i) == float
             assert i > 0.
+        assert self.cv_bounds[0] < self.cv_bounds[1]
 
         if self.exclude_groups is not None:
             assert type(self.exclude_groups) == list
