@@ -29,7 +29,7 @@ examples:
 	example/unzip_x.py
 	example/effects2params.py
 	example/objective_fun.py
-	example/loss.py
+	# example/loss.py
 
 # Use mkdocs gh-deploy to make changes to the gh-pages branch.
 # This is for running extract_md.py and checking the differences before
