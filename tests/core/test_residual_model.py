@@ -101,5 +101,56 @@ def test_smooth_residual_model_extra_smooth(smooth_rm, residual_data):
     )
 
 
-def test_smooth_residual_predictions(smooth_rm, residual_data):
+def test_smooth_residual_extrapolate(smooth_rm, residual_data):
     smooth_rm.fit_residuals(residual_data)
+    np.testing.assert_almost_equal(smooth_rm._extrapolate(num_data=3), 0.536410723)
+    np.testing.assert_almost_equal(smooth_rm._extrapolate(num_data=2), 0.536410723)
+
+
+def test_smooth_residual_predict(smooth_rm, residual_data):
+    smooth_rm.fit_residuals(residual_data)
+    predictions = smooth_rm._predict_residuals(
+        covariate_specs={'num_data': np.array([3]), 'far_out': np.array([1, 2, 3, 4])}
+    )
+    np.testing.assert_array_almost_equal(
+        predictions['residual_std'].values,
+        np.array([0.29158401, 0.42490675, 0.53641072, 0.53641072])
+    )
+
+
+def test_smooth_residual_predict_corner(smooth_rm, residual_data):
+    residual_data2 = pd.concat([
+        residual_data,
+        pd.DataFrame({
+            'num_data': 4,
+            'far_out': 1,
+            'residual': np.random.randn(1)
+        }, index=[0])
+    ]).reset_index()
+    smooth_rm.fit_residuals(residual_data2)
+    predictions = smooth_rm._predict_residuals(
+        covariate_specs={'num_data': np.array([4, 5]), 'far_out': np.array([1, 2, 3, 4])}
+    )
+    assert all(np.isclose(predictions['residual_std'].values, 0.238290))
+
+
+def test_smooth_residual_simulate(residual_data):
+    smooth_rm = SmoothResidualModel(
+        cv_bounds=[1e-4, np.inf],
+        covariates={'far_out': None, 'num_data': None},
+        num_smooth_iterations=1,
+        smooth_radius=[1, 1],
+        robust=True
+    )
+    smooth_rm.fit_residuals(residual_data)
+    covariate_specs = {'far_out': np.array([1, 2, 3]), 'num_data': np.array([1])}
+    predictions = smooth_rm._predict_residuals(covariate_specs)
+
+    np.random.seed(10)
+    # Test that the simulated variance is nearly equal to the real variance (to some 3 decimal points)
+    sims = smooth_rm.simulate_residuals(covariate_specs, num_simulations=int(1e6))
+    np.testing.assert_array_almost_equal(
+        sims.var(axis=0) ** 0.5,
+        predictions['residual_std'].values,
+        decimal=3
+    )

@@ -61,7 +61,7 @@ class _ResidualModel:
 
     {end_markdown _ResidualModel}
     """
-    def __init__(self, cv_bounds, covariates, exclude_groups):
+    def __init__(self, cv_bounds, covariates, exclude_groups=None):
 
         self.cv_bounds = cv_bounds
         self.covariates = covariates
@@ -137,7 +137,7 @@ class SmoothResidualModel(_ResidualModel):
         are the subsets of the covariates to use
         (e.g. only use the subset of data where covariate1 > 10. in the fitting). **NOTE**: this residual model
         requires that only two covariates, `"far_out"` and `"num_data"` are used.
-    - `exclude_groups (List[str])`: a list of groups to exclude from the fitting process (not excluded from
+    - `exclude_groups (optional, List[str])`: a list of groups to exclude from the fitting process (not excluded from
         making predictions)
     - `num_smooth_iterations (int)`: how many times should the model smooth over the residual matrix. If 1, then
         only calculates the standard deviation over a moving window. If > 1, then runs a local smoother over the
@@ -264,7 +264,7 @@ class SmoothResidualModel(_ResidualModel):
         for i, row in df.iterrows():
             if np.isnan(row['residual_std']):
                 df.at[i, 'residual_std'] = self._extrapolate(num_data=row['num_data'])
-        
+
         return df
 
     def simulate_residuals(self, covariate_specs, num_simulations):
@@ -275,6 +275,7 @@ class SmoothResidualModel(_ResidualModel):
             lambda x: min(max(x, self.cv_bounds[0]), self.cv_bounds[1])
         )
 
+        # Generate random error using the residual standard deviations
         random_error = np.random.randn(num_simulations)
         error = np.outer(random_error, pred_res_std['residual_std'])
         return error
