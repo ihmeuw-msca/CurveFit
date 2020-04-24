@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from curvefit.core.utils import data_translator
+from curvefit.utils.data import data_translator
 
 @dataclass
 class DataSpecs:
