@@ -126,6 +126,9 @@ class GaussianMixturesIntegration(Composite):
         matrix = self.gm_model.compute_design_matrix(t)
         return np.dot(matrix, self.gm_weights)
 
+
+
+
             
 
 

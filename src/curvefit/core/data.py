@@ -13,7 +13,6 @@ class DataSpecs:
     obs_se_fun: callable = None
 
 
-
 class Data:
     """
     {begin_markdown Data}
@@ -69,16 +68,18 @@ class Data:
 
     {end_markdown Data}
     """
-    def __init__(self, df, data_specs):
+    def __init__(self, df, col_t, col_obs, col_covs, col_group, obs_space,
+                 obs_se_func=None, col_obs_se=None):
 
         self.df = df.copy()
-        self.data_specs = data_specs
-        self.col_t = data_specs.col_t
-        self.col_obs = data_specs.col_obs
-        self.col_covs = data_specs.col_covs
-        self.col_group = data_specs.col_group
-        self.obs_space = data_specs.obs_space
-        self.obs_se_func = data_specs.obs_se_func
+        self.col_t = col_t
+        self.col_obs = col_obs
+        self.col_covs = col_covs
+        self.col_group = col_group
+        self.obs_space = obs_space
+        self.obs_se_func = obs_se_func
+
+        self.data_specs = DataSpecs(col_t, col_obs, col_covs, col_group, col_obs_se, obs_space, obs_se_func)
 
         self.df.sort_values([self.col_group, self.col_t], inplace=True)
 
@@ -86,7 +87,7 @@ class Data:
             self.col_obs_se = 'obs_se'
             self.df[self.col_obs_se] = self.df[self.col_t].apply(self.obs_se_func)
         else:
-            self.col_obs_se = data_specs.col_obs_se
+            self.col_obs_se = self.col_obs_se
 
         self.groups = self.df[self.col_group].unique()
 
