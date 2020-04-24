@@ -4,6 +4,9 @@ import scipy.optimize as sciopt
 from curvefit.models.gaussian_mixture import GaussianMixtures
 from curvefit.core.effects2params import effects2params
 
+class ModelNotDefinedError(Exception):
+    pass
+
 class SolverNotDefinedError(Exception):
     pass
 
@@ -15,12 +18,17 @@ class Base:
         self.x_opt = None
         self.fun_val_opt = None
 
-    def add_model_instance(self, model_instance):
-        if self.model is not None:
-            self.model = model_instance
+    def set_model_instance(self, model_instance):
+        self.model = model_instance
 
-    def remove_model_instance(self):
+    def detach_model_instance(self):
         self.model = None
+
+    def get_model_instance(self):
+        if self.model is not None:
+            return self.model
+        else:
+            raise ModelNotDefinedError()
 
     def fit(self, data, x_init=None, options=None):
         raise NotImplementedError()
@@ -49,24 +57,24 @@ class ScipyOpt(Base):
 
 class Composite(Base):
 
-    def __init__(self, model_instance=None):
-        super().__init__(model_instance)
+    def __init__(self):
+        super().__init__(model_instance=None)
         self.solver = None
     
-    def update_solver(self, solver):
+    def set_solver(self, solver):
         self.solver = solver
-        if self.model is not None:
-            self.solver.add_model_instance(self.model)
 
-    def add_model_instance(self, model_instance):
-        self.model = model_instance
-        if self.solver is not None:
-            self.solver.add_model_instance(self.model)
+    def set_model_instance(self, model_instance):
+        if self.is_solver_defined():
+            self.solver.set_model_instance(model_instance)
 
-    def remove_model_instance(self):
-        self.model = None
+    def detach_model_instance(self):
         if self.solver is not None:
-            self.solver.remove_model_instance()
+            self.solver.detach_model_instance()
+
+    def get_model_instance(self):
+        if self.is_solver_defined():
+            return self.solver.get_model_instance()
         
     def is_solver_defined(self):
         if self.solver is not None:
@@ -77,8 +85,8 @@ class Composite(Base):
 
 class MultipleInitializations(Composite):
 
-    def __init__(self, num_init, sample_fun, model_instance=None):
-        super().__init__(model_instance)
+    def __init__(self, num_init, sample_fun):
+        super().__init__()
         self.num_init = num_init
         self.sample_fun = sample_fun
 
@@ -97,20 +105,21 @@ class MultipleInitializations(Composite):
 
 class GaussianMixturesIntegration(Composite):
 
-    def __init__(self, gm_model, model_instance=None):
-        super().__init__(model_instance)
+    def __init__(self, gm_model):
+        super().__init__()
         self.gm_model = gm_model 
 
     def fit(self, data, x_init=None, options=None):
         if self.is_solver_defined():
             self.solver.fit(data, x_init, options)
             self.x_opt = self.solver.x_opt
+            model = self.get_model_instance()
             params = effects2params(
                 self.solver.x_opt, 
-                self.model.group_size, 
-                self.model.covs,
-                self.model.link_fun,
-                self.model.var_link_fun,
+                model.group_size, 
+                model.covs,
+                model.link_fun,
+                model.var_link_fun,
             )
             self.gm_model.set_params(params)
             gm_solver = ScipyOpt(self.gm_model)

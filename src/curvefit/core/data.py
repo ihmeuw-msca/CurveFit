@@ -87,7 +87,7 @@ class Data:
             self.col_obs_se = 'obs_se'
             self.df[self.col_obs_se] = self.df[self.col_t].apply(self.obs_se_func)
         else:
-            self.col_obs_se = self.col_obs_se
+            self.col_obs_se = col_obs_se
 
         self.groups = self.df[self.col_group].unique()
 
