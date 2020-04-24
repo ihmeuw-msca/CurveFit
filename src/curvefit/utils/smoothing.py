@@ -145,10 +145,12 @@ def convolve_sum(mat, radius=None):
     ## Convolve sum a 2D matrix by given radius.
 
     ## Arguments
+
     - `mat (numpy.ndarray)`: matrix of interest
     - `radius (array-like{int} | None, optional)`: given radius, if None assume radius = (0, 0)
 
     ## Returns
+
     - `numpy.ndarray`: the convolved sum, with the same shape with original matrix.
 
     {end_markdown convolve_sum}
@@ -183,15 +185,16 @@ def df_to_mat(df, col_val, col_axis, return_indices=False):
     ## Convert columns in data frame to matrix
 
     ## Arguments
-        df (pandas.DataFrame): Given data frame.
-        col_val (str): Value column.
-        col_axis (list{str}): Axis column.
-        return_indices (bool, optional):
-            If True, return indices of the original values and the corresponding
+
+    - `df (pandas.DataFrame)`: given data frame.
+    - `col_val (str)`: value column.
+    - `col_axis (List[str])`: axis column.
+    - `return_indices (bool, optional)`: if True, return indices of the original values and the corresponding
             axis values in the data frame.
 
     ## Returns
-    - `numpy.ndarray`: converted matrix
+
+    - `(numpy.ndarray)`: converted matrix
 
     {end_markdown df_to_mat}
     """

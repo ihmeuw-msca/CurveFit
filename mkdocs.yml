@@ -20,6 +20,12 @@ nav:
         - _ResidualModel: 'extract_md/_ResidualModel.md'
         - SmoothResidualModel: 'extract_md/SmoothResidualModel.md'
     - utils:
+        - smoothing:
+            - local_deviations: 'extract_md/local_deviations.md'
+            - local_smoother: 'extract_md/local_smoother.md'
+            - convolve_sum: 'extract_md/convolve_sum.md'
+            - df_to_mat: 'extract_md/df_to_mat.md'
+    - other:
       - unzip_x: 'extract_md/unzip_x.md'
       - sizes_to_indices: 'extract_md/sizes_to_indices.md'
       - split_by_group: 'extract_md/split_by_group.md'
