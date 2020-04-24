@@ -2,9 +2,8 @@ from dataclasses import fields, field, InitVar
 from pydantic.dataclasses import dataclass
 from typing import List, Callable, Tuple
 
-import pdb
-
 import numpy as np 
+
 
 @dataclass  
 class Variable:
@@ -86,7 +85,7 @@ def consolidate(cls, instance_list, exclude=None):
     if exclude is None:
         exclude = []
     consolidated = {}
-    for field in fields(cls):
-        if field.name not in exclude:
-            consolidated[field.name] = [instance.__getattribute__(field.name) for instance in instance_list]
+    for f in fields(cls):
+        if f.name not in exclude:
+            consolidated[f.name] = [instance.__getattribute__(f.name) for instance in instance_list]
     return consolidated
