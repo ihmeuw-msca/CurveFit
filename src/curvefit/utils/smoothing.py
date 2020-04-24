@@ -8,7 +8,7 @@ def local_deviations(df, col_val,
     """
     {begin_markdown local_deviations}
 
-    {spell_markdown }
+    {spell_markdown utils}
 
     # `curvefit.utils.smoothing.local_deviations`
     ## Computes standard deviation within a neighborhood of covariate values
@@ -20,7 +20,7 @@ def local_deviations(df, col_val,
     ## Arguments
 
     - `df (pd.DataFrame)`: Residual data frame.
-    - `col_val (str)`: Name for column that store th e residual.
+    - `col_val (str)`: Name for column that store the residual.
     - `col_axis (List[str])`: List of two axis column names.
     - `axis_offset (List[int] | None, optional)`:
         List of offset for each axis to make it suitable as numpy array.
@@ -77,7 +77,7 @@ def local_smoother(df,
     """
     {begin_markdown local_smoother}
 
-    {spell_markdown }
+    {spell_markdown utils}
 
     # `curvefit.utils.smoothing.local_smoother`
     ## Runs a local smoother over a neighborhood of covariate values
@@ -141,6 +141,8 @@ def convolve_sum(mat, radius=None):
     """
     {begin_markdown convolve_sum}
 
+    {spell_markdown utils convolve ndarray convolved}
+
     # `curvefit.utils.smoothing.convolve_sum`
     ## Convolve sum a 2D matrix by given radius.
 
@@ -180,6 +182,8 @@ def convolve_sum(mat, radius=None):
 def df_to_mat(df, col_val, col_axis, return_indices=False):
     """
     {begin_markdown df_to_mat}
+
+    {spell_markdown utils bool ndarray}
 
     # `curvefit.utils.smoothing.df_to_mat`
     ## Convert columns in data frame to matrix

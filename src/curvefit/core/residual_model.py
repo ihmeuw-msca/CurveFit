@@ -9,7 +9,7 @@ class _ResidualModel:
     """
     {begin_markdown _ResidualModel}
 
-    {spell_markdown subclassed}
+    {spell_markdown subclassed covs}
 
     # `curvefit.core.residual_model._ResidualModel`
     ## A model for describing the out of sample residuals
