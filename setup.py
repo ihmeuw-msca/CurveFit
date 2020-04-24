@@ -16,7 +16,8 @@ setup(
         'pytest',
         'matplotlib',
         'xspline',
-        'scikit-learn'
+        'scikit-learn',
+        'pydantic'
     ],
     zip_safe=False,
 )

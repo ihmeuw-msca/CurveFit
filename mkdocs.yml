@@ -14,6 +14,7 @@ nav:
       - data:
           - Data: 'extract_md/Data.md'
       - parameter:
+        - Variable: 'extract_md/Variable.md'
         - Parameter: 'extract_md/Parameter.md'
         - ParameterSet: 'extract_md/ParameterSet.md'
       - residual models:

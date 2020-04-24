@@ -1,227 +1,235 @@
-import numpy as np
+from dataclasses import fields, field, InitVar
+from pydantic.dataclasses import dataclass
+from typing import List, Callable, Tuple
+
+import numpy as np 
 
 
-class Parameter:
+@dataclass
+class Variable:
     """
-    {begin_markdown Parameter}
+    {begin_markdown Variable}
 
-    {spell_markdown metadata param init gprior}
+    {spell_markdown init gprior}
 
-    # `curvefit.core.parameter.Parameter`
-    ## Parameter metadata including priors, bounds, and initial values
+    # `curvefit.core.parameter.Variable`
+    ## A variable to be estimated during the fit
 
-    Contains all information for a particular parameter to be used
-    in a functional form for curve fitting. This class will be passed
-    to CoreModel.fit() and ModelProcess.fit(). Most use-cases will only
-    have one fixed effect (covariate) per parameter. For a general use
-    this class allows for any number of fixed effects for one parameter
-    and is determined by what is passed in for the `covariates` argument.
-    Parameter- versus fixed effect-specific arguments are highlighted
-    [arguments](#arguments) below.
+    A `Variable` is the most detailed unit to be estimated for curve fitting. A `Variable` corresponds
+    to an effect on a parameter -- and can contain a combination of both a fixed effect and random effects.
+    A `Variable` needs a `"covariate"`, but the covariate in the data can be just a column of 1's, in which
+    case a `Variable` is equivalent to a [`Parameter`](Parameter.md). If instead the values of
+    the `"covariate"` argument differ for different rows of the data, `Variable` multiplies the covariate
+    to get the `Parameter` for that data row.
 
-    ## Syntax
-    ```python
-    parameter = Parameter(
-        param_name, link_fun, var_link_fun, covariates,
-        fe_init, re_init, fe_gprior, re_gprior, fe_bounds, re_bounds
-    )
-    ```
+    A `curvefit` model is made up of multiple parameters. For more information, see
+    [`Parameter`](Parameter.md) and [`ParameterSet`](ParameterSet.md).
 
     ## Arguments
-    Parameter-specific arguments are denoted with (*), in contrast to
-    fixed effect-specific arguments (e.g. having multiple covariates).
 
-    - (*) `param_name (str)`: name of parameter, e.g. 'alpha'
-    - (*) `link_fun (callable)`: the link function for the parameter
-    - `covariates (str)`: list of covariate names to be applied to the parameter
-    - `var_link_fun (List[callable])`: list of link functions for each
-        fixed effect
-    - `fe_init (List[float])`: list of the initial values for the fixed effects
-        to be used in the optimization
-    - (*) `re_init (List[float])`: list of the initial values for the random effects
-        to be used in the optimization
-    - `fe_gprior (optional, List[List[float]])`: list of lists of Gaussian priors
-        for each fixed effect on the parameter where the inner list
-        has two elements, one for the mean and one for the standard deviation
-    - (*) `re_gprior (optional, List[List[float]])`: list of lists of Gaussian priors
-        for each random effect on fixed effect where the inner list
-        has two-elements list of mean and standard deviation for the random effects
-    - `fe_bounds (optional, List[List[float]])`: list of lists of box constraints
-        for the fixed effects during the optimization where the inner
-        list has two elements: lower and upper constraint
-    - (*) `re_bounds (optional, List[List[float]])`: list of lists of box constraints
-        for the random effects during the optimization where the inner
-        list has two elements: lower and upper constraint
-
-    ## Attributes
-
-    - `self.num_fe (int)`: number of fixed effects
+    - `covariate (str)`: name of the covariate for this variable (corresponds to what it will be in the data
+        that is eventually used to fit the model)
+    - `var_link_fun (Callable)`: link function for the variable
+    - `fe_init (float)`: initial value to be used in the optimization for the fixed effect
+    - `re_init (float)`: initial value to be used in the optimization for the random effect
+    - `fe_gprior (optional, List[float])`: list of Gaussian priors
+        the fixed effect where the first element is the prior
+        mean and the second element is the prior standard deviation
+    - `re_gprior (optional, List[float])`: list of Gaussian priors
+        the random effect where the first element is the prior
+        mean and the second element is the prior standard deviation
+    - `fe_bounds (optional, List[float])`: list of box constraints
+        for the fixed effects during the optimization where the first element is the lower bound
+        and the second element is the upper bound
+    - `re_bounds (optional, List[float])`: list of box constraints
+        for the fixed effects during the optimization where the first element is the lower bound
+        and the second element is the upper bound
 
     ## Usage
 
     ```python
-    parameter = Parameter(
-        param_name='alpha', link_fun=lambda x: x,
-        var_link_fun=[lambda x: x, lambda x: x],
-        covariates=['covariate1', 'covariate2'],
-        fe_gprior=[[0.0, 0.01], [0.0, 0.1]],
-        re_gprior=[[0.0, 1e-4], [0.0, 1e-4]],
-        fe_init=[2., 1.],
-        re_init=[0., 0.]
-    )
+    from curvefit.core.parameter import Variable
+
+    var = Variable(covariate='ones', var_link_fun=lambda x: x, fe_init=0., re_init=0.)
+    ```
+
+    {end_markdown Variable}
+    """
+
+    covariate: str 
+    var_link_fun: Callable
+    fe_init: float
+    re_init: float
+    fe_gprior: List[float] = field(default_factory=lambda: [0.0, np.inf])
+    re_gprior: List[float] = field(default_factory=lambda: [0.0, np.inf])
+    fe_bounds: List[float] = field(default_factory=lambda: [-np.inf, np.inf])
+    re_bounds: List[float] = field(default_factory=lambda: [-np.inf, np.inf]) 
+
+    def __post_init__(self):
+        assert isinstance(self.covariate, str)
+        assert len(self.fe_gprior) == 2
+        assert len(self.re_gprior) == 2
+        assert len(self.fe_bounds) == 2
+        assert len(self.re_bounds) == 2
+        assert self.fe_gprior[1] > 0.0
+        assert self.re_gprior[1] > 0.0
+
+
+@dataclass
+class Parameter:
+    """
+    {begin_markdown Parameter}
+
+    {spell_markdown param init}
+
+    # `curvefit.core.parameter.Parameter`
+    ## A parameter for the functional form of the curve
+
+    A `Parameter` is a parameter of the functional form for the curve. For example, if the parametric curve you want
+    to fit has three parameters then you need 3 `Parameter` objects. A `Parameter` is made up of one or more
+    [`Variable`](Variable.md) objects, which represent the fixed and random effects. Parameters may have
+    link functions that transform the parameter into some other
+     space to enforce, for example, positivity of the parameter (e.g. the parameter representing the scale of a
+     Gaussian distribution can't be negative).
+
+    ## Arguments
+
+    - `param_name (str)`: name of parameter, e.g. 'alpha'
+    - `link_fun (Callable)`: the link function for the parameter
+    - `variables (List[curvefit.core.parameter.Variable])`: a list of `Variable` instances
+
+    ## Attributes
+
+    All attributes from the `Variable`s in the list in the `variables` argument are carried over to
+    `Parameter` but they are put into a list. For example, the `fe_init` attribute for `Parameter` is a list of
+    `fe_init` attributes for each `Variable` in the order that they were passed in `variables` list.
+
+    *Additional* attributes that are not lists of the individual `Variable` attributes are listed below.
+
+    - `self.num_fe (int)`: total number of effects for the parameter (number of variables)
+
+    ## Usage
+
+    ```python
+    from curvefit.core.parameter import Parameter, Variable
+
+    var = Variable(covariate='ones', var_link_fun=lambda x: x, fe_init=0., re_init=0.)
+    param = Parameter(param_name='alpha', link_fun=lambda x: x, variables=[var])
     ```
 
     {end_markdown Parameter}
     """
 
-    def __init__(self, param_name, link_fun, covariates,
-                 var_link_fun, fe_init, re_init,
-                 fe_gprior=None, re_gprior=None, fe_bounds=None, re_bounds=None):
+    param_name: str
+    link_fun: Callable
+    variables: InitVar[List[Variable]]
 
-        self.param_name = param_name
-        self.link_fun = link_fun
-        self.covariates = covariates
-        self.var_link_fun = var_link_fun
+    num_fe: int = field(init=False)
+    covariate: List[str] = field(init=False)
+    var_link_fun: List[Callable] = field(init=False)
+    fe_init: List[float] = field(init=False)
+    re_init: List[float] = field(init=False)
+    fe_gprior: List[List[float]] = field(init=False)
+    re_gprior: List[List[float]] = field(init=False)
+    fe_bounds: List[List[float]] = field(init=False)
+    re_bounds: List[List[float]] = field(init=False)
 
-        self.fe_init = fe_init
-        self.re_init = re_init
-
-        self.num_fe = len(self.covariates)
-
-        self.fe_gprior = fe_gprior
-        self.re_gprior = re_gprior
-        self.fe_bounds = fe_bounds
-        self.re_bounds = re_bounds
-
-        if self.fe_gprior is None:
-            self.fe_gprior = [[0., np.inf]] * self.num_fe
-        if self.re_gprior is None:
-            self.re_gprior = [[0., np.inf]] * self.num_fe
-        if self.fe_bounds is None:
-            self.fe_bounds = [[-np.inf, np.inf]] * self.num_fe
-        if self.re_bounds is None:
-            self.re_bounds = [[-np.inf, np.inf]] * self.num_fe
-
-        assert type(self.param_name) == str
-        assert callable(self.link_fun)
-
-        assert len(self.var_link_fun) == self.num_fe
-        assert len(self.fe_gprior) == self.num_fe
-        assert len(self.fe_bounds) == self.num_fe
-        assert len(self.fe_init) == self.num_fe
-
-        for i in range(self.num_fe):
-
-            assert callable(self.var_link_fun[i])
-
-            assert len(self.fe_bounds[i]) == 2
-            for j in self.fe_bounds[i]:
-                assert type(j) == float
-
-            assert len(self.re_bounds[i]) == 2
-            for j in self.re_bounds[i]:
-                assert type(j) == float
-
-            assert len(self.fe_gprior[i]) == 2
-            assert type(self.fe_gprior[i][0]) == float
-            assert type(self.fe_gprior[i][1]) == float
-            assert self.fe_gprior[i][1] > 0.
-
-            assert len(self.re_gprior[i]) == 2
-            assert type(self.re_gprior[i][0]) == float
-            assert type(self.re_gprior[i][1]) == float
-            assert self.re_gprior[i][1] > 0.
-
-            assert type(self.fe_init[i]) == float
-            assert type(self.re_init[i]) == float
+    def __post_init__(self, variables):
+        assert isinstance(variables, list)
+        assert len(variables) > 0
+        assert isinstance(variables[0], Variable)
+        self.num_fe = len(variables)
+        for k, v in consolidate(Variable, variables).items():
+            self.__setattr__(k, v)
 
 
+@dataclass
 class ParameterSet:
     """
     {begin_markdown ParameterSet}
 
-    {spell_markdown params param init}
+    {spell_markdown init inits param params}
 
     # `curvefit.core.parameter.ParameterSet`
-    ## Set of Parameters that will be used in a model
+    ## A set of parameters that together specify the functional form of a curve
 
-    Links instances of the Parameter class with one another to include all the parameters
-    that will go into a model. Can also include functional priors based on functions of the parameters.
+    A `ParameterSet` is a set of parameters that define the functional form for the curve.
+    For example, if the parametric curve you want
+    to fit has three parameters then you need 1 `ParameterSet` objects that consists of 3 `Parameter` objects.
 
-    ## Syntax
-    ```python
-    parameter = ParameterSet(
-        parameter_list,
-        parameter_functions,
-        parameter_function_priors
-    )
-    ```
+    A `ParameterSet` is made up of one or more
+    [`Parameter`](Parameter.md) objects, which are each made up of one or more [`Variable`](Variable.md) objects.
+    Please refer to their documentation for more details on those objects.
+
+    A `ParameterSet` can also encode functional priors -- priors for functions of the parameter list that is
+    passed into a `ParameterSet`.
 
     ## Arguments
 
-    - `parameter_list (List[Parameter])`: list of instances of Parameter
-        class
-    - `parameter_functions (optional, List[callable])`: list of functions of the parameter_list
-    - `parameter_function_priors (optional, List[List[float]])`: list of functional priors
-        that matches with `parameter_functions`
+    - `parameters (List[curvefit.core.parameter.Parameter])`: a list of `Parameter` instances
+    - `parameter_functions (List[Tuple[Callable, List[float]]]`: a list of tuples which each contain
+    (0) functions to apply to the `parameters` list and
+    (1) a prior for the parameter function (mean and standard deviation --
+    see [`Variable`](Variable.md#arguments) for more details about priors)
 
     ## Attributes
 
-    - `self.num_fe (int)`: total number of fixed effects across parameters
-    - `self.num_params (int)`: number of parameters
+    All attributes from the `Parameter`s in the list in the `parameters` argument are carried over to
+    `ParameterSet` but they are put into a list. For example, the `fe_init` attribute for `ParameterSet` is a list of
+    the `fe_init` attributes for each `Parameter` in the order that they were passed in `parameters` list (which
+    are lists of `fe_inits` for each `Variable` within a `Parameter` (see [here](Parameter.md#attributes) for more).
+
+    *Additional* attributes that are not lists of the individual `Parameter` attributes are listed below.
+
+    - `self.num_fe (int)`: total number of effects for the parameter set (number of variables)
 
     ## Usage
 
     ```python
-    parameter1 = Parameter(
-        param_name='alpha', link_fun=lambda x: x,
-        var_link_fun=[lambda x: x], covariates=['covariate1'],
-        fe_init=[0.], re_init=[0.]
-    )
-    parameter2 = Parameter(
-        param_name='beta', link_fun=lambda x: x,
-        var_link_fun=[lambda x: x], covariates=['covariate2'],
-        fe_init=[0.], re_init=[0.]
-    )
-    parameter = ParameterSet(
-        parameter_list=[parameter1, parameter2],
-        parameter_functions=[lambda params: params[0] * params[1]],
-        parameter_function_priors=[[0.0, np.inf]]
-    )
+    from curvefit.core.parameter import Parameter, Variable, ParameterSet
+
+    var = Variable(covariate='ones', var_link_fun=lambda x: x, fe_init=0., re_init=0.)
+    param = Parameter(param_name='alpha', link_fun=lambda x: x, variables=[var])
+    param_set = ParameterSet(parameters=[param], parameter_functions=[(lambda params: params[0] ** 2, [0., np.inf)])
     ```
 
     {end_markdown ParameterSet}
     """
-    def __init__(self, parameter_list, parameter_functions=None, parameter_function_priors=None):
 
-        self.parameter_list = parameter_list
-        self.parameter_functions = parameter_functions
-        self.parameter_function_priors = parameter_function_priors
+    parameters: InitVar[List[Parameter]]
+    parameter_functions: List[Tuple[Callable, List[float]]] = None
 
-        assert type(self.parameter_list) == list
-        for param in self.parameter_list:
-            assert type(param) == Parameter
+    param_name: List[str] = field(init=False)
+    num_fe: int = field(init=False)
+    link_fun: List[Callable] = field(init=False)
+    covariate: List[List[str]] = field(init=False)
+    var_link_fun: List[List[Callable]] = field(init=False)
+    fe_init: List[List[float]] = field(init=False)
+    re_init: List[List[float]] = field(init=False)
+    fe_gprior: List[List[List[float]]] = field(init=False)
+    re_gprior: List[List[List[float]]] = field(init=False)
+    fe_bounds: List[List[List[float]]] = field(init=False)
+    re_bounds: List[List[List[float]]] = field(init=False)
 
-        self.num_params = len(self.parameter_list)
+    def __post_init__(self, parameters):
+        if self.parameter_functions is not None:
+            for fun in self.parameter_functions:
+                assert len(fun[1]) == 2
+                assert isinstance(fun[0], Callable)
+
+        for k, v in consolidate(Parameter, parameters, exclude=['num_fe']).items():
+            self.__setattr__(k, v)
+
         self.num_fe = 0
-        for param in self.parameter_list:
+        for param in parameters:
             self.num_fe += param.num_fe
 
-        if self.parameter_functions is None and self.parameter_function_priors is not None:
-            raise RuntimeError("Can't use a functional prior without providing the function.")
 
-        if self.parameter_functions is not None:
-
-            assert type(self.parameter_functions) == list
-            for param_func in self.parameter_functions:
-                assert callable(param_func)
-
-            if self.parameter_function_priors is None:
-                self.parameter_function_priors = [[0., np.inf]] * len(self.parameter_functions)
-
-            assert len(self.parameter_function_priors) == len(self.parameter_functions)
-            for param_func_prior in self.parameter_function_priors:
-                assert len(param_func_prior) == 2
-                assert type(param_func_prior[0]) == float
-                assert type(param_func_prior[1]) == float
-                assert param_func_prior[1] > 0.
+def consolidate(cls, instance_list, exclude=None):
+    if exclude is None:
+        exclude = []
+    consolidated = {}
+    for f in fields(cls):
+        if f.name not in exclude:
+            consolidated[f.name] = [instance.__getattribute__(f.name) for instance in instance_list]
+    return consolidated
