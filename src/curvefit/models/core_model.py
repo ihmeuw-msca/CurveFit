@@ -71,15 +71,22 @@ class DataNotFoundError(Exception):
 class CoreModel:
     """
     {begin_markdown Model}
+
     {spell_markdown param}
+
     # `curvefit.core.core_model.Model`
     ## Base class for a curvefit model
+
     Add description here.
+
     ## Arguments
+
     - `param_set (curvefit.core.parameter.ParameterSet)`
     - `curve_fun (Callable)`: function from `curvefit.core.functions` for the parametric function to fit
     - `loss_fun (Callable)`: function from `curvefit.core.functions` for the loss function
+
     ## Attributes
+    
     ## Methods
 
     {end_markdown Model}
