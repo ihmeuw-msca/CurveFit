@@ -3,7 +3,9 @@ from operator import iconcat
 from dataclasses import dataclass
 from typing import List, Callable, Tuple
 import numpy as np
+
 from curvefit.core.objective_fun import objective_fun
+from curvefit.core.effects2params import effects2params
 
 
 @dataclass(frozen=True)
@@ -171,6 +173,16 @@ class Model:
             re_gprior=self.data_inputs.re_gprior,
             param_gprior=self.data_inputs.param_gprior_info,
         ) 
+
+    def forward(self, x, t):
+        params = effects2params(
+            x, 
+            self.data_inputs.group_sizes, 
+            self.data_inputs.covariates_matrices,
+            self.param_set.link_fun,
+            self.data_inputs.var_link_fun,
+        )
+        return self.curve_fun(t, params)
 
     @property
     def bounds(self):
