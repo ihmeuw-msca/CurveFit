@@ -60,39 +60,26 @@ class DataInputs:
 
 class Model:
     """
-    {begin_markdown DataInputs}
+    {begin_markdown Model}
 
-    {spell_markdown ndarray gprior param}
+    {spell_markdown param}
 
-    # `curvefit.core.core_model.DataInputs`
-    ## Provides the required data inputs for a `curvefit.core.core_model.Model`
+    # `curvefit.core.core_model.Model`
+    ## Base class for a curvefit model
 
-    The `DataInputs` class holds all of the inputs that are needed for fitting
-    a core model. It is only used in the `Model.convert_inputs()` method (
-    see [here](Model.md). The purpose is to extract only the required elements
-    of a `Data` class that are needed for model fitting in order to reduce the memory
-    usage, but also keep key information for model debugging.
+    Add description here.
 
     ## Arguments
 
-    - `t (np.ndarray)`: the time variable (or independent variable) in the curve
-        fitting
-    - `obs (np.ndarray)`: the observation variable (or dependent variable) in the
-        curve fitting
-    - `obs_se (np.ndarray)`: the observation standard error to attach to the observations
-    - `covariates_matrices (List[np.ndarray])`: list of covariate matrices for each parameter
-        (in many cases these covariate matrices will just be one column of ones)
-    - `group_sizes (List[int])`: size of the groups
-    - `link_fun (List[Callable])`: list of link functions for the parameters
-    - `var_link_fun (List[Callable])`: list of variable link functions for the variables
-    - `fe_gprior (np.ndarray)`: array of fixed effects Gaussian priors for the variables
-    - `re_gprior (np.ndarray)`: array of random effects Gaussian priors for the variables
-    - `param_gprior_info (Tuple[Callable, List[float], List[float]])`: tuple of
-        information about the parameter functional Gaussian priors;
-        first element is a composite function of all of the parameter functional priors;
-        second element is a list of means; third element is a list of standard deviations
+    - `param_set (curvefit.core.parameter.ParameterSet)`
+    - `curve_fun (Callable)`: function from `curvefit.core.functions` for the parametric function to fit
+    - `loss_fun (Callable)`: function from `curvefit.core.functions` for the loss function
 
-    {end_markdown DataInputs}
+    ## Attributes
+
+    ## Methods
+
+    {end_markdown Model}
     """
     def __init__(self, param_set, curve_fun, loss_fun):
 
@@ -192,4 +179,4 @@ class Model:
         re_bounds = np.array(reduce(iconcat, self.param_set.re_bounds, []))
         re_bounds = np.repeat(re_bounds[None, :, :], self.data_inputs.num_groups, axis=0)
 
-        return np.vstack([fe_bounds, re_bounds.reshape(self.param_set.num_fe * self.data_inputs.num_groups , 2)])
+        return np.vstack([fe_bounds, re_bounds.reshape(self.param_set.num_fe * self.data_inputs.num_groups, 2)])

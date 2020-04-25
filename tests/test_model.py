@@ -62,7 +62,7 @@ def test_loss_fun(test_data, param_names,
 @pytest.mark.parametrize('link_fun', [[np.exp, lambda x: x, np.exp]])
 @pytest.mark.parametrize('var_link_fun', [[lambda x: x]*3])
 @pytest.mark.parametrize('loss_fun', [normal_loss])
-def test_defualt_obs_se(test_data, param_names,
+def test_default_obs_se(test_data, param_names,
                         fun, link_fun, var_link_fun, loss_fun):
     model = CurveModel(test_data, 't', 'obs',
                        [['intercept']]*3,
