@@ -16,7 +16,7 @@ n_total = n_A + n_B + n_C
 @pytest.fixture
 def data():
     df = pd.DataFrame({
-        't': np.arange(n_total),
+        't': np.concatenate((np.arange(n_B), np.arange(n_A), np.arange(n_C))),
         'obs': np.random.rand(n_total),
         'group': ['B'] * n_B + ['A'] * n_A + ['C'] * n_C,
         'intercept': np.ones(n_total),
@@ -65,3 +65,5 @@ def test_core_model(data, param_set, curve_fun, loss_fun):
     ub = [b[1] for b in model.bounds]
     assert ub[:4] == [np.inf] * 4
     assert ub[4:] == [1.0, 2.0, 3.0, 3.0] * 3
+
+    model.forward(x0, np.arange(10, 16))

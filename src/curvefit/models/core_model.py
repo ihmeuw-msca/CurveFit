@@ -182,7 +182,7 @@ class Model:
             self.param_set.link_fun,
             self.data_inputs.var_link_fun,
         )
-        return self.curve_fun(t, params)
+        return self.curve_fun(t, params[:, 0])
 
     @property
     def bounds(self):
