@@ -3,7 +3,7 @@ from typing import List
 
 from curvefit.utils.data import data_translator
 
-@dataclass
+@dataclass(frozen=True)
 class DataSpecs:
     col_t: str
     col_obs: str
