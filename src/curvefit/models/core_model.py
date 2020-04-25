@@ -137,7 +137,7 @@ class CoreModel:
         if predict_fun is None:
             predict_fun = self.curve_fun 
         
-        return self.curve_fun(t, params[:, 0])
+        return predict_fun(t, params[:, 0])
 
     @property
     def bounds(self):
