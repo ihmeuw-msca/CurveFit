@@ -6,7 +6,7 @@ import numpy as np
 from curvefit.core.objective_fun import objective_fun
 
 
-@dataclass
+@dataclass(frozen=True)
 class DataInputs:
     """
     {begin_markdown DataInputs}
@@ -82,7 +82,7 @@ class Model:
         for covs in self.param_set.covariate:
             covs_mat.append(df[covs].to_numpy())
 
-        group_names = np.sort(df[data_specs.col_group].unique())
+        group_names = df[data_specs.col_group].unique()
         group_sizes_dict = { 
             name: np.sum(df[data_specs.col_group].values == name) 
             for name in group_names
