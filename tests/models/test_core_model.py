@@ -50,8 +50,10 @@ def param_set():
 @pytest.mark.parametrize('loss_fun', [normal_loss, st_loss])
 def test_core_model_run(data, param_set, curve_fun, loss_fun):
     model = CoreModel(param_set, curve_fun, loss_fun)
-    x0 = np.array([0.0] * param_set.num_fe * 4)
+    num_fe = param_set.num_fe 
+    x0 = np.array([0.0] * num_fe * 4)
     model.objective(x0, data)
+    num_groups = model.data_inputs.num_groups
     
     covs_mat = model.data_inputs.covariates_matrices
     assert covs_mat[0].shape[1] == 1
@@ -59,16 +61,16 @@ def test_core_model_run(data, param_set, curve_fun, loss_fun):
     assert covs_mat[2].shape[1] == 2
 
     assert model.data_inputs.group_sizes == [n_B, n_A, n_C]
-    assert len(model.data_inputs.var_link_fun) == 4
+    assert len(model.data_inputs.var_link_fun) == num_fe
 
-    assert model.bounds.shape == (4 * (3 + 1), 2)
+    assert model.bounds.shape == (num_fe * (num_groups + 1), 2)
     ub = [b[1] for b in model.bounds]
-    assert ub[:4] == [np.inf] * 4
-    assert np.linalg.norm(np.array(ub[4:]) - np.array([1.0, 2.0, 3.0, 3.0] * 3)) < 1e-10
+    assert ub[:4] == [np.inf] * param_set.num_fe
+    assert np.linalg.norm(np.array(ub[4:]) - np.array([1.0, 2.0, 3.0, 3.0] * num_groups)) < 1e-10
 
-    assert len(model.x_init) == 4 * (3 + 1)
+    assert len(model.x_init) == num_fe * (num_groups + 1)
     assert np.linalg.norm(model.x_init[:4] - np.array([0.0, 0.1, 0.2, 0.2])) < 1e-10
-    assert np.linalg.norm(model.x_init[4:] - [0.3, 0.4, 0.5, 0.5] * 3) < 1e-10
+    assert np.linalg.norm(model.x_init[4:] - [0.3, 0.4, 0.5, 0.5] * num_groups) < 1e-10
 
     model.gradient(x0, data)
     model.forward(x0, np.arange(10, 16))
