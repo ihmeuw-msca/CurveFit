@@ -31,9 +31,6 @@ class Base:
 
     def fit(self, data, x_init=None, options=None):
         raise NotImplementedError()
-    
-    def predict(self, data):
-        return self.model.forward(self.x_opt, data)
 
 
 class ScipyOpt(Base):

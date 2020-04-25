@@ -73,7 +73,7 @@ def test_core_model_run(data, param_set, curve_fun, loss_fun):
     assert np.linalg.norm(model.x_init[4:] - [0.3, 0.4, 0.5, 0.5] * num_groups) < 1e-10
 
     model.gradient(x0, data)
-    model.forward(x0, np.arange(10, 16))
+    model.predict(x0, np.arange(10, 16))
 
     data_inputs = model.detach_data()
     data_inputs.bounds[0][0] = -2.0

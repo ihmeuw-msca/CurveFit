@@ -126,7 +126,7 @@ class CoreModel:
 
         return grad
 
-    def forward(self, x, t):
+    def predict(self, x, t, predict_fun=None):
         params = effects2params(
             x,
             self.data_inputs.group_sizes,
@@ -134,6 +134,9 @@ class CoreModel:
             self.param_set.link_fun,
             self.data_inputs.var_link_fun,
         )
+        if predict_fun is None:
+            predict_fun = self.curve_fun 
+        
         return self.curve_fun(t, params[:, 0])
 
     @property
