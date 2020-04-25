@@ -32,6 +32,7 @@ class DataInputs:
     - `covariates_matrices (List[np.ndarray])`: list of covariate matrices for each parameter
         (in many cases these covariate matrices will just be one column of ones)
     - `group_sizes (List[int])`: size of the groups
+    - `num_groups (int)`: number of groups
     - `link_fun (List[Callable])`: list of link functions for the parameters
     - `var_link_fun (List[Callable])`: list of variable link functions for the variables
     - `fe_gprior (np.ndarray)`: array of fixed effects Gaussian priors for the variables
@@ -49,6 +50,7 @@ class DataInputs:
     obs_se: np.ndarray
     covariates_matrices: List[np.ndarray]
     group_sizes: List[int]
+    num_groups: int
     link_fun: List[Callable]
     var_link_fun: List[Callable]
     fe_gprior: np.ndarray
@@ -80,7 +82,13 @@ class Model:
         for covs in self.param_set.covariate:
             covs_mat.append(df[covs].to_numpy())
 
-        group_sizes = [df.shape[0]]
+        group_names = np.sort(df[data_specs.col_group].unique())
+        group_sizes_dict = { 
+            name: np.sum(df[data_specs.col_group].values == name) 
+            for name in group_names
+        }
+        group_sizes = list(group_sizes_dict.values())
+        num_groups = len(group_names)
 
         var_link_fun = reduce(iconcat, self.param_set.var_link_fun, [])
 
@@ -90,23 +98,25 @@ class Model:
         re_gprior = []
         for priors in self.param_set.re_gprior:
             for prior in priors:
-                re_gprior.append([prior])
+                re_gprior.append([prior] * num_groups)
         re_gprior = np.array(re_gprior)
-        assert re_gprior.shape == (self.param_set.num_fe, 1, 2)
+        assert re_gprior.shape == (self.param_set.num_fe, num_groups, 2)
 
-        param_gprior = [[], [], []]
+        param_gprior_funs = []
+        param_gprior_means = []
+        param_gprior_stds = []
         if self.param_set.parameter_functions is not None:
-            for fun in self.param_set.parameter_functions:
-                param_gprior[0].append(fun[0])
-                param_gprior[1].append(fun[1][0])
-                param_gprior[2].append(fun[1][1])
+            for fun_prior in self.param_set.parameter_functions:
+                param_gprior_funs.append(fun_prior[0])
+                param_gprior_means.append(fun_prior[1][0])
+                param_gprior_stds.append(fun_prior[1][1])
 
             def param_gprior_fun(p):
-                return [f(p) for f in param_gprior[0]]
+                return [f(p) for f in param_gprior_funs[0]]
 
-            param_fun = (param_gprior_fun, param_gprior[1], param_gprior[2])
+            param_gprior_info = (param_gprior_fun, param_gprior_means, param_gprior_stds)
         else:
-            param_fun = None
+            param_gprior_info = None
 
         self.data_inputs = DataInputs(
             t=t,
@@ -114,11 +124,12 @@ class Model:
             obs_se=obs_se,
             covariates_matrices=covs_mat,
             group_sizes=group_sizes,
+            num_groups=num_groups,
             link_fun=self.param_set.link_fun,
             var_link_fun=var_link_fun,
             fe_gprior=fe_gprior,
             re_gprior=re_gprior,
-            param_gprior_info=param_fun,
+            param_gprior_info=param_gprior_info,
         )
 
     def objective(self, x, data):
@@ -142,13 +153,9 @@ class Model:
 
     @property
     def bounds(self):
-        all_bounds = []
 
         fe_bounds = np.array(reduce(iconcat, self.param_set.fe_bounds, []))
         re_bounds = np.array(reduce(iconcat, self.param_set.re_bounds, []))
+        re_bounds = np.repeat(re_bounds[None, :, :], self.data_inputs.num_groups, axis=0)
 
-        for fb, rb in zip(fe_bounds, re_bounds):
-            all_bounds.append(fb)
-            all_bounds.append(rb)
-
-        return np.array(all_bounds)
+        return np.vstack([fe_bounds, re_bounds.reshape(self.param_set.num_fe * self.data_inputs.num_groups , 2)])
