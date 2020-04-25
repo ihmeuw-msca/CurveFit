@@ -10,10 +10,12 @@ nav:
     - random_effect_xam: 'extract_md/random_effect_xam.md'
     - param_time_fun_xam: 'extract_md/param_time_fun_xam.md'
   - Developer Doc:
+    - Loss Functions:
+      - st_loss: 'extract_md/st_loss.md'
+      - normal_loss: 'extract_md/normal_loss.md'
+      - loss_xam:    'extract_md/loss_xam.md'
     - unzip_x: 'extract_md/unzip_x.md'
     - sizes_to_indices: 'extract_md/sizes_to_indices.md'
-    - st_loss: 'extract_md/st_loss.md'
-    - normal_loss: 'extract_md/normal_loss.md'
     - split_by_group: 'extract_md/split_by_group.md'
     - param_time_fun: 'extract_md/param_time_fun.md'
     - effects2params: 'extract_md/effects2params.md'
@@ -23,7 +25,6 @@ nav:
     - Developer Examples:
       - unzip_x_xam: 'extract_md/unzip_x_xam.md'
       - sizes_to_indices_xam: 'extract_md/sizes_to_indices_xam.md'
-      - loss_xam: 'extract_md/loss_xam.md'
       - effects2params_xam: 'extract_md/effects2params_xam.md'
       - objective_fun_xam: 'extract_md/objective_fun_xam.md'
 theme:
