@@ -45,7 +45,7 @@ class ScipyOpt(Base):
         result = sciopt.minimize(
             fun=lambda x: self.model.objective(x, data), 
             x0=x_init, 
-            jac=self.model.gradient,
+            jac=lambda x: self.model.gradient(x, data),
             bounds=self.model.bounds,
             options=options,
         )
@@ -87,17 +87,19 @@ class MultipleInitializations(Composite):
     def __init__(self, num_init, sample_fun):
         super().__init__()
         self.num_init = num_init
-        self.sample_fun = sample_fun
+        self.sample_fun = lambda x: sample_fun(x, self.num_init)
 
     def fit(self, data, x_init=None, options=None):
         if self.is_solver_defined():
+            if x_init is None:
+                x_init = self.get_model_instance().x_init        
             fun_vals = []
             xs_opt = []
-            xs_init = self.sample_fun(self.num_init)
+            xs_init = self.sample_fun(x_init)
             for i in range(self.num_init):
                 self.solver.fit(data, xs_init[i], options=options)
                 fun_vals.append(self.solver.fun_val_opt)
                 xs_opt.append(self.solver.x_opt)
             
             self.x_opt = xs_opt[np.argmin(fun_vals)]
-            self.fun_val = np.min(fun_vals)
+            self.fun_val_opt = np.min(fun_vals)

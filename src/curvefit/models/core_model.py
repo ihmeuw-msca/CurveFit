@@ -3,7 +3,6 @@ from operator import iconcat
 from dataclasses import dataclass
 from typing import List, Callable, Tuple
 import numpy as np
-from scipy.optimize import rosen, rosen_der
 
 from curvefit.core.objective_fun import objective_fun
 from curvefit.core.effects2params import effects2params
@@ -61,31 +60,11 @@ class DataInputs:
     param_gprior_info: Tuple[Callable, List[float], List[float]] = None
 
 
-class Model:
-    """
-    {begin_markdown Model}
-
-    {spell_markdown param}
-
-    # `curvefit.core.core_model.Model`
-    ## Base class for a curvefit model
-
-    Add description here.
-
-    ## Arguments
-
-    - `param_set (curvefit.core.parameter.ParameterSet)`
-    - `curve_fun (Callable)`: function from `curvefit.core.functions` for the parametric function to fit
-    - `loss_fun (Callable)`: function from `curvefit.core.functions` for the loss function
-
-    ## Attributes
-
-    ## Methods
+class CoreModel:
 
     {end_markdown Model}
     """
     def __init__(self, param_set, curve_fun, loss_fun):
-        super().__init__()
 
         self.param_set = param_set
         self.curve_fun = curve_fun

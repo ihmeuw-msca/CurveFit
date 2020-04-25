@@ -30,9 +30,9 @@ def data():
 
 @pytest.fixture
 def param_set():
-    variable1 = Variable('intercept', lambda x:x, 0.0, 0.0, re_bounds=[0.0, 1.0])
-    variable2 = Variable('intercept', lambda x:x, 0.0, 0.0, re_bounds=[0.0, 2.0])
-    variable3 = Variable('intercept', lambda x:x, 0.0, 0.0, re_bounds=[0.0, 3.0])
+    variable1 = Variable('intercept', lambda x:x, 0.0, 0.3, re_bounds=[0.0, 1.0])
+    variable2 = Variable('intercept', lambda x:x, 0.1, 0.4, re_bounds=[0.0, 2.0])
+    variable3 = Variable('intercept', lambda x:x, 0.2, 0.5, re_bounds=[0.0, 3.0])
     parameter1 = Parameter('p1', np.exp, [variable1])
     parameter2 = Parameter('p2', np.exp, [variable2])
     parameter3 = Parameter('p2', np.exp, [variable3] * 2)
@@ -64,7 +64,11 @@ def test_core_model_run(data, param_set, curve_fun, loss_fun):
     assert model.bounds.shape == (4 * (3 + 1), 2)
     ub = [b[1] for b in model.bounds]
     assert ub[:4] == [np.inf] * 4
-    assert ub[4:] == [1.0, 2.0, 3.0, 3.0] * 3
+    assert np.linalg.norm(np.array(ub[4:]) - np.array([1.0, 2.0, 3.0, 3.0] * 3)) < 1e-10
+
+    assert len(model.x_init) == 4 * (3 + 1)
+    assert np.linalg.norm(model.x_init[:4] - np.array([0.0, 0.1, 0.2, 0.2])) < 1e-10
+    assert np.linalg.norm(model.x_init[4:] - [0.3, 0.4, 0.5, 0.5] * 3) < 1e-10
 
     model.gradient(x0, data)
     model.forward(x0, np.arange(10, 16))
