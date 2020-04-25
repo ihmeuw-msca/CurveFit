@@ -3,6 +3,7 @@ from operator import iconcat
 from dataclasses import dataclass
 from typing import List, Callable, Tuple
 import numpy as np
+from scipy.optimize import rosen, rosen_der
 
 from curvefit.core.objective_fun import objective_fun
 from curvefit.core.effects2params import effects2params
@@ -48,7 +49,7 @@ class DataInputs:
     """
 
     t: np.ndarray
-    obs: np.ndarray 
+    obs: np.ndarray
     obs_se: np.ndarray
     covariates_matrices: List[np.ndarray]
     group_sizes: List[int]
@@ -84,6 +85,7 @@ class Model:
     {end_markdown Model}
     """
     def __init__(self, param_set, curve_fun, loss_fun):
+        super().__init__()
 
         self.param_set = param_set
         self.curve_fun = curve_fun
@@ -106,8 +108,8 @@ class Model:
             covs_mat.append(df[covs].to_numpy())
 
         group_names = df[data_specs.col_group].unique()
-        group_sizes_dict = { 
-            name: np.sum(df[data_specs.col_group].values == name) 
+        group_sizes_dict = {
+            name: np.sum(df[data_specs.col_group].values == name)
             for name in group_names
         }
         group_sizes = list(group_sizes_dict.values())
@@ -172,9 +174,10 @@ class Model:
             fe_gprior=self.data_inputs.fe_gprior,
             re_gprior=self.data_inputs.re_gprior,
             param_gprior=self.data_inputs.param_gprior_info,
-        ) 
+        )
 
-    def gradient(self, x, data, eps=1e-16):
+    def gradient(self, x, data):
+        eps = 1e-16
         if self.data_inputs is None:
             self.convert_inputs(data)
         finfo = np.finfo(float)
@@ -190,8 +193,8 @@ class Model:
 
     def forward(self, x, t):
         params = effects2params(
-            x, 
-            self.data_inputs.group_sizes, 
+            x,
+            self.data_inputs.group_sizes,
             self.data_inputs.covariates_matrices,
             self.param_set.link_fun,
             self.data_inputs.var_link_fun,

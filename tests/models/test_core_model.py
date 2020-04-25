@@ -4,7 +4,7 @@ import pandas as pd
 
 from curvefit.core.data import DataSpecs
 from curvefit.core.functions import normal_loss, st_loss, ln_gaussian_cdf, ln_gaussian_pdf, gaussian_cdf, gaussian_pdf
-from curvefit.models.core_model import Model
+from curvefit.models.core_model import CoreModel
 from curvefit.core.parameter import Variable, Parameter, ParameterSet
 
 
@@ -48,8 +48,8 @@ def param_set():
     gaussian_pdf,
 ])
 @pytest.mark.parametrize('loss_fun', [normal_loss, st_loss])
-def test_core_model(data, param_set, curve_fun, loss_fun):
-    model = Model(param_set, curve_fun, loss_fun)
+def test_core_model_run(data, param_set, curve_fun, loss_fun):
+    model = CoreModel(param_set, curve_fun, loss_fun)
     x0 = np.array([0.0] * param_set.num_fe * 4)
     model.objective(x0, data)
     
@@ -66,4 +66,5 @@ def test_core_model(data, param_set, curve_fun, loss_fun):
     assert ub[:4] == [np.inf] * 4
     assert ub[4:] == [1.0, 2.0, 3.0, 3.0] * 3
 
+    model.gradient(x0, data)
     model.forward(x0, np.arange(10, 16))
