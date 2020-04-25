@@ -1,21 +1,10 @@
 import numpy
 import curvefit
 
-def objective_fun(
-        x,
-        t,
-        obs,
-        obs_se,
-        covs,
-        group_sizes,
-        model_fun,
-        loss_fun,
-        link_fun,
-        var_link_fun,
-        fe_gprior,
-        re_gprior,
-        param_gprior,
-    ) :
+
+def objective_fun(x, t, obs, obs_se, covs, group_sizes,
+                  model_fun, loss_fun, link_fun, var_link_fun,
+                  fe_gprior, re_gprior, param_gprior):
     """
     {begin_markdown objective_fun}
     {spell_markdown covs gprior param params obj}
