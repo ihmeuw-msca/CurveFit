@@ -22,7 +22,7 @@ def test_params() :
     covs            = list()
     for k in range(num_param) :
         covs.append( numpy.ones( (num_obs, 1), dtype = float ) )
-    a_exp           = a_functions.a_exp
+    a_exp           = numpy.exp
     a_link_fun      = [ a_exp, identity_fun, a_exp ]
     a_var_link_fun  = num_param * [ identity_fun ]
     expand          = False

@@ -80,7 +80,7 @@ def test_objective() :
     ax                = cppad_py.independent(x)
     a_model_fun       = a_functions.a_gaussian_cdf
     a_loss_fun        = gaussian_loss
-    a_link_fun        = [ a_functions.a_exp, identity_fun, a_functions.a_exp ]
+    a_link_fun        = [ numpy.exp, identity_fun, numpy.exp ]
     a_var_link_fun    = var_link_fun
     a_param_gprior    = param_gprior
     aobj_val = a_objective_fun.a_objective_fun(

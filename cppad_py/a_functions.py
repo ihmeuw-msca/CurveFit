@@ -28,12 +28,6 @@ def a_erf(vec) :
         result[i] = vec[i].erf()
     return result
 #
-def a_exp(vec) :
-    result = numpy.empty(len(vec), dtype = a_double )
-    for i in range( len(vec) ) :
-        result[i] = vec[i].exp()
-    return result
-#
 def unpack_param(t, param) :
     assert param.shape[0] == 3
     assert t.ndim == 1
@@ -57,7 +51,7 @@ def a_gaussian_cdf(t, param) :
 def a_expit(t, param) :
     alpha, beta, p = unpack_param(t, param)
     z              = alpha * (t - beta)
-    return p / ( a_double(1.0) + a_exp(-z) )
+    return p / ( a_double(1.0) + numpy.exp(-z) )
 #
 def a_ln_expit(t, param) :
     alpha, beta, p = unpack_param(t, param)
@@ -70,7 +64,7 @@ def a_ln_gaussian_cdf(t, param) :
 def a_gaussian_pdf(t, param) :
     alpha, beta, p = unpack_param(t, param)
     z              = alpha * (t - beta)
-    return alpha * p * a_exp( - z * z ) / numpy.sqrt(numpy.pi)
+    return alpha * p * numpy.exp( - z * z ) / numpy.sqrt(numpy.pi)
 #
 def a_ln_gaussian_pdf(t, param) :
     alpha, beta, p = unpack_param(t, param)
