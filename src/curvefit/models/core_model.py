@@ -144,23 +144,6 @@ class CoreModel:
     def x_init(self):
         return self.data_inputs.x_init
 
-    # @property
-    # def bounds(self):
-
-    #     fe_bounds = np.array(reduce(iconcat, self.param_set.fe_bounds, []))
-    #     re_bounds = np.array(reduce(iconcat, self.param_set.re_bounds, []))
-    #     re_bounds = np.repeat(re_bounds[None, :, :], self.data_inputs.num_groups, axis=0)
-
-    #     return np.vstack([fe_bounds, re_bounds.reshape(self.param_set.num_fe * self.data_inputs.num_groups , 2)])
-
-    # @property
-    # def x_init(self):
-    #     fe_init = np.array(reduce(iconcat, self.param_set.fe_init, []))
-    #     re_init = np.array(reduce(iconcat, self.param_set.re_init, []))
-    #     re_init = np.repeat(re_init[None, :], self.data_inputs.num_groups, axis=0).flatten()
-
-    #     return np.concatenate((fe_init, re_init))
-
 
 def convert_inputs(param_set, data):
     if isinstance(data, DataInputs):

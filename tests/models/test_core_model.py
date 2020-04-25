@@ -74,3 +74,8 @@ def test_core_model_run(data, param_set, curve_fun, loss_fun):
 
     model.gradient(x0, data)
     model.forward(x0, np.arange(10, 16))
+
+    data_inputs = model.detach_data()
+    data_inputs.bounds[0][0] = -2.0
+    model.objective(x0, data_inputs)
+    assert model.data_inputs.bounds[0][0] == -2.0
