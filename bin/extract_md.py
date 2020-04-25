@@ -25,6 +25,8 @@ file_list = [
     'src/curvefit/core/residual_model.py',
 
     'src/curvefit/utils/smoothing.py',
+
+    'src/curvefit/models/core_model.py'
 ]
 # list of extra words that the spell checker will consider correct
 extra_special_words = [
@@ -37,6 +39,7 @@ extra_special_words = [
     'initialized',
     'initialize',
     'numpy',
+    'params',
     'py',
     'sandbox',
     'scipy',

@@ -11,7 +11,7 @@ class DataInputs:
     """
     {begin_markdown DataInputs}
 
-    {spell_markdown }
+    {spell_markdown ndarray gprior param}
 
     # `curvefit.core.core_model.DataInputs`
     ## Provides the required data inputs for a `curvefit.core.core_model.Model`
@@ -57,7 +57,41 @@ class DataInputs:
 
 
 class Model:
+    """
+    {begin_markdown DataInputs}
 
+    {spell_markdown ndarray gprior param}
+
+    # `curvefit.core.core_model.DataInputs`
+    ## Provides the required data inputs for a `curvefit.core.core_model.Model`
+
+    The `DataInputs` class holds all of the inputs that are needed for fitting
+    a core model. It is only used in the `Model.convert_inputs()` method (
+    see [here](Model.md). The purpose is to extract only the required elements
+    of a `Data` class that are needed for model fitting in order to reduce the memory
+    usage, but also keep key information for model debugging.
+
+    ## Arguments
+
+    - `t (np.ndarray)`: the time variable (or independent variable) in the curve
+        fitting
+    - `obs (np.ndarray)`: the observation variable (or dependent variable) in the
+        curve fitting
+    - `obs_se (np.ndarray)`: the observation standard error to attach to the observations
+    - `covariates_matrices (List[np.ndarray])`: list of covariate matrices for each parameter
+        (in many cases these covariate matrices will just be one column of ones)
+    - `group_sizes (List[int])`: size of the groups
+    - `link_fun (List[Callable])`: list of link functions for the parameters
+    - `var_link_fun (List[Callable])`: list of variable link functions for the variables
+    - `fe_gprior (np.ndarray)`: array of fixed effects Gaussian priors for the variables
+    - `re_gprior (np.ndarray)`: array of random effects Gaussian priors for the variables
+    - `param_gprior_info (Tuple[Callable, List[float], List[float]])`: tuple of
+        information about the parameter functional Gaussian priors;
+        first element is a composite function of all of the parameter functional priors;
+        second element is a list of means; third element is a list of standard deviations
+
+    {end_markdown DataInputs}
+    """
     def __init__(self, param_set, curve_fun, loss_fun):
 
         self.param_set = param_set
