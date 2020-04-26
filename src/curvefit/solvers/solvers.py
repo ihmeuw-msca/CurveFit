@@ -100,3 +100,30 @@ class MultipleInitializations(Composite):
             
             self.x_opt = xs_opt[np.argmin(fun_vals)]
             self.fun_val_opt = np.min(fun_vals)
+
+
+class GaussianMixturesIntegration(Composite):
+
+    def __init__(self, gm_model):
+        super().__init__()
+        self.gm_model = gm_model 
+
+    def fit(self, data, x_init=None, options=None):
+        if self.is_solver_defined():
+            if x_init is None:
+                x_init = self.get_model_instance().x_init 
+            self.solver.fit(data, x_init, options)
+            self.x_opt = self.solver.x_opt
+            model = self.get_model_instance()
+            params = effects2params(
+                self.solver.x_opt, 
+                model.data_inputs.group_sizes, 
+                model.data_inputs.covariates_matrices,
+                model.param_set.link_fun,
+                model.data_inputs.var_link_fun,
+            )
+            self.gm_model.set_params(params)
+            gm_solver = ScipyOpt(self.gm_model)
+            gm_solver.fit(data)
+            self.gm_weights = gm_solver.x_opt 
+
