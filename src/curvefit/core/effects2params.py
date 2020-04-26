@@ -51,6 +51,10 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
         x, group_sizes, covs, link_fun, var_link_fun, expand=True
     )`
 
+    ## Element Type
+    The type of the elements of each numpy array below is either
+    `float` or `a_double`.
+
     ## Vector
     If `v` is a vector, `len(v)` is its length as an integer. For non-negative
     integer `i` less than `len(v)`, and `v[i]` is its i-th element.
@@ -77,6 +81,8 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
     The value `len(link_fun)` is equal to the number of parameters and
     `link_fun[k]` is a function with one numpy array argument and result
     that acts element by element and transforms the k-th parameter.
+    If any of the elements of *x* or *covs[k]* are `a_double`,
+    *link_fun* must support `a_double` arguments.
 
     ## var_link_fun
     The value `len(var_link_fun)` is equal to the number of fixed effects and
@@ -85,6 +91,8 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True) :
     The first `len(covs[0])` fixed effects correspond to the first parameter,
     the next `len(covs[1])` fixed effects correspond to the second parameter
     and so on.
+    If any of the elements of *x* or *covs[k]* are `a_double`,
+    *link_fun* must support `a_double` arguments.
 
     ## expand
     If *expand* is `True` (`False`), create parameters for each observation

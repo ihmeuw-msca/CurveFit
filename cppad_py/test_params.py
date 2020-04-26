@@ -1,7 +1,7 @@
 import numpy
 import a_functions
 from cppad_py import a_double
-from a_effects2params import a_effects2params
+from curvefit.core.effects2params import effects2params
 
 def identity_fun(x) :
     return x
@@ -29,7 +29,7 @@ def test_params() :
     a_link_fun      = [ a_exp, identity_fun, a_exp ]
     a_var_link_fun  = num_param * [ identity_fun ]
     expand          = False
-    aparam          = a_effects2params(
+    aparam          = effects2params(
         ax, group_sizes, covs, a_link_fun, a_var_link_fun, expand
     )
     # ----------------------------------------------------------------------

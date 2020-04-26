@@ -1,6 +1,6 @@
 import numpy
 import curvefit
-import a_effects2params
+from curvefit.core.effects2params import effects2params
 import a_functions
 
 def a_objective_fun(
@@ -23,7 +23,7 @@ def a_objective_fun(
     afe, are   = curvefit.core.effects2params.unzip_x(ax, num_groups, num_fe)
     #
     # params
-    aparams = a_effects2params.a_effects2params(
+    aparams = effects2params(
         ax,
         group_sizes,
         covs,
@@ -51,7 +51,7 @@ def a_objective_fun(
     #
     # param_gprior
     if a_param_gprior is not None:
-        aparams = a_effects2params.a_effects2params(
+        aparams = effects2params(
             ax,
             group_sizes,
             covs,
