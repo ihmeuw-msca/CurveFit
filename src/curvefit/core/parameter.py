@@ -162,7 +162,7 @@ class ParameterSet(Prototype):
     """
     {begin_markdown ParameterSet}
 
-    {spell_markdown init inits param params}
+    {spell_markdown init inits param params gprior}
 
     # `curvefit.core.parameter.ParameterSet`
     ## A set of parameters that together specify the functional form of a curve

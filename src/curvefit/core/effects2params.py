@@ -50,6 +50,9 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True):
     # `curvefit.core.effects2params`
     ## Map Vector of Fixed and Random Effects to Parameter Matrix
 
+    Extracts fixed and random effects and converts them to parameters.
+    Needs to use [`unzip_x`](unzip_x.md).
+
     ## Syntax
     ```python
     params = curvefit.core.effects2params.effects2params(
@@ -128,7 +131,6 @@ def effects2params(x, group_sizes, covs, link_fun, var_link_fun, expand=True):
     group_idx = numpy.cumsum(group_sizes) - 1
     fe_sizes = numpy.array([covs[k].shape[1] for k in range(num_params)])
     num_fe = fe_sizes.sum()
-    num_re = num_groups * num_fe
     fe_idx = sizes_to_indices(fe_sizes)
 
     # asserts
