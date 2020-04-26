@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from typing import List, Callable, Tuple
 import numpy as np
 
-from curvefit.core.prototype import Prototype
 from curvefit.core.objective_fun import objective_fun
 from curvefit.core.effects2params import effects2params
 from curvefit.models.base import Model, DataInputs
@@ -121,7 +120,7 @@ class CoreModel(Model):
 
     def gradient(self, x, data):
         if self.data_inputs is None:
-            self.data_inputs = convert_inputs(self.param_set, data)
+            self.data_inputs = self.convert_inputs(data)
         finfo = np.finfo(float)
         step = finfo.tiny / finfo.eps
         x_c = x + 0j
@@ -156,7 +155,6 @@ class CoreModel(Model):
     @property
     def x_init(self):
         return self.data_inputs.x_init
-
 
     def convert_inputs(self, data):
         if isinstance(data, DataInputs):

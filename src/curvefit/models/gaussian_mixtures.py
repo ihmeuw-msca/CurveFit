@@ -2,6 +2,7 @@ import numpy as np
 from curvefit.core.functions import gaussian_pdf
 from curvefit.models.base import Model, DataInputs
 
+
 class GaussianMixtures(Model):
 
     def __init__(self, stride, size, params=None):

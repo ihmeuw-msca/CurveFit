@@ -1,7 +1,8 @@
-
 from dataclasses import dataclass
 from typing import List, Callable, Tuple
 import numpy as np
+
+from curvefit.core.prototype import Prototype
 
 
 class DataNotFoundError(Exception):
@@ -64,7 +65,7 @@ class DataInputs:
     param_gprior_info: Tuple[Callable, List[float], List[float]] = None
 
 
-class Model:
+class Model(Prototype):
 
     def __init__(self):
         self.data_inputs = None
@@ -93,7 +94,7 @@ class Model:
         if self.data_inputs is None:
             self.data_inputs = self.convert_inputs(data)
         finfo = np.finfo(float)
-        step  = finfo.tiny / finfo.eps
+        step = finfo.tiny / finfo.eps
         x_c = x + 0j
         grad = np.zeros(x.size)
         for i in range(x.size):

@@ -2,6 +2,8 @@ import numpy as np
 from copy import deepcopy
 import scipy.optimize as sciopt
 
+from curvefit.core.effects2params import effects2params
+
 
 class ModelNotDefinedError(Exception):
     pass
@@ -112,7 +114,7 @@ class MultipleInitializations(CompositeSolver):
         return self.solver.predict(self.x_opt, **kwargs)
 
 
-class GaussianMixturesIntegration(Composite):
+class GaussianMixturesIntegration(CompositeSolver):
 
     def __init__(self, gm_model):
         super().__init__()
