@@ -1,7 +1,6 @@
 import numpy
 import cppad_py
 import curvefit
-import a_functions
 #
 def test_gaussian_pdf() :
     eps99  = 99.0 * numpy.finfo(float).eps
@@ -21,12 +20,12 @@ def test_gaussian_pdf() :
     # -----------------------------------------------------------------------
     # f(t) = gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.gaussian_cdf(at, aparam)
+    ay = curvefit.core.param_model.gaussian_cdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
     # g(t) = d/dt gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.gaussian_pdf(at, aparam)
+    ay = curvefit.core.param_model.gaussian_pdf(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
     # check gaussian_pdf
@@ -42,7 +41,7 @@ def test_gaussian_pdf() :
     # -----------------------------------------------------------------------
     # check a_ln_dgaussain_cdf
     at = cppad_py.independent(t)
-    ay = a_functions.ln_gaussian_pdf(at, aparam)
+    ay = curvefit.core.param_model.ln_gaussian_pdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     f0 = f.forward(0, t)
     rel_error = f0 / numpy.log(g0) - 1

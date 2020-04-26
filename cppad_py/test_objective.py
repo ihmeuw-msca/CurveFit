@@ -1,7 +1,6 @@
 import sys
 import numpy
 import curvefit
-import a_functions
 import a_objective_fun
 import cppad_py
 #
@@ -78,7 +77,7 @@ def test_objective() :
     # -----------------------------------------------------------------------
     # call a_double objective_fun
     ax                = cppad_py.independent(x)
-    a_model_fun       = a_functions.gaussian_cdf
+    a_model_fun       = curvefit.core.param_model.gaussian_cdf
     a_loss_fun        = gaussian_loss
     a_link_fun        = [ numpy.exp, identity_fun, numpy.exp ]
     a_var_link_fun    = var_link_fun

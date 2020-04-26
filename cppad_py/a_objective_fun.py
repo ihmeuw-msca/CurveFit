@@ -1,7 +1,6 @@
 import numpy
 import curvefit
 from curvefit.core.effects2params import effects2params
-import a_functions
 
 def a_objective_fun(
         ax,

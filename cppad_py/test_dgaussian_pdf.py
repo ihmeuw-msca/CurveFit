@@ -1,7 +1,6 @@
 import numpy
 import cppad_py
 import curvefit
-import a_functions
 #
 def test_dgaussian_pdf() :
     eps99  = 99.0 * numpy.finfo(float).eps
@@ -21,12 +20,12 @@ def test_dgaussian_pdf() :
     # -----------------------------------------------------------------------
     # f(t) = gaussian_pdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.gaussian_pdf(at, aparam)
+    ay = curvefit.core.param_model.gaussian_pdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
     # g(t) = dgaussian_pdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.dgaussian_pdf(at, aparam)
+    ay = curvefit.core.param_model.dgaussian_pdf(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
     # check dgaussian_pdf

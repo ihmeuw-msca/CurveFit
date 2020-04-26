@@ -118,7 +118,7 @@ def gaussian_cdf(t, param) :
     """
     alpha, beta, p = unpack_param(t, param)
     z              = alpha * (t - beta)
-    return p * ( a_double(1.0) + erf(z) ) / a_double(2.0)
+    return p * ( 1.0 + erf(z) ) / 2.0
 #
 def expit(t, param) :
     """
@@ -126,7 +126,7 @@ def expit(t, param) :
     """
     alpha, beta, p = unpack_param(t, param)
     z              = alpha * (t - beta)
-    return p / ( a_double(1.0) + numpy.exp(-z) )
+    return p / ( 1.0 + numpy.exp(-z) )
 #
 def ln_expit(t, param) :
     """
@@ -164,5 +164,4 @@ def dgaussian_pdf(t, param) :
     """
     alpha, beta, p = unpack_param(t, param)
     z              = alpha * (t - beta)
-    two            = a_double(2.0)
-    return - two * z * alpha * gaussian_pdf(t, param)
+    return - 2.0 * z * alpha * gaussian_pdf(t, param)

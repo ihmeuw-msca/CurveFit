@@ -1,5 +1,4 @@
 import numpy
-import a_functions
 from cppad_py import a_double
 from curvefit.core.effects2params import effects2params
 
