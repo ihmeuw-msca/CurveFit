@@ -86,7 +86,6 @@ class Data:
             col_obs=self.col_obs,
             col_covs=self.col_covs,
             col_group=self.col_group,
-            col_obs_se=self.col_obs_se,
             obs_space=self.obs_space,
             obs_se_fun=self.obs_se_func
         )
