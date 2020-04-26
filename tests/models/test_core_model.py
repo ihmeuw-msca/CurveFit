@@ -13,6 +13,7 @@ n_B = 6
 n_C = 7
 n_total = n_A + n_B + n_C
 
+
 @pytest.fixture
 def data():
     df = pd.DataFrame({

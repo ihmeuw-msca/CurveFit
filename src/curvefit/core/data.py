@@ -3,6 +3,7 @@ from typing import List
 
 from curvefit.utils.data import data_translator
 
+
 @dataclass(frozen=True)
 class DataSpecs:
     col_t: str
@@ -80,7 +81,15 @@ class Data:
         self.obs_space = obs_space
         self.obs_se_func = obs_se_func
 
-        self.data_specs = DataSpecs(col_t, col_obs, col_covs, col_group, col_obs_se, obs_space, obs_se_func)
+        self.data_specs = DataSpecs(
+            col_t=self.col_t,
+            col_obs=self.col_obs,
+            col_covs=self.col_covs,
+            col_group=self.col_group,
+            col_obs_se=self.col_obs_se,
+            obs_space=self.obs_space,
+            obs_se_fun=self.obs_se_func
+        )
 
         self.df.sort_values([self.col_group, self.col_t], inplace=True)
 

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import List, Callable, Tuple
 import numpy as np
 
+from curvefit.core.prototype import Prototype
 from curvefit.core.objective_fun import objective_fun
 from curvefit.core.effects2params import effects2params
 
@@ -68,7 +69,7 @@ class DataNotFoundError(Exception):
     pass
 
 
-class CoreModel:
+class CoreModel(Prototype):
     """
     {begin_markdown Model}
 
@@ -135,7 +136,7 @@ class CoreModel:
         if self.data_inputs is None:
             self.data_inputs = convert_inputs(self.param_set, data)
         finfo = np.finfo(float)
-        step  = finfo.tiny / finfo.eps
+        step = finfo.tiny / finfo.eps
         x_c = x + 0j
         grad = np.zeros(x.size)
         for i in range(x.size):

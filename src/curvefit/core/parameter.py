@@ -1,8 +1,9 @@
 from dataclasses import fields, field, InitVar
 from pydantic.dataclasses import dataclass
-from typing import List, Callable, Tuple
+from typing import List, Callable
+import numpy as np
 
-import numpy as np 
+from curvefit.core.prototype import Prototype
 
 
 @dataclass
@@ -144,7 +145,20 @@ class Parameter:
 
 
 @dataclass
-class ParameterSet:
+class ParameterFunction(Prototype):
+
+    param_function_name: str
+    param_function: Callable
+    param_function_fe_gprior: List[float] = field(default_factory=lambda: [0.0, np.inf])
+
+    def __post_init__(self):
+        assert isinstance(self.param_function_name, str)
+        assert len(self.param_function_fe_gprior) == 2
+        assert self.param_function_fe_gprior[1] > 0.0
+
+
+@dataclass
+class ParameterSet(Prototype):
     """
     {begin_markdown ParameterSet}
 
@@ -190,14 +204,21 @@ class ParameterSet:
 
     var = Variable(covariate='ones', var_link_fun=lambda x: x, fe_init=0., re_init=0.)
     param = Parameter(param_name='alpha', link_fun=lambda x: x, variables=[var])
-    param_set = ParameterSet(parameters=[param], parameter_functions=[(lambda params: params[0] ** 2, [0., np.inf)])
+    param_function = ParameterFunction(
+        param_function_name='alpha_squared',
+        param_function=lambda params: params[0] ** 2,
+        param_function_fe_gprior=[0., np.inf]
+    )
+    param_set = ParameterSet(
+        parameters=[param], parameter_functions=[param_function]
+    )
     ```
 
     {end_markdown ParameterSet}
     """
 
     parameters: InitVar[List[Parameter]]
-    parameter_functions: List[Tuple[Callable, List[float]]] = None
+    parameter_functions: InitVar[List[ParameterFunction]] = None
 
     param_name: List[str] = field(init=False)
     num_fe: int = field(init=False)
@@ -211,18 +232,33 @@ class ParameterSet:
     fe_bounds: List[List[List[float]]] = field(init=False)
     re_bounds: List[List[List[float]]] = field(init=False)
 
-    def __post_init__(self, parameters):
-        if self.parameter_functions is not None:
-            for fun in self.parameter_functions:
-                assert len(fun[1]) == 2
-                assert isinstance(fun[0], Callable)
+    param_function_name: List[str] = field(init=False)
+    param_function: List[Callable] = field(init=False)
+    param_function_fe_gprior: List[List[float]] = field(init=False)
+
+    def __post_init__(self, parameters, parameter_functions):
 
         for k, v in consolidate(Parameter, parameters, exclude=['num_fe']).items():
             self.__setattr__(k, v)
 
+        for k, v in consolidate(ParameterFunction, parameter_functions).items():
+            self.__setattr__(k, v)
+
+        if len(set(self.param_name)) != len(self.param_name):
+            raise RuntimeError("Cannot have duplicate parameters in a set.")
+        if len(set(self.param_function_name)) != len(self.param_function_name):
+            raise RuntimeError("Cannot have duplicate parameter functions in a set.")
+
         self.num_fe = 0
         for param in parameters:
             self.num_fe += param.num_fe
+
+    def get_param_index(self, param_name):
+        try:
+            param_index = self.param_name.index(param_name)
+        except ValueError:
+            raise RuntimeError(f"No {param_name} parameter in this parameter set.")
+        return param_index
 
 
 def consolidate(cls, instance_list, exclude=None):
@@ -231,5 +267,8 @@ def consolidate(cls, instance_list, exclude=None):
     consolidated = {}
     for f in fields(cls):
         if f.name not in exclude:
-            consolidated[f.name] = [instance.__getattribute__(f.name) for instance in instance_list]
+            if instance_list is not None:
+                consolidated[f.name] = [instance.__getattribute__(f.name) for instance in instance_list]
+            else:
+                consolidated[f.name] = list()
     return consolidated
