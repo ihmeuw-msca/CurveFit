@@ -21,14 +21,16 @@ tests:
 	pytest tests cppad_py
 
 examples:
-	example/get_started.py
 	example/covariate.py
+	example/effects2params.py
+	example/get_started.py
+	example/numpy_ufunc.py
+	example/objective_fun.py
+	example/param_time_fun.py
 	example/random_effect.py
 	example/sizes_to_indices.py
-	example/param_time_fun.py
+	example/unpack_param.py
 	example/unzip_x.py
-	example/effects2params.py
-	example/objective_fun.py
 	@echo 'The folowing command fails on travis test system:'
 	@echo '    python example/loss.py'
 

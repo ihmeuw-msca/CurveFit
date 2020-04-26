@@ -1,14 +1,15 @@
 #! /usr/bin/env python3
-'''{begin_markdown unpack_param_xam}
-{spell_markdown utils}
+"""
+{begin_markdown unpack_param_xam}
+{spell_markdown utils param}
 
 # Example and Test of unpack_param
 
 ## Function Documentation
-[sizes_to_indices](unpack_param.md)
+[unpack_param](unpack_param.md)
 
 ## Example Source Code
-```python'''
+```python"""
 import sys
 import numpy
 import sandbox
@@ -34,5 +35,6 @@ assert all( beta  == param[1, :] )
 #
 print('unpack_param.py: OK')
 sys.exit(0)
-'''```
-{end_markdown unpack_param_xam}'''
+"""```
+{end_markdown unpack_param_xam}
+"""

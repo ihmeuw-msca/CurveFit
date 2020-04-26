@@ -1,23 +1,15 @@
 import numpy
 from cppad_py import a_double
 from curvefit.core.utils import unpack_param
+from curvefit.core.numpy_ufunc import erf
 
-# ---------------------------------------------------------------------------
-# Local Functions
-# ---------------------------------------------------------------------------
-def a_erf(vec) :
-    result = numpy.empty(len(vec), dtype = a_double )
-    for i in range( len(vec) ) :
-        result[i] = vec[i].erf()
-    return result
-#
 # ---------------------------------------------------------------------------
 # Model Functions
 # ---------------------------------------------------------------------------
 def a_gaussian_cdf(t, param) :
     alpha, beta, p = unpack_param(t, param)
     z              = alpha * (t - beta)
-    return p * ( a_double(1.0) + a_erf(z) ) / a_double(2.0)
+    return p * ( a_double(1.0) + erf(z) ) / a_double(2.0)
 #
 def a_expit(t, param) :
     alpha, beta, p = unpack_param(t, param)

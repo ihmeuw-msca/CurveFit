@@ -8,6 +8,8 @@ file_list = [
     'example/covariate.py',
     'example/random_effect.py',
     'example/sizes_to_indices.py',
+    'example/numpy_ufunc.py',
+    'example/unpack_param.py',
     'example/loss.py',
     'example/param_time_fun.py',
     'example/unzip_x.py',
@@ -21,6 +23,7 @@ file_list = [
     'bin/extract_md.py',
     'bin/get_cppad_py.py',
     'src/curvefit/core/loss.py',
+    'src/curvefit/core/numpy_ufunc.py',
 ]
 # list of extra words that the spell checker will consider correct
 extra_special_words = [
@@ -175,6 +178,11 @@ by the same number of space characters, those space characters
 are not included in the markdown output. This enables one to indent the
 markdown so it is grouped with the proper code block in the source.
 
+## Python Style Guide
+Use triple double quotes instead of triple single quotes at beginning
+and end of comments so it is easier to distinguish from triple back quotes.
+
+
 ## Wish List
 The following is a wish list for future improvements to `extract_md.py`:
 
@@ -199,6 +207,9 @@ Detect double word errors and allow for exceptions by specifying them in a
 Have a way to include code blocks that are not directly below and in the same
 file; e.g., one my automatically transfer the prototype for a function,
 in the same file or a different file, to the documentation for a section.
+
+### Module
+Convert the extract program into a python module and provide a pip distribution for it.
 
 {end_markdown extract_md.py}'''
 # ----------------------------------------------------------------------------
