@@ -11,7 +11,7 @@ class GaussianMixtures:
     def set_params(self, params):
         self.params = params
 
-    def compute_design_matrix(self, x):
+    def compute_design_matrix(self, t):
         half_size = self.size // 2
         self.size = half_size * 2 + 1  # making sure it's odd
         betas = np.linspace(
@@ -22,9 +22,9 @@ class GaussianMixtures:
         assert np.abs(betas[half_size] - self.params[1]) / np.abs(self.params[1]) < 1e-2
         X = []
         for beta in betas:
-            X.append(gaussian_pdf(x, [self.params[0], beta, self.params[2]]))
+            X.append(gaussian_pdf(t, [self.params[0], beta, self.params[2]]))
         X = np.asarray(X).T
-        assert X.shape == (len(x), self.size)
+        assert X.shape == (len(t), self.size)
         return X
 
     def _objective_and_gradient(self, x, data):
@@ -53,9 +53,6 @@ class GaussianMixtures:
         x[self.size // 2] = 1.0
         return x
 
-    def predict(self, x, data):
-        df = data[0]
-        data_specs = data[1]
-        t = df[data_specs.col_t]
+    def predict(self, x, t):
         matrix = self.compute_design_matrix(t)
         return np.dot(matrix, x)

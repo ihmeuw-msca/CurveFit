@@ -50,6 +50,9 @@ class ScipyOpt(Base):
         self.x_opt = result.x
         self.fun_val_opt = result.fun
 
+    def predict(self, **kwargs):
+        return self.model.predict(self.x_opt, **kwargs)
+
 
 class Composite(Base):
 
@@ -101,6 +104,9 @@ class MultipleInitializations(Composite):
             self.x_opt = xs_opt[np.argmin(fun_vals)]
             self.fun_val_opt = np.min(fun_vals)
 
+    def predict(self, **kwargs):
+        return self.solver.predict(self.x_opt, **kwargs)
+
 
 class GaussianMixturesIntegration(Composite):
 
@@ -113,7 +119,6 @@ class GaussianMixturesIntegration(Composite):
             if x_init is None:
                 x_init = self.get_model_instance().x_init 
             self.solver.fit(data, x_init, options)
-            self.x_opt = self.solver.x_opt
             model = self.get_model_instance()
             params = effects2params(
                 self.solver.x_opt, 
@@ -125,5 +130,11 @@ class GaussianMixturesIntegration(Composite):
             self.gm_model.set_params(params)
             gm_solver = ScipyOpt(self.gm_model)
             gm_solver.fit(data)
-            self.gm_weights = gm_solver.x_opt 
+            self.x_opt = gm_solver.x_opt 
+            self.fun_val_opt = gm_solver.fun_val_opt
+
+    def predict(self, t):
+        return self.gm_model.predict(self.x_opt, t)
+
+
 
