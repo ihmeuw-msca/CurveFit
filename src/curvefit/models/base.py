@@ -14,7 +14,7 @@ class DataInputs:
     """
     {begin_markdown DataInputs}
 
-    {spell_markdown ndarray gprior param}
+    {spell_markdown ndarray gprior param init}
 
     # `curvefit.models.base.DataInputs`
     ## Provides the required data inputs for a `curvefit.core.core_model.Model`
