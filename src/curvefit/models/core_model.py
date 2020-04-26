@@ -3,10 +3,12 @@ from operator import iconcat
 from dataclasses import dataclass
 from typing import List, Callable, Tuple
 import numpy as np
+
 from curvefit.core.objective_fun import objective_fun
+from curvefit.core.effects2params import effects2params
 
 
-@dataclass(frozen=True)
+@dataclass
 class DataInputs:
     """
     {begin_markdown DataInputs}
@@ -35,6 +37,8 @@ class DataInputs:
     - `num_groups (int)`: number of groups
     - `link_fun (List[Callable])`: list of link functions for the parameters
     - `var_link_fun (List[Callable])`: list of variable link functions for the variables
+    - `x_init (np.ndarray)`: initial values for variables
+    - `bounds (np.ndarray)`: bounds for variables
     - `fe_gprior (np.ndarray)`: array of fixed effects Gaussian priors for the variables
     - `re_gprior (np.ndarray)`: array of random effects Gaussian priors for the variables
     - `param_gprior_info (Tuple[Callable, List[float], List[float]])`: tuple of
@@ -46,19 +50,25 @@ class DataInputs:
     """
 
     t: np.ndarray
-    obs: np.ndarray 
+    obs: np.ndarray
     obs_se: np.ndarray
     covariates_matrices: List[np.ndarray]
     group_sizes: List[int]
     num_groups: int
     link_fun: List[Callable]
     var_link_fun: List[Callable]
+    x_init: np.ndarray
+    bounds: np.ndarray
     fe_gprior: np.ndarray
     re_gprior: np.ndarray
     param_gprior_info: Tuple[Callable, List[float], List[float]] = None
 
 
-class Model:
+class DataNotFoundError(Exception):
+    pass
+
+
+class CoreModel:
     """
     {begin_markdown Model}
 
@@ -76,7 +86,7 @@ class Model:
     - `loss_fun (Callable)`: function from `curvefit.core.functions` for the loss function
 
     ## Attributes
-
+    
     ## Methods
 
     {end_markdown Model}
@@ -88,74 +98,23 @@ class Model:
         self.loss_fun = loss_fun
         self.data_inputs = None
 
-    def detach_data(self):
+    def get_data(self):
+        if self.data_inputs is not None:
+            return self.data_inputs
+        else:
+            raise DataNotFoundError()
+
+    def erase_data(self):
         self.data_inputs = None
 
-    def convert_inputs(self, data):
-        df = data[0]
-        data_specs = data[1]
-
-        t = df[data_specs.col_t].to_numpy()
-        obs = df[data_specs.col_obs].to_numpy()
-        obs_se = df[data_specs.col_obs_se].to_numpy()
-
-        covs_mat = []
-        for covs in self.param_set.covariate:
-            covs_mat.append(df[covs].to_numpy())
-
-        group_names = df[data_specs.col_group].unique()
-        group_sizes_dict = { 
-            name: np.sum(df[data_specs.col_group].values == name) 
-            for name in group_names
-        }
-        group_sizes = list(group_sizes_dict.values())
-        num_groups = len(group_names)
-
-        var_link_fun = reduce(iconcat, self.param_set.var_link_fun, [])
-
-        fe_gprior = np.array(reduce(iconcat, self.param_set.fe_gprior, []))
-        assert fe_gprior.shape == (self.param_set.num_fe, 2)
-
-        re_gprior = []
-        for priors in self.param_set.re_gprior:
-            for prior in priors:
-                re_gprior.append([prior] * num_groups)
-        re_gprior = np.array(re_gprior)
-        assert re_gprior.shape == (self.param_set.num_fe, num_groups, 2)
-
-        param_gprior_funs = []
-        param_gprior_means = []
-        param_gprior_stds = []
-        if self.param_set.parameter_functions is not None:
-            for fun_prior in self.param_set.parameter_functions:
-                param_gprior_funs.append(fun_prior[0])
-                param_gprior_means.append(fun_prior[1][0])
-                param_gprior_stds.append(fun_prior[1][1])
-
-            def param_gprior_fun(p):
-                return [f(p) for f in param_gprior_funs[0]]
-
-            param_gprior_info = (param_gprior_fun, param_gprior_means, param_gprior_stds)
-        else:
-            param_gprior_info = None
-
-        self.data_inputs = DataInputs(
-            t=t,
-            obs=obs,
-            obs_se=obs_se,
-            covariates_matrices=covs_mat,
-            group_sizes=group_sizes,
-            num_groups=num_groups,
-            link_fun=self.param_set.link_fun,
-            var_link_fun=var_link_fun,
-            fe_gprior=fe_gprior,
-            re_gprior=re_gprior,
-            param_gprior_info=param_gprior_info,
-        )
+    def detach_data(self):
+        data_inputs = self.get_data()
+        self.data_inputs = None
+        return data_inputs
 
     def objective(self, x, data):
         if self.data_inputs is None:
-            self.convert_inputs(data)
+            self.data_inputs = convert_inputs(self.param_set, data)
         return objective_fun(
             x=x,
             t=self.data_inputs.t,
@@ -170,13 +129,117 @@ class Model:
             fe_gprior=self.data_inputs.fe_gprior,
             re_gprior=self.data_inputs.re_gprior,
             param_gprior=self.data_inputs.param_gprior_info,
-        ) 
+        )
+
+    def gradient(self, x, data):
+        if self.data_inputs is None:
+            self.data_inputs = convert_inputs(self.param_set, data)
+        finfo = np.finfo(float)
+        step  = finfo.tiny / finfo.eps
+        x_c = x + 0j
+        grad = np.zeros(x.size)
+        for i in range(x.size):
+            x_c[i] += step*1j
+            grad[i] = self.objective(x_c, data).imag/step
+            x_c[i] -= step*1j
+
+        return grad
+
+    def predict(self, x, t, predict_fun=None):
+        params = effects2params(
+            x,
+            self.data_inputs.group_sizes,
+            self.data_inputs.covariates_matrices,
+            self.param_set.link_fun,
+            self.data_inputs.var_link_fun,
+        )
+        if predict_fun is None:
+            predict_fun = self.curve_fun 
+        
+        return predict_fun(t, params[:, 0])
 
     @property
     def bounds(self):
+        return self.data_inputs.bounds
 
-        fe_bounds = np.array(reduce(iconcat, self.param_set.fe_bounds, []))
-        re_bounds = np.array(reduce(iconcat, self.param_set.re_bounds, []))
-        re_bounds = np.repeat(re_bounds[None, :, :], self.data_inputs.num_groups, axis=0)
+    @property
+    def x_init(self):
+        return self.data_inputs.x_init
 
-        return np.vstack([fe_bounds, re_bounds.reshape(self.param_set.num_fe * self.data_inputs.num_groups, 2)])
+
+def convert_inputs(param_set, data):
+    if isinstance(data, DataInputs):
+        return data
+
+    df = data[0]
+    data_specs = data[1]
+
+    t = df[data_specs.col_t].to_numpy()
+    obs = df[data_specs.col_obs].to_numpy()
+    obs_se = df[data_specs.col_obs_se].to_numpy()
+
+    covs_mat = []
+    for covs in param_set.covariate:
+        covs_mat.append(df[covs].to_numpy())
+
+    group_names = df[data_specs.col_group].unique()
+    group_sizes_dict = {
+        name: np.sum(df[data_specs.col_group].values == name)
+        for name in group_names
+    }
+    group_sizes = list(group_sizes_dict.values())
+    num_groups = len(group_names)
+
+    var_link_fun = reduce(iconcat, param_set.var_link_fun, [])
+
+    fe_init = np.array(reduce(iconcat, param_set.fe_init, []))
+    re_init = np.array(reduce(iconcat, param_set.re_init, []))
+    re_init = np.repeat(re_init[None, :], num_groups, axis=0).flatten()
+    x_init = np.concatenate((fe_init, re_init))
+
+    fe_bounds = np.array(reduce(iconcat, param_set.fe_bounds, []))
+    re_bounds = np.array(reduce(iconcat, param_set.re_bounds, []))
+    re_bounds = np.repeat(re_bounds[None, :, :], num_groups, axis=0)
+    bounds = np.vstack([fe_bounds, re_bounds.reshape(param_set.num_fe * num_groups , 2)])
+
+    fe_gprior = np.array(reduce(iconcat, param_set.fe_gprior, []))
+    assert fe_gprior.shape == (param_set.num_fe, 2)
+
+    re_gprior = []
+    for priors in param_set.re_gprior:
+        for prior in priors:
+            re_gprior.append([prior] * num_groups)
+    re_gprior = np.array(re_gprior)
+    assert re_gprior.shape == (param_set.num_fe, num_groups, 2)
+
+    param_gprior_funs = []
+    param_gprior_means = []
+    param_gprior_stds = []
+    if param_set.parameter_functions is not None:
+        for fun_prior in param_set.parameter_functions:
+            param_gprior_funs.append(fun_prior[0])
+            param_gprior_means.append(fun_prior[1][0])
+            param_gprior_stds.append(fun_prior[1][1])
+
+        def param_gprior_fun(p):
+            return [f(p) for f in param_gprior_funs[0]]
+
+        param_gprior_info = (param_gprior_fun, param_gprior_means, param_gprior_stds)
+    else:
+        param_gprior_info = None
+
+    return DataInputs(
+        t=t,
+        obs=obs,
+        obs_se=obs_se,
+        covariates_matrices=covs_mat,
+        group_sizes=group_sizes,
+        num_groups=num_groups,
+        link_fun=param_set.link_fun,
+        var_link_fun=var_link_fun,
+        x_init=x_init,
+        bounds=bounds,
+        fe_gprior=fe_gprior,
+        re_gprior=re_gprior,
+        param_gprior_info=param_gprior_info,
+    )
