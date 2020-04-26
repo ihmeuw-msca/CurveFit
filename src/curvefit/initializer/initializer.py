@@ -2,6 +2,7 @@ import numpy as np
 from typing import List
 
 from curvefit.solvers.solvers import Solver
+from curvefit.core.effects2params import effects2params
 
 
 class PriorInitializerComponent:
