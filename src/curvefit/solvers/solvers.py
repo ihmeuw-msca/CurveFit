@@ -58,7 +58,7 @@ class Composite(Base):
 
     def __init__(self):
         super().__init__(model_instance=None)
-        self.solver = None
+        self.solver = ScipyOpt()
     
     def set_solver(self, solver):
         self.solver = solver
