@@ -154,22 +154,9 @@ class SmartInitialization(CompositeSolver):
             df = data[0]
             data_specs = data[1]
             group_names = df[data_specs.col_group].unique()
-            params = []
+            xs = []
             for group in group_names:
                 data_sub = (df[df[data_specs.col_group] == group], data_specs)
                 self.solver.fit(data_sub, x_init, options=options)
-                params.append(
-                    effects2params(
-                        self.solver.x_opt,
-                        model.data_inputs.group_sizes,
-                        model.data_inputs.covariates_matrices,
-                        model.param_set.link_fun,
-                        model.data_inputs.var_link_fun,
-                    )[0,:]
-                )
+                xs.append(self.solver.x_opt)
                 model.erase_data()
-
-            assert len(params) == len(group_names)
-
-            self.params_mean = np.mean(params, axis=0)
-            self.params_std = np.std(params, axis=0)
