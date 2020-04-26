@@ -25,7 +25,7 @@ class CoreModel(Model):
     - `loss_fun (Callable)`: function from `curvefit.core.functions` for the loss function
 
     ## Attributes
-    
+
     ## Methods
 
     {end_markdown CoreModel}
@@ -82,8 +82,8 @@ class CoreModel(Model):
     def predict(self, x, t, predict_fun=None):
         params = self.get_params(x=x)
         if predict_fun is None:
-            predict_fun = self.curve_fun 
-        
+            predict_fun = self.curve_fun
+
         return predict_fun(t, params[:, 0])
 
     @property

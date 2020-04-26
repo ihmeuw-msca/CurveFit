@@ -3,6 +3,7 @@ from copy import deepcopy
 import scipy.optimize as sciopt
 
 from curvefit.core.effects2params import effects2params
+from curvefit.models.core_model import convert_inputs
 
 
 class ModelNotDefinedError(Exception):
@@ -44,15 +45,15 @@ class ScipyOpt(Solver):
     def fit(self, data, x_init=None, options=None):
         if x_init is None:
             x_init = self.model.x_init
-        
+
         result = sciopt.minimize(
-            fun=lambda x: self.model.objective(x, data), 
-            x0=x_init, 
+            fun=lambda x: self.model.objective(x, data),
+            x0=x_init,
             jac=lambda x: self.model.gradient(x, data),
             bounds=self.model.bounds,
             options=options,
         )
-        
+
         self.x_opt = result.x
         self.fun_val_opt = result.fun
 
@@ -65,7 +66,7 @@ class CompositeSolver(Solver):
     def __init__(self):
         super().__init__(model_instance=None)
         self.solver = ScipyOpt()
-    
+
     def set_solver(self, solver):
         self.solver = solver
 
@@ -80,10 +81,10 @@ class CompositeSolver(Solver):
     def get_model_instance(self):
         if self.is_solver_defined():
             return self.solver.get_model_instance()
-        
+
     def is_solver_defined(self):
         if self.solver is not None:
-            return True 
+            return True
         else:
             raise SolverNotDefinedError()
 
@@ -98,7 +99,7 @@ class MultipleInitializations(CompositeSolver):
     def fit(self, data, x_init=None, options=None):
         if self.is_solver_defined():
             if x_init is None:
-                x_init = self.get_model_instance().x_init        
+                x_init = self.get_model_instance().x_init
             fun_vals = []
             xs_opt = []
             xs_init = self.sample_fun(x_init)
@@ -118,17 +119,17 @@ class GaussianMixturesIntegration(CompositeSolver):
 
     def __init__(self, gm_model):
         super().__init__()
-        self.gm_model = gm_model 
+        self.gm_model = gm_model
 
     def fit(self, data, x_init=None, options=None):
         if self.is_solver_defined():
             if x_init is None:
-                x_init = self.get_model_instance().x_init 
+                x_init = self.get_model_instance().x_init
             self.solver.fit(data, x_init, options)
             model = self.get_model_instance()
             params = effects2params(
-                self.solver.x_opt, 
-                model.data_inputs.group_sizes, 
+                self.solver.x_opt,
+                model.data_inputs.group_sizes,
                 model.data_inputs.covariates_matrices,
                 model.param_set.link_fun,
                 model.data_inputs.var_link_fun,
@@ -136,8 +137,39 @@ class GaussianMixturesIntegration(CompositeSolver):
             self.gm_model.set_params(params)
             gm_solver = ScipyOpt(self.gm_model)
             gm_solver.fit(data)
-            self.x_opt = gm_solver.x_opt 
+            self.x_opt = gm_solver.x_opt
             self.fun_val_opt = gm_solver.fun_val_opt
 
     def predict(self, t):
         return self.gm_model.predict(self.x_opt, t)
+
+
+class SmartInitialization(CompositeSolver):
+
+    def fit(self, data, x_init=None, options=None):
+         if self.is_solver_defined():
+            model = self.get_model_instance()
+            if x_init is None:
+                x_init = model.x_init
+            df = data[0]
+            data_specs = data[1]
+            group_names = df[data_specs.col_group].unique()
+            params = []
+            for group in group_names:
+                data_sub = (df[df[data_specs.col_group] == group], data_specs)
+                self.solver.fit(data_sub, x_init, options=options)
+                params.append(
+                    effects2params(
+                        self.solver.x_opt,
+                        model.data_inputs.group_sizes,
+                        model.data_inputs.covariates_matrices,
+                        model.param_set.link_fun,
+                        model.data_inputs.var_link_fun,
+                    )[0,:]
+                )
+                model.erase_data()
+
+            assert len(params) == len(group_names)
+
+            self.params_mean = np.mean(params, axis=0)
+            self.params_std = np.std(params, axis=0)
