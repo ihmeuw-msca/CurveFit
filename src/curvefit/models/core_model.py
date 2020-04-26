@@ -146,14 +146,17 @@ class CoreModel(Prototype):
 
         return grad
 
-    def predict(self, x, t, predict_fun=None):
-        params = effects2params(
+    def get_params(self, x):
+        return effects2params(
             x,
             self.data_inputs.group_sizes,
             self.data_inputs.covariates_matrices,
             self.param_set.link_fun,
             self.data_inputs.var_link_fun,
         )
+
+    def predict(self, x, t, predict_fun=None):
+        params = self.get_params(x=x)
         if predict_fun is None:
             predict_fun = self.curve_fun 
         
