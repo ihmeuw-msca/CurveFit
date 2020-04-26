@@ -13,6 +13,7 @@ n_B = 6
 n_C = 7
 n_total = n_A + n_B + n_C
 
+
 @pytest.fixture
 def data():
     df = pd.DataFrame({
@@ -30,12 +31,12 @@ def data():
 
 @pytest.fixture
 def param_set():
-    variable1 = Variable('intercept', lambda x:x, 0.0, 0.3, re_bounds=[0.0, 1.0])
-    variable2 = Variable('intercept', lambda x:x, 0.1, 0.4, re_bounds=[0.0, 2.0])
-    variable3 = Variable('intercept', lambda x:x, 0.2, 0.5, re_bounds=[0.0, 3.0])
+    variable1 = Variable('intercept', lambda x: x, 0.0, 0.3, re_bounds=[0.0, 1.0])
+    variable2 = Variable('intercept', lambda x: x, 0.1, 0.4, re_bounds=[0.0, 2.0])
+    variable3 = Variable('intercept', lambda x: x, 0.2, 0.5, re_bounds=[0.0, 3.0])
     parameter1 = Parameter('p1', np.exp, [variable1])
     parameter2 = Parameter('p2', np.exp, [variable2])
-    parameter3 = Parameter('p2', np.exp, [variable3] * 2)
+    parameter3 = Parameter('p3', np.exp, [variable3] * 2)
     parameter_set = ParameterSet([parameter1, parameter2, parameter3])
     assert parameter_set.num_fe == 4
     return parameter_set

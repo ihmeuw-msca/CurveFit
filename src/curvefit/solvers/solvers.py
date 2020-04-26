@@ -1,16 +1,17 @@
 import numpy as np
+from copy import deepcopy
 import scipy.optimize as sciopt
 
-from curvefit.core.effects2params import effects2params
 
 class ModelNotDefinedError(Exception):
     pass
+
 
 class SolverNotDefinedError(Exception):
     pass
 
 
-class Base:
+class Solver:
 
     def __init__(self, model_instance=None):
         self.model = model_instance
@@ -32,8 +33,11 @@ class Base:
     def fit(self, data, x_init=None, options=None):
         raise NotImplementedError()
 
+    def clone(self):
+        return deepcopy(self)
 
-class ScipyOpt(Base):
+
+class ScipyOpt(Solver):
 
     def fit(self, data, x_init=None, options=None):
         if x_init is None:
@@ -54,7 +58,7 @@ class ScipyOpt(Base):
         return self.model.predict(self.x_opt, **kwargs)
 
 
-class Composite(Base):
+class CompositeSolver(Solver):
 
     def __init__(self):
         super().__init__(model_instance=None)
@@ -82,7 +86,7 @@ class Composite(Base):
             raise SolverNotDefinedError()
 
 
-class MultipleInitializations(Composite):
+class MultipleInitializations(CompositeSolver):
 
     def __init__(self, num_init, sample_fun):
         super().__init__()
@@ -100,7 +104,7 @@ class MultipleInitializations(Composite):
                 self.solver.fit(data, xs_init[i], options=options)
                 fun_vals.append(self.solver.fun_val_opt)
                 xs_opt.append(self.solver.x_opt)
-            
+
             self.x_opt = xs_opt[np.argmin(fun_vals)]
             self.fun_val_opt = np.min(fun_vals)
 
@@ -135,6 +139,3 @@ class GaussianMixturesIntegration(Composite):
 
     def predict(self, t):
         return self.gm_model.predict(self.x_opt, t)
-
-
-

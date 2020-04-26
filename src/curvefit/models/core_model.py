@@ -4,14 +4,75 @@ from dataclasses import dataclass
 from typing import List, Callable, Tuple
 import numpy as np
 
+from curvefit.core.prototype import Prototype
 from curvefit.core.objective_fun import objective_fun
 from curvefit.core.effects2params import effects2params
 from curvefit.models.base import Model, DataInputs
 
 
+@dataclass
+class DataInputs:
+    """
+    {begin_markdown DataInputs}
+
+    {spell_markdown ndarray gprior param init}
+
+    # `curvefit.core.core_model.DataInputs`
+    ## Provides the required data inputs for a `curvefit.core.core_model.Model`
+
+    The `DataInputs` class holds all of the inputs that are needed for fitting
+    a core model. It is only used in the `Model.convert_inputs()` method (
+    see [here](Model.md). The purpose is to extract only the required elements
+    of a `Data` class that are needed for model fitting in order to reduce the memory
+    usage, but also keep key information for model debugging.
+
+    ## Arguments
+
+    - `t (np.ndarray)`: the time variable (or independent variable) in the curve
+        fitting
+    - `obs (np.ndarray)`: the observation variable (or dependent variable) in the
+        curve fitting
+    - `obs_se (np.ndarray)`: the observation standard error to attach to the observations
+    - `covariates_matrices (List[np.ndarray])`: list of covariate matrices for each parameter
+        (in many cases these covariate matrices will just be one column of ones)
+    - `group_sizes (List[int])`: size of the groups
+    - `num_groups (int)`: number of groups
+    - `link_fun (List[Callable])`: list of link functions for the parameters
+    - `var_link_fun (List[Callable])`: list of variable link functions for the variables
+    - `x_init (np.ndarray)`: initial values for variables
+    - `bounds (np.ndarray)`: bounds for variables
+    - `fe_gprior (np.ndarray)`: array of fixed effects Gaussian priors for the variables
+    - `re_gprior (np.ndarray)`: array of random effects Gaussian priors for the variables
+    - `param_gprior_info (Tuple[Callable, List[float], List[float]])`: tuple of
+        information about the parameter functional Gaussian priors;
+        first element is a composite function of all of the parameter functional priors;
+        second element is a list of means; third element is a list of standard deviations
+
+    {end_markdown DataInputs}
+    """
+
+    t: np.ndarray
+    obs: np.ndarray
+    obs_se: np.ndarray
+    covariates_matrices: List[np.ndarray]
+    group_sizes: List[int]
+    num_groups: int
+    link_fun: List[Callable]
+    var_link_fun: List[Callable]
+    x_init: np.ndarray
+    bounds: np.ndarray
+    fe_gprior: np.ndarray
+    re_gprior: np.ndarray
+    param_gprior_info: Tuple[Callable, List[float], List[float]] = None
+
+
+class DataNotFoundError(Exception):
+    pass
+
+
 class CoreModel(Model):
     """
-    {begin_markdown Model}
+    {begin_markdown CoreModel}
 
     {spell_markdown param}
 
@@ -30,7 +91,7 @@ class CoreModel(Model):
     
     ## Methods
 
-    {end_markdown Model}
+    {end_markdown CoreModel}
     """
     def __init__(self, param_set, curve_fun, loss_fun):
         super().__init__()
@@ -58,14 +119,31 @@ class CoreModel(Model):
             param_gprior=self.data_inputs.param_gprior_info,
         )
 
-    def predict(self, x, t, predict_fun=None):
-        params = effects2params(
+    def gradient(self, x, data):
+        if self.data_inputs is None:
+            self.data_inputs = convert_inputs(self.param_set, data)
+        finfo = np.finfo(float)
+        step = finfo.tiny / finfo.eps
+        x_c = x + 0j
+        grad = np.zeros(x.size)
+        for i in range(x.size):
+            x_c[i] += step*1j
+            grad[i] = self.objective(x_c, data).imag/step
+            x_c[i] -= step*1j
+
+        return grad
+
+    def get_params(self, x):
+        return effects2params(
             x,
             self.data_inputs.group_sizes,
             self.data_inputs.covariates_matrices,
             self.param_set.link_fun,
             self.data_inputs.var_link_fun,
         )
+
+    def predict(self, x, t, predict_fun=None):
+        params = self.get_params(x=x)
         if predict_fun is None:
             predict_fun = self.curve_fun 
         
