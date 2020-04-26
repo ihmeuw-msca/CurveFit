@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import List, Callable, Tuple
 import numpy as np
 
+from curvefit.core.prototype import Prototype
 from curvefit.core.objective_fun import objective_fun
 from curvefit.core.effects2params import effects2params
 
@@ -13,7 +14,7 @@ class DataInputs:
     """
     {begin_markdown DataInputs}
 
-    {spell_markdown ndarray gprior param}
+    {spell_markdown ndarray gprior param init}
 
     # `curvefit.core.core_model.DataInputs`
     ## Provides the required data inputs for a `curvefit.core.core_model.Model`
@@ -68,7 +69,7 @@ class DataNotFoundError(Exception):
     pass
 
 
-class CoreModel:
+class CoreModel(Prototype):
     """
     {begin_markdown Model}
 
@@ -135,7 +136,7 @@ class CoreModel:
         if self.data_inputs is None:
             self.data_inputs = convert_inputs(self.param_set, data)
         finfo = np.finfo(float)
-        step  = finfo.tiny / finfo.eps
+        step = finfo.tiny / finfo.eps
         x_c = x + 0j
         grad = np.zeros(x.size)
         for i in range(x.size):
@@ -145,14 +146,17 @@ class CoreModel:
 
         return grad
 
-    def predict(self, x, t, predict_fun=None):
-        params = effects2params(
+    def get_params(self, x):
+        return effects2params(
             x,
             self.data_inputs.group_sizes,
             self.data_inputs.covariates_matrices,
             self.param_set.link_fun,
             self.data_inputs.var_link_fun,
         )
+
+    def predict(self, x, t, predict_fun=None):
+        params = self.get_params(x=x)
         if predict_fun is None:
             predict_fun = self.curve_fun 
         

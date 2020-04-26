@@ -13,6 +13,7 @@ nav:
     - core:
         - data:
             - Data: 'extract_md/Data.md'
+            - DataSpecs: 'extract_md/DataSpecs.md'
         - parameter:
             - Variable: 'extract_md/Variable.md'
             - Parameter: 'extract_md/Parameter.md'
@@ -20,6 +21,9 @@ nav:
         - residual models:
             - _ResidualModel: 'extract_md/_ResidualModel.md'
             - SmoothResidualModel: 'extract_md/SmoothResidualModel.md'
+        - effects2params:
+            - unzip_x: 'extract_md/unzip_x.md'
+            - effects2params: 'extract_md/effects2params.md'
     - models:
         - core_model:
             - DataInputs: 'extract_md/DataInputs.md'
@@ -31,11 +35,9 @@ nav:
             - convolve_sum: 'extract_md/convolve_sum.md'
             - df_to_mat: 'extract_md/df_to_mat.md'
     - other:
-      - unzip_x: 'extract_md/unzip_x.md'
       - sizes_to_indices: 'extract_md/sizes_to_indices.md'
       - split_by_group: 'extract_md/split_by_group.md'
       - param_time_fun: 'extract_md/param_time_fun.md'
-      - effects2params: 'extract_md/effects2params.md'
       - objective_fun: 'extract_md/objective_fun.md'
       - extract_md.py: 'extract_md/extract_md.py.md'
       - get_cppad_py.py: 'extract_md/get_cppad_py.py.md'

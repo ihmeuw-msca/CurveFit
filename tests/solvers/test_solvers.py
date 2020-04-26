@@ -4,6 +4,7 @@ from scipy.optimize import rosen, rosen_der
 
 from curvefit.solvers.solvers import ScipyOpt, MultipleInitializations
 
+
 class Rosenbrock:
 
     def __init__(self, n_dim=2):
@@ -11,15 +12,19 @@ class Rosenbrock:
         self.bounds = np.array([[-2.0, 2.0]] * n_dim)
         self.x_init = np.array([-1.0] * n_dim)
 
-    def objective(self, x, data):
+    @staticmethod
+    def objective(x, data):
         return rosen(x)
 
-    def gradient(self, x, data):
+    @staticmethod
+    def gradient(x, data):
         return rosen_der(x)
+
 
 @pytest.fixture(scope='module')
 def rb():
     return Rosenbrock()
+
 
 class TestBaseSolvers:
 

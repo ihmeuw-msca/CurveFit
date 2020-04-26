@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from curvefit.core.parameter import Variable, Parameter, ParameterSet
+from curvefit.core.parameter import Variable, Parameter, ParameterSet, ParameterFunction
 
 
 @pytest.fixture
@@ -72,13 +72,10 @@ def test_parameter():
     assert len(parameter.re_bounds) == 2
 
 
-def test_parameter_set():
+@pytest.fixture
+def param1():
     var1 = Variable(
         covariate='covariate1', var_link_fun=lambda x: x,
-        fe_init=1., re_init=1.
-    )
-    var2 = Variable(
-        covariate='covariate2', var_link_fun=lambda x: x,
         fe_init=1., re_init=1.
     )
     parameter1 = Parameter(
@@ -86,20 +83,65 @@ def test_parameter_set():
         variables=[var1],
         link_fun=lambda x: x,
     )
+    return parameter1
+
+
+@pytest.fixture
+def param2():
+    var2 = Variable(
+        covariate='covariate2', var_link_fun=lambda x: x,
+        fe_init=1., re_init=1.
+    )
     parameter2 = Parameter(
         param_name='beta',
         variables=[var2],
         link_fun=lambda x: x,
     )
-    param_set = ParameterSet(
-        parameters=[parameter1, parameter2],
-        parameter_functions=[(lambda params: params[0] * params[1], [0.0, np.inf])],
+    return parameter2
+
+
+def test_parameter_set_duplicates(param1):
+    with pytest.raises(RuntimeError):
+        ParameterSet(
+            parameters=[param1, param1]
+        )
+
+
+@pytest.fixture
+def parameter_function():
+    return ParameterFunction(
+        param_function_name='alpha-squared',
+        param_function=lambda params: params[0] * params[1],
+        param_function_fe_gprior=[0.0, np.inf]
     )
 
-    assert param_set.num_fe == 2
-    assert len(param_set.parameter_functions) == 1
-    assert callable(param_set.parameter_functions[0][0])
-    assert len(param_set.parameter_functions[0][1]) == 2
-    assert param_set.parameter_functions[0][1] == [0., np.inf]
 
-    assert param_set.parameter_functions[0][0]([2, 3]) == 6
+def test_parameter_function(parameter_function):
+    assert parameter_function.param_function_name == 'alpha-squared'
+    assert parameter_function.param_function([2, 2]) == 4
+    assert parameter_function.param_function_fe_gprior == [0.0, np.inf]
+
+
+@pytest.fixture
+def parameter_set(param1, param2, parameter_function):
+    return ParameterSet(
+        parameters=[param1, param2],
+        parameter_functions=[parameter_function],
+    )
+
+
+def test_parameter_set(parameter_set):
+    assert parameter_set.num_fe == 2
+    assert callable(parameter_set.param_function[0])
+    assert len(parameter_set.param_function_fe_gprior[0]) == 2
+    assert parameter_set.param_function_fe_gprior[0] == [0., np.inf]
+    assert parameter_set.param_function[0]([2, 3]) == 6
+
+
+def test_parameter_set_index(parameter_set):
+    assert parameter_set.get_param_index('alpha') == 0
+    assert parameter_set.get_param_index('beta') == 1
+
+    with pytest.raises(RuntimeError):
+        parameter_set.get_param_index('gamma')
+

@@ -3,8 +3,21 @@ from typing import List
 
 from curvefit.utils.data import data_translator
 
+
 @dataclass(frozen=True)
 class DataSpecs:
+    """
+    {begin_markdown DataSpecs}
+
+    # `curvefit.core.data.DataSpecs`
+    ## Data specifications based on a `Data` object
+
+    ## Arguments
+
+    See arguments to [`curvefit.core.data.Data`](Data.md).
+
+    {end_markdown DataSpecs}
+    """
     col_t: str
     col_obs: str
     col_covs: List[str]
@@ -55,8 +68,9 @@ class Data:
     ## Methods
 
     ### `get_df`
-    Returns a copy of the data frame, or a pointer to the data frame. If you plan on modifying the data frame,
-    use `copy=True`. If a group is passed, then a group-specific data frame will be passed.
+    Returns a copy of the data frame or a pointer to the data frame, and optionally data specs.
+    If you plan on modifying the data frame, use `copy=True`. If a group is passed,
+    then a group-specific data frame will be passed.
 
     - `group (optional, str)`: optional group name
     - `copy (bool)`: return a copy or not
@@ -79,8 +93,7 @@ class Data:
         self.col_group = col_group
         self.obs_space = obs_space
         self.obs_se_func = obs_se_func
-
-        self.data_specs = DataSpecs(col_t, col_obs, col_covs, col_group, col_obs_se, obs_space, obs_se_func)
+        self.col_obs_se = col_obs_se
 
         self.df.sort_values([self.col_group, self.col_t], inplace=True)
 
@@ -89,6 +102,16 @@ class Data:
             self.df[self.col_obs_se] = self.df[self.col_t].apply(self.obs_se_func)
         else:
             self.col_obs_se = col_obs_se
+
+        self.data_specs = DataSpecs(
+            col_t=self.col_t,
+            col_obs=self.col_obs,
+            col_covs=self.col_covs,
+            col_group=self.col_group,
+            obs_space=self.obs_space,
+            obs_se_fun=self.obs_se_func,
+            col_obs_se=self.col_obs_se
+        )
 
         self.groups = self.df[self.col_group].unique()
 

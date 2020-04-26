@@ -30,15 +30,21 @@ file_list = [
 ]
 # list of extra words that the spell checker will consider correct
 extra_special_words = [
+    'bool',
     'covariates',
     'covariate',
     'curvefit',
     'curvemodel',
     'dict',
     'dtype',
+    'gprior'
+    'init',
+    'inits',
     'initialized',
     'initialize',
     'numpy',
+    'ndarray',
+    'param',
     'params',
     'py',
     'sandbox',
