@@ -57,14 +57,14 @@ class Variable:
     {end_markdown Variable}
     """
 
-    covariate: str 
+    covariate: str
     var_link_fun: Callable
     fe_init: float
     re_init: float
     fe_gprior: List[float] = field(default_factory=lambda: [0.0, np.inf])
     re_gprior: List[float] = field(default_factory=lambda: [0.0, np.inf])
     fe_bounds: List[float] = field(default_factory=lambda: [-np.inf, np.inf])
-    re_bounds: List[float] = field(default_factory=lambda: [-np.inf, np.inf]) 
+    re_bounds: List[float] = field(default_factory=lambda: [-np.inf, np.inf])
 
     def __post_init__(self):
         assert isinstance(self.covariate, str)
@@ -123,7 +123,7 @@ class Parameter:
 
     param_name: str
     link_fun: Callable
-    variables: InitVar[List[Variable]]
+    variables: List[Variable]
 
     num_fe: int = field(init=False)
     covariate: List[str] = field(init=False)
@@ -135,12 +135,12 @@ class Parameter:
     fe_bounds: List[List[float]] = field(init=False)
     re_bounds: List[List[float]] = field(init=False)
 
-    def __post_init__(self, variables):
-        assert isinstance(variables, list)
-        assert len(variables) > 0
-        assert isinstance(variables[0], Variable)
-        self.num_fe = len(variables)
-        for k, v in consolidate(Variable, variables).items():
+    def __post_init__(self):
+        assert isinstance(self.variables, list)
+        assert len(self.variables) > 0
+        assert isinstance(self.variables[0], Variable)
+        self.num_fe = len(self.variables)
+        for k, v in consolidate(Variable, self.variables).items():
             self.__setattr__(k, v)
 
 
@@ -238,7 +238,7 @@ class ParameterSet(Prototype):
 
     def __post_init__(self, parameters, parameter_functions):
 
-        for k, v in consolidate(Parameter, parameters, exclude=['num_fe']).items():
+        for k, v in consolidate(Parameter, self.parameters, exclude=['num_fe']).items():
             self.__setattr__(k, v)
 
         for k, v in consolidate(ParameterFunction, parameter_functions).items():
@@ -250,7 +250,7 @@ class ParameterSet(Prototype):
             raise RuntimeError("Cannot have duplicate parameter functions in a set.")
 
         self.num_fe = 0
-        for param in parameters:
+        for param in self.parameters:
             self.num_fe += param.num_fe
 
     def get_param_index(self, param_name):
