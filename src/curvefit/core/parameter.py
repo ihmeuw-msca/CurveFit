@@ -145,7 +145,7 @@ class Parameter:
 
 
 @dataclass
-class ParameterFunction(Prototype):
+class ParameterFunction:
 
     param_function_name: str
     param_function: Callable
