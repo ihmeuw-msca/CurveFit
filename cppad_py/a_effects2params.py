@@ -40,8 +40,7 @@ def a_effects2params(
     aparams = numpy.empty( shape, dtype = a_double )
     for k in range(num_params) :
         # covariate times variable for i-th parameter
-        acovs_k    = a_functions.array2a_double( covs[k] )
-        aprod      = acovs_k * avar[:, fe_idx[k]]
+        aprod      = covs[k] * avar[:, fe_idx[k]]
         # sum of produces for i-th parameter
         aparams[k] = numpy.sum(aprod, axis=1)
         # transform the sum

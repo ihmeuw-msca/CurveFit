@@ -11,12 +11,15 @@ def test_params() :
     # Test parameters
     num_param    = 3
     num_group    = 2
+    eps99        = 99.0  * numpy.finfo(float).eps
     # -----------------------------------------------------------------------
     # call effects2params
     num_fe          = num_param
     num_x           = (num_group + 1) * num_fe
-    x               = numpy.array( range(num_x), dtype = float ) / num_x
-    ax              = a_functions.array2a_double(x)
+    start           = 0.0
+    stop            = 1.0
+    x               = numpy.linspace(start, stop, num_x)
+    ax              = numpy.array( [ a_double(x[i]) for i in range(num_x) ] )
     group_sizes     = numpy.arange(num_group) * 2 + 1
     num_obs         = sum( group_sizes )
     covs            = list()
@@ -31,7 +34,6 @@ def test_params() :
     )
     # ----------------------------------------------------------------------
     # check result
-    eps99  = 99.0  * numpy.finfo(float).eps
     afe    = ax[0 : num_fe]
     are    = ax[num_fe :].reshape( (num_group, num_fe), order='C')
     asum   = afe + are

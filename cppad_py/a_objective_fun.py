@@ -32,9 +32,7 @@ def a_objective_fun(
         expand=True
     )
     # residual
-    aobs = a_functions.array2a_double( obs )
-    at   = a_functions.array2a_double( t )
-    aresidual = (aobs - a_model_fun(at, aparams))/obs_se
+    aresidual = (obs - a_model_fun(t, aparams))/obs_se
     #
     # loss
     a_obj_val = a_loss_fun(aresidual)

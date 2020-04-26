@@ -5,15 +5,6 @@ from curvefit.core.utils import unpack_param
 # ---------------------------------------------------------------------------
 # Local Functions
 # ---------------------------------------------------------------------------
-def array2a_double(array) :
-    shape = array.shape
-    size  = array.size
-    vec   = numpy.reshape(array, size, order='C')
-    a_vec = numpy.empty(shape, dtype=a_double)
-    for i in range(size) :
-        a_vec[i] = a_double( vec[i] )
-    return a_vec
-#
 def a_erf(vec) :
     result = numpy.empty(len(vec), dtype = a_double )
     for i in range( len(vec) ) :
