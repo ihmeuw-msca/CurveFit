@@ -21,7 +21,7 @@ def test_gaussian_cdf() :
     # -----------------------------------------------------------------------
     # f(t) = gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.a_gaussian_cdf(at, aparam)
+    ay = a_functions.gaussian_cdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
     # zero order foward mode using same values as during recording
@@ -50,7 +50,7 @@ def test_gaussian_cdf() :
     # -----------------------------------------------------------------------
     # g(t) = ln_gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.a_ln_gaussian_cdf(at, aparam)
+    ay = a_functions.ln_gaussian_cdf(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
     # zero order foward mode using same values as during recording

@@ -21,15 +21,15 @@ def test_dgaussian_pdf() :
     # -----------------------------------------------------------------------
     # f(t) = gaussian_pdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.a_gaussian_pdf(at, aparam)
+    ay = a_functions.gaussian_pdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
     # g(t) = dgaussian_pdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.a_dgaussian_pdf(at, aparam)
+    ay = a_functions.dgaussian_pdf(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
-    # check a_dgaussian_pdf
+    # check dgaussian_pdf
     f.forward(0, t)
     g0  = g.forward(0, t)
     dt  = numpy.zeros((t.size), dtype = float)

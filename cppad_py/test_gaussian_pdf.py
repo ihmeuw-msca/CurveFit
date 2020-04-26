@@ -21,15 +21,15 @@ def test_gaussian_pdf() :
     # -----------------------------------------------------------------------
     # f(t) = gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.a_gaussian_cdf(at, aparam)
+    ay = a_functions.gaussian_cdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     #
     # g(t) = d/dt gaussian_cdf(t, param)
     at = cppad_py.independent(t)
-    ay = a_functions.a_gaussian_pdf(at, aparam)
+    ay = a_functions.gaussian_pdf(at, aparam)
     g  = cppad_py.d_fun(at, ay)
     #
-    # check a_gaussian_pdf
+    # check gaussian_pdf
     f.forward(0, t)
     g0  = g.forward(0, t)
     dt  = numpy.zeros((t.size), dtype = float)
@@ -42,7 +42,7 @@ def test_gaussian_pdf() :
     # -----------------------------------------------------------------------
     # check a_ln_dgaussain_cdf
     at = cppad_py.independent(t)
-    ay = a_functions.a_ln_gaussian_pdf(at, aparam)
+    ay = a_functions.ln_gaussian_pdf(at, aparam)
     f  = cppad_py.d_fun(at, ay)
     f0 = f.forward(0, t)
     rel_error = f0 / numpy.log(g0) - 1
