@@ -146,6 +146,9 @@ class GaussianMixturesIntegration(CompositeSolver):
 
 class SmartInitialization(CompositeSolver):
 
+    def __init__(self, update_prior_fun):
+        self.update_prior_fun = update_prior_fun
+
     def fit(self, data, x_init=None, options=None):
          if self.is_solver_defined():
             model = self.get_model_instance()
@@ -157,6 +160,12 @@ class SmartInitialization(CompositeSolver):
             xs = []
             for group in group_names:
                 data_sub = (df[df[data_specs.col_group] == group], data_specs)
-                self.solver.fit(data_sub, x_init, options=options)
+                self.solver.fit(data_sub, x_init, options)
                 xs.append(self.solver.x_opt)
                 model.erase_data()
+
+            new_param_set = self.update_prior_fun(model.param_set, xs)
+            model.update_param_set(new_param_set)
+            self.solver.fit(data, x_init, options)
+            self.x_opt = self.solver.x_opt
+            self.fun_val_opt = self.solver.fun_val_opt
