@@ -65,11 +65,3 @@ def a_dgaussian_pdf(t, param) :
     z              = alpha * (t - beta)
     two            = a_double(2.0)
     return - two * z * alpha * a_gaussian_pdf(t, param)
-# ----------------------------------------------------------------------------
-# Loss Functions
-# ----------------------------------------------------------------------------
-def a_st_loss(r, nu) :
-    return numpy.sum( numpy.log( a_double(1.0) + r * r / nu) )
-#
-def a_normal_loss(r) :
-    return a_double(0.5) * numpy.sum( r * r )

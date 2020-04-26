@@ -11,7 +11,7 @@ def st_loss(r, nu=1.0):
     # Student's t Loss Function
 
     ## Syntax
-    `loss = curvefit.core.loss_fun.st_loss(r, nu = 1.0)`
+    `loss = curvefit.core.loss.st_loss(r, nu = 1.0)`
 
     ## t
     is a numpy vector of residual values. We use \( n \)
@@ -60,7 +60,7 @@ def normal_loss(r):
     # Gaussian Loss Function
 
     ## Syntax
-    `loss = curvefit.core.loss_fun.normal_loss(r)`
+    `loss = curvefit.core.loss.normal_loss(r)`
 
     ## r
     is a numpy vector of normalized residual values. We use \( n \)
