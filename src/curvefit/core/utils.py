@@ -5,14 +5,54 @@ from copy import deepcopy
 from collections import OrderedDict
 from curvefit.core.functions import *
 
+def unpack_param(t, param) :
+    """
+    {begin_markdown unpack_param}
+    {spell_markdown param utils}
+
+    # Unpack Parameters
+
+    ## Syntax
+    `p1, ..., pm = curvefit.core.utils.unpack_param(t, param)`
+
+    ## Notation
+    We use *vector* to denote a list or a numpy array with only on dimension.
+
+    ## t
+    must be a vector.  We use *n* to denote the length of this vector.
+
+    ## param
+    must be a vector or numpy matrix.
+    If it is a vector, we use *m* to denote its length.
+    If it is a matrix, its column dimension is equal to the length of *t*
+    and we use *m* to denote its row dimension.
+
+    ## p1, ..., pm
+    If *param* is a vector; *p1* , ... , *pm* are the elements of `param`.
+    Otherwise, *p1* , ... , *pm* are the rows of `param`.
+
+    ## Example
+    [unpack_param](unpack_param_xam.md)
+
+    {end_markdown unpack_param}
+    """
+    if isinstance(param, list) :
+        result_list = param
+    else :
+        result_list = [ param[i] for i in range(param.shape[0]) ]
+    #
+    return tuple(param)
+
 
 def sizes_to_indices(sizes):
-    """{begin_markdown sizes_to_indices}
-    {spell_markdown subvector subvectors iterable}
+    """
+    {begin_markdown sizes_to_indices}
+    {spell_markdown subvector subvectors iterable utils}
+
     # Converting sizes to corresponding indices.
 
     ## Syntax
-    `indices = curvefit.sizes_to_indices(sizes)`
+    `indices = curvefit.core.utils.sizes_to_indices(sizes)`
 
     ## sizes
     The argument *sizes* is an iterable object with integer values.
