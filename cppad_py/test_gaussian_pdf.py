@@ -32,7 +32,7 @@ def test_gaussian_pdf() :
     # check a_gaussian_pdf
     f.forward(0, t)
     g0  = g.forward(0, t)
-    dt  = a_functions.constant_array((t.size,), 0.0)
+    dt  = numpy.zeros((t.size), dtype = float)
     for i in range(len(t)) :
         dt[i]     = 1.0
         df        = f.forward(1, dt)

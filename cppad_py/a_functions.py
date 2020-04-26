@@ -5,15 +5,6 @@ from curvefit.core.utils import unpack_param
 # ---------------------------------------------------------------------------
 # Local Functions
 # ---------------------------------------------------------------------------
-def constant_array(shape, value) :
-    size = 1
-    for dim in shape :
-        size *= dim
-    vec = numpy.empty(size, dtype=type(value))
-    for i in range(size) :
-        vec[i] = value
-    return numpy.reshape(vec, shape)
-#
 def array2a_double(array) :
     shape = array.shape
     size  = array.size
