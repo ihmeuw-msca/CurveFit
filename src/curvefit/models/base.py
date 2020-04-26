@@ -16,7 +16,7 @@ class DataInputs:
 
     {spell_markdown ndarray gprior param}
 
-    # `curvefit.core.core_model.DataInputs`
+    # `curvefit.models.base.DataInputs`
     ## Provides the required data inputs for a `curvefit.core.core_model.Model`
 
     The `DataInputs` class holds all of the inputs that are needed for fitting
@@ -66,6 +66,13 @@ class DataInputs:
 
 
 class Model(Prototype):
+    """
+    {begin_markdown Model}
+
+    # `curvefit.models.base.Model`
+
+    {end_markdown Model}
+    """
 
     def __init__(self):
         self.data_inputs = None

@@ -26,6 +26,7 @@ file_list = [
 
     'src/curvefit/utils/smoothing.py',
 
+    'src/curvefit/models/base.py',
     'src/curvefit/models/core_model.py'
 ]
 # list of extra words that the spell checker will consider correct

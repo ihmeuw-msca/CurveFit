@@ -25,9 +25,11 @@ nav:
             - unzip_x: 'extract_md/unzip_x.md'
             - effects2params: 'extract_md/effects2params.md'
     - models:
-        - core_model:
+        - base:
             - DataInputs: 'extract_md/DataInputs.md'
             - Model: 'extract_md/Model.md'
+        - core_model:
+            - CoreModel: 'extract_md/CoreModel.md'
     - utils:
         - smoothing:
             - local_deviations: 'extract_md/local_deviations.md'
