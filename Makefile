@@ -27,7 +27,6 @@ examples:
 	example/numpy_ufunc.py
 	example/objective_fun.py
 	example/param_model.py
-	example/param_time_fun.py
 	example/random_effect.py
 	example/sizes_to_indices.py
 	example/unpack_param.py
