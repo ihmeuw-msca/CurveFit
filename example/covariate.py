@@ -9,6 +9,7 @@
     ftol
     gtol
     erf
+    ufunc
 }
 
 # Using Covariates
@@ -100,13 +101,14 @@ import sandbox
 sandbox.path()
 import curvefit
 from curvefit.core.model import CurveModel
+from curvefit.core.numpy_ufunc import erf
 #
 # model for the mean of the data
 def gaussian_cdf(t, params) :
     alpha = params[0]
     beta  = params[1]
     p     = params[2]
-    return 0.5 * p * ( 1.0 + scipy.special.erf( alpha * ( t - beta ) ) )
+    return 0.5 * p * ( 1.0 + erf( alpha * ( t - beta ) ) )
 #
 # link function used for beta
 def identity_fun(x) :

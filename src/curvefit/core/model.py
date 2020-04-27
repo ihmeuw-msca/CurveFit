@@ -13,6 +13,7 @@ from curvefit.core.functions import normal_loss
 from curvefit.core.effects2params import effects2params
 from curvefit.core.objective_fun import objective_fun
 
+import cppad_py
 
 class CurveModel:
     """Curve Fitting Class
@@ -359,10 +360,25 @@ class CurveModel:
         bounds = np.vstack([fe_bounds,
                             re_bounds.reshape(self.num_re, 2)])
 
+        # -------------------------------------------------------------------
+        # The only thing that changes durning the optimization is x
+        # so we record f(x) and pass the optimizer f(x) and f'(x)
+        ax   = cppad_py.independent(x0)
+        ay   = np.array( [self.objective(ax)] )
+        f    = cppad_py.d_fun(ax, ay)
+        def f_ad(x) :
+            y = f.forward(0, x)
+            return y[0]
+        def g_ad(x) :
+            f.forward(0, x)
+            w  = np.array( [ [ 1.0 ] ] )
+            g  = f.reverse(1, w)
+            return g
+        # -------------------------------------------------------------------
         result = minimize(
-            fun=self.objective,
+            fun=f_ad,
             x0=x0,
-            jac=self.gradient,
+            jac=g_ad,
             method='L-BFGS-B',
             bounds=bounds,
             options=options
