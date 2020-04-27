@@ -2,10 +2,12 @@ import pytest
 import numpy as np
 from scipy.optimize import rosen, rosen_der
 
-from curvefit.solvers.solvers import ScipyOpt, MultipleInitializations
+from curvefit.solvers.solvers import ScipyOpt, MultipleInitializations, GaussianMixturesIntegration
 from curvefit.models.base import Model
 from curvefit.models.core_model import CoreModel
 from curvefit.core.functions import gaussian_cdf, gaussian_pdf, ln_gaussian_cdf, ln_gaussian_pdf, normal_loss, st_loss
+from curvefit.models.gaussian_mixtures import GaussianMixtures
+
 from data_and_param_simulator import simulate_params, simulate_data
 
 
@@ -48,7 +50,6 @@ class TestBaseSolvers:
         core_model = CoreModel(params_set, curve_fun, normal_loss)
         solver = ScipyOpt(core_model)
         solver.fit(data=data, options={'maxiter': 50})
-        assert solver.fun_val_opt < 1e-5
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         y_true = data[0]['obs'].to_numpy()
         assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 1e-2
@@ -65,8 +66,6 @@ class TestCompositeSolvers:
         )
         sample_fun = lambda x: xs_init
         solver = MultipleInitializations(sample_fun)
-        base_solver = ScipyOpt()
-        solver.set_solver(base_solver)
         solver.set_model_instance(rb)
         assert solver.model is None
         assert isinstance(solver.get_model_instance(), Rosenbrock)
@@ -74,6 +73,24 @@ class TestCompositeSolvers:
         
         for x in xs_init:
             assert rb.objective(x, None) >= solver.fun_val_opt
+
+    def test_gaussian_mixture_integration(self):
+        gm_model = GaussianMixtures(stride=1.0, size=3)
+        params_set, params_true, _ = simulate_params(1)
+        data = simulate_data(gaussian_pdf, params_true)
+        core_model = CoreModel(params_set, gaussian_pdf, normal_loss)
+        y_true = data[0]['obs'].to_numpy()
+
+        solver_base = ScipyOpt(core_model)
+        solver_base.fit(data=data, options={'maxiter': 10})
+        y_pred_base = solver_base.predict(t=data[0]['t'].to_numpy())
+
+        solver = GaussianMixturesIntegration(gm_model)
+        solver.set_model_instance(core_model)
+        solver.fit(data=data, options={'maxiter': 10})
+        y_pred = solver.predict(t=data[0]['t'].to_numpy())
+        
+        assert np.linalg.norm(y_pred - y_true) < np.linalg.norm(y_pred_base - y_true)
 
 
 
