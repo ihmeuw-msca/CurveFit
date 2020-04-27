@@ -3,7 +3,6 @@ import pandas as pd
 from xspline import XSpline
 from copy import deepcopy
 from collections import OrderedDict
-from curvefit.core.functions import *
 
 def unpack_param(t, param) :
     """
