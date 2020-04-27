@@ -75,7 +75,7 @@ class JointPriorInitializerComponent(PriorInitializerComponent):
     """
     def __init__(self):
         super().__init__()
-        self.initializer_type = 'joint'
+        self.component_type = 'joint'
 
 
 class IndividualPriorInitializerComponent(PriorInitializerComponent):
@@ -99,7 +99,7 @@ class IndividualPriorInitializerComponent(PriorInitializerComponent):
     """
     def __init__(self):
         super().__init__()
-        self.initializer_type = 'individual'
+        self.component_type = 'individual'
 
 
 class LnAlphaBetaPrior(IndividualPriorInitializerComponent):
