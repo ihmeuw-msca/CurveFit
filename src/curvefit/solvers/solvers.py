@@ -131,7 +131,7 @@ class GaussianMixturesIntegration(CompositeSolver):
                 model.param_set.link_fun,
                 model.data_inputs.var_link_fun,
             )
-            self.gm_model.set_params(params)
+            self.gm_model.set_params(params[:, 0])
             gm_solver = ScipyOpt(self.gm_model)
             gm_solver.fit(data)
             self.x_opt = gm_solver.x_opt
