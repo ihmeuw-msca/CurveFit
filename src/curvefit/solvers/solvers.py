@@ -37,6 +37,9 @@ class Solver:
     def clone(self):
         return deepcopy(self)
 
+    def predict(self, **kwargs):
+        return self.model.predict(self.x_opt, **kwargs)
+
 
 class ScipyOpt(Solver):
 
@@ -55,21 +58,18 @@ class ScipyOpt(Solver):
         self.x_opt = result.x
         self.fun_val_opt = result.fun
 
-    def predict(self, **kwargs):
-        return self.model.predict(self.x_opt, **kwargs)
-
 
 class CompositeSolver(Solver):
 
-    def __init__(self):
+    def __init__(self, solver=None):
         super().__init__(model_instance=None)
-        self.solver = ScipyOpt()
+        self.solver = ScipyOpt() if solver is None else solver
 
     def set_solver(self, solver):
         self.solver = solver
 
     def set_model_instance(self, model_instance):
-        if self.is_solver_defined():
+        if self.assert_solver_defined() is True:
             self.solver.set_model_instance(model_instance)
 
     def detach_model_instance(self):
@@ -77,50 +77,49 @@ class CompositeSolver(Solver):
             self.solver.detach_model_instance()
 
     def get_model_instance(self):
-        if self.is_solver_defined():
+        if self.assert_solver_defined() is True:
             return self.solver.get_model_instance()
 
-    def is_solver_defined(self):
+    def assert_solver_defined(self):
         if self.solver is not None:
             return True
         else:
             raise SolverNotDefinedError()
 
+    def predict(self, **kwargs):
+        return self.solver.predict(self.x_opt, **kwargs)
+
 
 class MultipleInitializations(CompositeSolver):
 
-    def __init__(self, num_init, sample_fun):
+    def __init__(self, sample_fun, solver=None):
         super().__init__()
-        self.num_init = num_init
-        self.sample_fun = lambda x: sample_fun(x, self.num_init)
+        self.sample_fun = sample_fun
 
     def fit(self, data, x_init=None, options=None):
-        if self.is_solver_defined():
+        if self.assert_solver_defined() is True:
             if x_init is None:
                 x_init = self.get_model_instance().x_init
             fun_vals = []
             xs_opt = []
             xs_init = self.sample_fun(x_init)
-            for i in range(self.num_init):
-                self.solver.fit(data, xs_init[i], options=options)
+            for x in xs_init:
+                self.solver.fit(data, x, options=options)
                 fun_vals.append(self.solver.fun_val_opt)
                 xs_opt.append(self.solver.x_opt)
 
             self.x_opt = xs_opt[np.argmin(fun_vals)]
             self.fun_val_opt = np.min(fun_vals)
 
-    def predict(self, **kwargs):
-        return self.solver.predict(self.x_opt, **kwargs)
-
 
 class GaussianMixturesIntegration(CompositeSolver):
 
-    def __init__(self, gm_model):
+    def __init__(self, gm_model, solver=None):
         super().__init__()
         self.gm_model = gm_model
 
     def fit(self, data, x_init=None, options=None):
-        if self.is_solver_defined():
+        if self.assert_solver_defined() is True:
             if x_init is None:
                 x_init = self.get_model_instance().x_init
             self.solver.fit(data, x_init, options)
@@ -144,17 +143,22 @@ class GaussianMixturesIntegration(CompositeSolver):
 
 class SmartInitialization(CompositeSolver):
 
-    def __init__(self):
+    def __init__(self, solver=None):
         super().__init__()
 
     def fit(self, data, x_init=None, options=None):
-         if self.is_solver_defined():
-            model = self.get_model_instance()
-            if x_init is None:
-                x_init = model.x_init
+         if self.assert_solver_defined() is True:
             df = data[0]
             data_specs = data[1]
             group_names = df[data_specs.col_group].unique()
+            if len(group_names) == 1:
+                raise RuntimeError('SmartInitialization is only for multiple groups.')
+            
+            model = self.get_model_instance()
+            if x_init is None:
+                x_init = model.x_init
+            re_bounds = deepcopy(model.param_set.re_bounds)
+            model.param_set.re_bounds = self._set_bounds_zeros(model.param_set.re_bounds)
             xs = []
             for group in group_names:
                 data_sub = (df[df[data_specs.col_group] == group], data_specs)
@@ -164,9 +168,17 @@ class SmartInitialization(CompositeSolver):
             xs = np.array(xs)
             x_mean = np.mean(xs, axis=0)
             x_init = np.concatenate((x_mean, np.reshape(xs - x_mean, (-1, ))))
+            model.param_set.re_bounds = re_bounds
             self.solver.fit(data, x_init, options)
             self.x_opt = self.solver.x_opt
             self.fun_val_opt = self.solver.fun_val_opt
 
-    def predict(self, t, **kwargs):
-        return self.solver.predict(t, **kwargs)
+    def _set_bounds_zeros(self, bounds):
+        if len(bounds) == 2 and isinstance(bounds[0], float):
+            return [0.0, 0.0]
+        else:
+            bds = []
+            for b in bounds:
+                bds.append(self._set_bounds_zeros(b))
+            return bds
+

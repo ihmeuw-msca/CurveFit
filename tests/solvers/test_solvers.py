@@ -43,8 +43,8 @@ class TestCompositeSolvers:
             high=[b[1] for b in rb.bounds],
             size=(num_init, rb.n_dim),
         )
-        sample_fun = lambda x, n: xs_init
-        solver = MultipleInitializations(num_init, sample_fun)
+        sample_fun = lambda x: xs_init
+        solver = MultipleInitializations(sample_fun)
         base_solver = ScipyOpt()
         solver.set_solver(base_solver)
         solver.set_model_instance(rb)
