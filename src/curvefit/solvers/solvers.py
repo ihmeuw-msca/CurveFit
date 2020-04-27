@@ -1,8 +1,8 @@
 import numpy as np
-from copy import deepcopy
 import scipy.optimize as sciopt
 
 from curvefit.core.effects2params import effects2params
+from curvefit.core.prototype import Prototype
 
 
 class ModelNotDefinedError(Exception):
@@ -13,7 +13,7 @@ class SolverNotDefinedError(Exception):
     pass
 
 
-class Solver:
+class Solver(Prototype):
 
     def __init__(self, model_instance=None):
         self.model = model_instance
@@ -34,9 +34,6 @@ class Solver:
 
     def fit(self, data, x_init=None, options=None):
         raise NotImplementedError()
-
-    def clone(self):
-        return deepcopy(self)
 
 
 class ScipyOpt(Solver):
