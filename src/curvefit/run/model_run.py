@@ -13,9 +13,6 @@ class ModelRunner:
 
     ## Arguments
 
-    - `prior_initializer (curvefit.initializer.initializers.PriorInitializer)`: prior initializer
-    - `initializer_data (curvefit.core.data.Data)`: data for the initializer only,
-        might be the same or different from `data` (could overlap, could be completely separate)
     - `data (curvefit.core.data.Data)`: data object with all groups
     - `model (curvefit.models.base.Model)`: a model instance with an attached
         ParameterSet
@@ -23,6 +20,10 @@ class ModelRunner:
     - `predictive_validity (curvefit.uncertainty.predictive_validity.PredictiveValidity)`: a predictive validity object
     - `residual_model (curvefit.uncertainty.residual_models._ResidualModel)`: a residual model
     - `draws (curvefit.uncertainty.draws.Draws)`: a draws object
+    - `prior_initializer (optional, curvefit.initializer.initializers.PriorInitializer)`: prior initializer
+    - `initializer_data (optional, curvefit.core.data.Data)`: data for the initializer only,
+        might be the same or different from `data` (could overlap, could be completely separate)
+
 
     ## Methods
 
@@ -36,12 +37,9 @@ class ModelRunner:
 
     {end_markdown ModelRunner}
     """
-    def __init__(self, prior_initializer, initializer_data,
-                 data, model, solver,
-                 predictive_validity, residual_model, draws):
-
-        self.prior_initializer = prior_initializer
-        self.initializer_data = initializer_data
+    def __init__(self, data, model, solver,
+                 predictive_validity, residual_model, draws,
+                 prior_initializer=None, initializer_data=None):
 
         self.data = data
         self.model = model
@@ -56,14 +54,21 @@ class ModelRunner:
         self.residual_model = residual_model
         self.draws = draws
 
+        self.prior_initializer = prior_initializer
+        self.initializer_data = initializer_data
+
     def run(self):
 
         # Initialize the priors
-        self.model.parameter_set = self.prior_initializer.initialize(
-            data=self.initializer_data,
-            model_prototype=self.model,
-            solver_prototype=self.solver
-        )
+        if self.prior_initializer is not None:
+            if self.initializer_data is None:
+                self.initializer_data = self.data
+            self.model.parameter_set = self.prior_initializer.initialize(
+                data=self.initializer_data,
+                model_prototype=self.model,
+                solver_prototype=self.solver
+            )
+
         # Run predictive validity
         self.predictive_validity.run_predictive_validity(
             data=self.data,
