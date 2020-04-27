@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 import pandas as pd
 
-from curvefit.core.residual_model import _ResidualModel, SmoothResidualModel
+from curvefit.uncertainty.residual_model import _ResidualModel, SmoothResidualModel
 from curvefit.utils.smoothing import local_deviations, local_smoother
 
 

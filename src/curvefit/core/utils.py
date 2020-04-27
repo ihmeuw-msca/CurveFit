@@ -203,35 +203,6 @@ def model_average(pred1, pred2, w1, w2, pred_fun):
     return pred
 
 
-# TODO: move the test from pv to here and test it not use the old code.
-def condense_residual_matrix(matrix, sequential_diffs, data_density):
-    """
-    Condense the residuals from a residual matrix to three columns
-    that represent how far out the prediction was, the number of data points,
-    and the observed residual.
-
-    Args:
-        matrix: (np.ndarray)
-        sequential_diffs:
-        data_density:
-
-    Returns:
-        numpy.ndarray:
-            Combined matrix.
-    """
-    row_idx, col_idx = np.triu_indices(matrix.shape[0], 1)
-    map1 = np.cumsum(np.insert(sequential_diffs, 0, 0))
-    map2 = data_density
-
-    far_out = map1[col_idx] - map1[row_idx]
-    num_data = map2[row_idx]
-    robs = matrix[row_idx, col_idx]
-
-    # return the results for the residual matrix as a (len(available_times), 3) shaped matrix
-    r_matrix = np.vstack([far_out, num_data, robs]).T
-    return r_matrix
-
-
 def get_initial_params(model, groups, fit_arg_dict):
     """
     Runs a separate model for each group fixing the random effects to 0
