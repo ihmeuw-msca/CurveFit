@@ -25,7 +25,7 @@ class CoreModel(Model):
     - `loss_fun (Callable)`: function from `curvefit.core.functions` for the loss function
 
     ## Attributes
-    
+
     ## Methods
 
     {end_markdown CoreModel}
@@ -56,20 +56,6 @@ class CoreModel(Model):
             param_gprior=self.data_inputs.param_gprior_info,
         )
 
-    def gradient(self, x, data):
-        if self.data_inputs is None:
-            self.data_inputs = self.convert_inputs(data)
-        finfo = np.finfo(float)
-        step = finfo.tiny / finfo.eps
-        x_c = x + 0j
-        grad = np.zeros(x.size)
-        for i in range(x.size):
-            x_c[i] += step*1j
-            grad[i] = self.objective(x_c, data).imag/step
-            x_c[i] -= step*1j
-
-        return grad
-
     def get_params(self, x):
         return effects2params(
             x,
@@ -82,8 +68,8 @@ class CoreModel(Model):
     def predict(self, x, t, predict_fun=None):
         params = self.get_params(x=x)
         if predict_fun is None:
-            predict_fun = self.curve_fun 
-        
+            predict_fun = self.curve_fun
+
         return predict_fun(t, params[:, 0])
 
     @property

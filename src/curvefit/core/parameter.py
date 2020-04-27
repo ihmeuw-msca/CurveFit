@@ -57,14 +57,14 @@ class Variable:
     {end_markdown Variable}
     """
 
-    covariate: str 
+    covariate: str
     var_link_fun: Callable
     fe_init: float
     re_init: float
     fe_gprior: List[float] = field(default_factory=lambda: [0.0, np.inf])
     re_gprior: List[float] = field(default_factory=lambda: [0.0, np.inf])
     fe_bounds: List[float] = field(default_factory=lambda: [-np.inf, np.inf])
-    re_bounds: List[float] = field(default_factory=lambda: [-np.inf, np.inf]) 
+    re_bounds: List[float] = field(default_factory=lambda: [-np.inf, np.inf])
 
     def __post_init__(self):
         assert isinstance(self.covariate, str)
