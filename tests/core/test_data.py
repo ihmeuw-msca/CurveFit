@@ -52,8 +52,8 @@ class TestData:
             col_group='group',
             obs_space=ln_gaussian_pdf,
         )
-        pd.testing.assert_frame_equal(d.df, d.get_df())
-        pd.testing.assert_frame_equal(d.df[0:3], d.get_df(group='group1'))
+        pd.testing.assert_frame_equal(d.df, d._get_df())
+        pd.testing.assert_frame_equal(d.df[0:3], d._get_df(group='group1'))
 
 
     def test_get_translated_observations(self, df):
@@ -67,5 +67,5 @@ class TestData:
         )
         np.testing.assert_equal(
             np.exp(d.df[d.col_obs])[0:3],
-            d.get_translated_observations(group='group1', space=gaussian_pdf)
+            d._get_translated_observations(group='group1', space=gaussian_pdf)
         )

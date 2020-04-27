@@ -67,7 +67,7 @@ class Data:
 
     ## Methods
 
-    ### `get_df`
+    ### `_get_df`
     Returns a copy of the data frame or a pointer to the data frame, and optionally data specs.
     If you plan on modifying the data frame, use `copy=True`. If a group is passed,
     then a group-specific data frame will be passed.
@@ -75,7 +75,7 @@ class Data:
     - `group (optional, str)`: optional group name
     - `copy (bool)`: return a copy or not
 
-    ### `get_translated_observations`
+    ### `_get_translated_observations`
     Returns the observations for a group in a particular space from `curvefit.core.functions`
 
     - `group (str)`: which group to return observations for
@@ -115,7 +115,7 @@ class Data:
 
         self.groups = self.df[self.col_group].unique()
 
-    def get_df(self, group=None, copy=False, return_specs=False):
+    def _get_df(self, group=None, copy=False, return_specs=False):
         if group is not None:
             df = self.df.loc[self.df[self.col_group] == group]
         else:
@@ -130,8 +130,8 @@ class Data:
         else:
             return df
 
-    def get_translated_observations(self, group, space):
-        values = self.get_df(group=group)[self.col_obs].values
+    def _get_translated_observations(self, group, space):
+        values = self._get_df(group=group)[self.col_obs].values
         return data_translator(
             data=values,
             input_space=self.obs_space,

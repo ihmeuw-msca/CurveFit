@@ -308,7 +308,7 @@ class PriorInitializer:
             model = model_prototype.clone()
             solver = solver_prototype.clone()
 
-            group_data = data.get_df(group=group, copy=False, return_specs=True)
+            group_data = data._get_df(group=group, copy=False, return_specs=True)
 
             solver.set_model_instance(model)
             solver.fit(data=group_data)
