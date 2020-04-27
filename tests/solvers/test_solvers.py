@@ -5,8 +5,8 @@ from scipy.optimize import rosen, rosen_der
 from curvefit.solvers.solvers import ScipyOpt, MultipleInitializations
 from curvefit.models.base import Model
 from curvefit.models.core_model import CoreModel
-from curvefit.core.functions import gaussian_cdf, gaussian_pdf, ln_gaussian_cdf, ln_gaussian_pdf, normal_loss
-from data_simulator import simulate_params, simulate_data
+from curvefit.core.functions import gaussian_cdf, gaussian_pdf, ln_gaussian_cdf, ln_gaussian_pdf, normal_loss, st_loss
+from data_and_param_simulator import simulate_params, simulate_data
 
 
 class Rosenbrock(Model):
@@ -43,7 +43,7 @@ class TestBaseSolvers:
 
     @pytest.mark.parametrize('curve_fun', [ln_gaussian_pdf, ln_gaussian_cdf, gaussian_pdf, gaussian_cdf])
     def test_scipyopt_core_mdoel(self, curve_fun):
-        params_set, params_true, x_true = simulate_params(1)
+        params_set, params_true, _ = simulate_params(1)
         data = simulate_data(curve_fun, params_true)
         core_model = CoreModel(params_set, curve_fun, normal_loss)
         solver = ScipyOpt(core_model)

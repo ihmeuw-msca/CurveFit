@@ -62,6 +62,7 @@ class GaussianMixtures(Model):
     def convert_inputs(self, data):
         if isinstance(data, DataInputs):
             self.data_inputs = data
+            return 
         
         df = data[0]
         data_specs = data[1]
