@@ -1,14 +1,10 @@
 import sys
 import numpy
 import curvefit
-import a_objective_fun
 import cppad_py
 #
 def identity_fun (x):
     return x
-#
-def gaussian_loss(x) :
-    return numpy.sum( x * x ) / 2.0
 #
 def test_objective() :
     # -----------------------------------------------------------------------
@@ -35,7 +31,7 @@ def test_objective() :
         covs.append( numpy.ones( (num_obs, 1), dtype = float ) )
     #
     model_fun       = curvefit.core.functions.gaussian_cdf
-    loss_fun        = gaussian_loss
+    loss_fun        = curvefit.core.loss.normal_loss;
     link_fun        = [ numpy.exp, identity_fun, numpy.exp ]
     var_link_fun    = num_param * [ identity_fun ]
     # fe_gprior
@@ -78,11 +74,11 @@ def test_objective() :
     # call a_double objective_fun
     ax                = cppad_py.independent(x)
     a_model_fun       = curvefit.core.param_model.gaussian_cdf
-    a_loss_fun        = gaussian_loss
+    a_loss_fun        = curvefit.core.loss.normal_loss;
     a_link_fun        = [ numpy.exp, identity_fun, numpy.exp ]
     a_var_link_fun    = var_link_fun
     a_param_gprior    = param_gprior
-    aobj_val = a_objective_fun.a_objective_fun(
+    aobj_val = curvefit.core.objective_fun.objective_fun(
             ax,
             t,
             obs,
