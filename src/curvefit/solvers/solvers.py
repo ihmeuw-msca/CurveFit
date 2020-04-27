@@ -3,8 +3,6 @@ from copy import deepcopy
 import scipy.optimize as sciopt
 
 from curvefit.core.effects2params import effects2params
-from curvefit.models.core_model import convert_inputs
-
 
 class ModelNotDefinedError(Exception):
     pass
