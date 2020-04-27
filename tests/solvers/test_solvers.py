@@ -41,16 +41,18 @@ class TestBaseSolvers:
         solver.fit(data=None, options={'maxiter': 20})
         assert np.abs(solver.fun_val_opt) < 1e-5
 
-    @pytest.mark.parametrize('curve_fun', [gaussian_pdf])
+    @pytest.mark.parametrize('curve_fun', [ln_gaussian_pdf, ln_gaussian_cdf, gaussian_pdf, gaussian_cdf])
     def test_scipyopt_core_mdoel(self, curve_fun):
         params_set, params_true, x_true = simulate_params(1)
         data = simulate_data(curve_fun, params_true)
         core_model = CoreModel(params_set, curve_fun, normal_loss)
         solver = ScipyOpt(core_model)
-        solver.fit(data=data)
-        assert np.linalg.norm(x_true- solver.x_opt[:x_true.shape[1]]) / np.linalg.norm(x_true) < 1e-2
-
-
+        solver.fit(data=data, options={'maxiter': 50})
+        assert solver.fun_val_opt < 1e-5
+        y_pred = solver.predict(t=data[0]['t'].to_numpy())
+        y_true = data[0]['obs'].to_numpy()
+        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 1e-2
+        
 
 class TestCompositeSolvers:
 
