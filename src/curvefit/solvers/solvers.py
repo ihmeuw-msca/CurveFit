@@ -144,8 +144,8 @@ class GaussianMixturesIntegration(CompositeSolver):
 
 class SmartInitialization(CompositeSolver):
 
-    def __init__(self, update_prior_fun):
-        self.update_prior_fun = update_prior_fun
+    def __init__(self):
+        super().__init__()
 
     def fit(self, data, x_init=None, options=None):
          if self.is_solver_defined():
@@ -161,9 +161,12 @@ class SmartInitialization(CompositeSolver):
                 self.solver.fit(data_sub, x_init, options)
                 xs.append(self.solver.x_opt)
                 model.erase_data()
-
-            new_param_set = self.update_prior_fun(model.param_set, xs)
-            model.update_param_set(new_param_set)
+            xs = np.array(xs)
+            x_mean = np.mean(xs, axis=0)
+            x_init = np.concatenate((x_mean, np.reshape(xs - x_mean, (-1, ))))
             self.solver.fit(data, x_init, options)
             self.x_opt = self.solver.x_opt
             self.fun_val_opt = self.solver.fun_val_opt
+
+    def predict(self, t, **kwargs):
+        return self.solver.predict(t, **kwargs)
