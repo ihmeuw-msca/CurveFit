@@ -6,8 +6,8 @@ from curvefit.uncertainty.residuals import Residuals, ResidualInfo
 class PredictiveValidity:
     """
     {begin_markdown PredictiveValidity}
-    {spell_markdown }
-    
+    {spell_markdown metadata debug}
+
     # `curvefit.uncertainty.predictive_validity`
     ## Out of sample predictive validity
 
@@ -57,7 +57,7 @@ class PredictiveValidity:
 
     ### `get_residual_data`
     Return the out of sample residuals for all groups from the data argument to
-    `run_predictive_validity`. Important input to the [`ResidualModel`](ResidualModel.md) for
+    `run_predictive_validity`. Important input to the [`_ResidualModel`](_ResidualModel.md) for
     eventually creating uncertainty.
 
     {end_markdown PredictiveValidity}

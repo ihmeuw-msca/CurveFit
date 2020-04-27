@@ -8,7 +8,7 @@ import pandas as pd
 class ResidualInfo:
     """
     {begin_markdown ResidualInfo}
-    {spell_markdown }
+    {spell_markdown metadata}
 
     # `curvefit.uncertainty.predictive_validity.ResidualInfo`
     ## Keeps track of metadata about the residuals
@@ -45,6 +45,7 @@ class ResidualInfo:
 class Residuals:
     """
     {begin_markdown Residuals}
+    {spell_markdown metadata}
 
     # `curvefit.uncertainty.predictive_validity.residuals`
     ## Data storage and manipulation for residual matrices
