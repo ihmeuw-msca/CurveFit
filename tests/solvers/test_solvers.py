@@ -3,11 +3,16 @@ import numpy as np
 from scipy.optimize import rosen, rosen_der
 
 from curvefit.solvers.solvers import ScipyOpt, MultipleInitializations
+from curvefit.models.base import Model
+from curvefit.models.core_model import CoreModel
+from curvefit.core.functions import gaussian_cdf, gaussian_pdf, ln_gaussian_cdf, ln_gaussian_pdf, normal_loss
+from data_simulator import simulate_params, simulate_data
 
 
-class Rosenbrock:
+class Rosenbrock(Model):
 
     def __init__(self, n_dim=2):
+        super().__init__()
         self.n_dim = n_dim
         self.bounds = np.array([[-2.0, 2.0]] * n_dim)
         self.x_init = np.array([-1.0] * n_dim)
@@ -19,6 +24,9 @@ class Rosenbrock:
     @staticmethod
     def gradient(x, data):
         return rosen_der(x)
+
+    def convert_inputs(self, data):
+        pass
 
 
 @pytest.fixture(scope='module')
@@ -32,6 +40,16 @@ class TestBaseSolvers:
         solver = ScipyOpt(rb)
         solver.fit(data=None, options={'maxiter': 20})
         assert np.abs(solver.fun_val_opt) < 1e-5
+
+    @pytest.mark.parametrize('curve_fun', [gaussian_pdf])
+    def test_scipyopt_core_mdoel(self, curve_fun):
+        params_set, params_true, x_true = simulate_params(1)
+        data = simulate_data(curve_fun, params_true)
+        core_model = CoreModel(params_set, curve_fun, normal_loss)
+        solver = ScipyOpt(core_model)
+        solver.fit(data=data)
+        assert np.linalg.norm(x_true- solver.x_opt[:x_true.shape[1]]) / np.linalg.norm(x_true) < 1e-2
+
 
 
 class TestCompositeSolvers:

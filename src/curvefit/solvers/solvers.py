@@ -43,6 +43,7 @@ class Solver(Prototype):
 class ScipyOpt(Solver):
 
     def fit(self, data, x_init=None, options=None):
+        self.model.convert_inputs(data)
         if x_init is None:
             x_init = self.model.x_init
 

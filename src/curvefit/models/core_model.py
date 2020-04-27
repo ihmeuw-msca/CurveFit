@@ -39,7 +39,7 @@ class CoreModel(Model):
 
     def objective(self, x, data):
         if self.data_inputs is None:
-            self.data_inputs = self.convert_inputs(data)
+            self.convert_inputs(data)
         return objective_fun(
             x=x,
             t=self.data_inputs.t,
@@ -65,12 +65,18 @@ class CoreModel(Model):
             self.data_inputs.var_link_fun,
         )
 
-    def predict(self, x, t, predict_fun=None):
+    def predict(self, x, t, predict_fun=None, is_multi_group=False):
         params = self.get_params(x=x)
         if predict_fun is None:
             predict_fun = self.curve_fun
-
-        return predict_fun(t, params[:, 0])
+        
+        if not is_multi_group:
+            return predict_fun(t, params[:, 0])
+        else:
+            pred = np.zeros((params.shape[1], len(t)))
+            for i in range(params.shape[1]):
+                pred[i, :] = predict_fun(t, params[:, i])
+            return pred
 
     @property
     def bounds(self):
@@ -82,8 +88,8 @@ class CoreModel(Model):
 
     def convert_inputs(self, data):
         if isinstance(data, DataInputs):
-            return data
-
+            self.data_inputs = data
+            
         df = data[0]
         data_specs = data[1]
 
@@ -141,7 +147,7 @@ class CoreModel(Model):
         else:
             param_gprior_info = None
 
-        return DataInputs(
+        self.data_inputs = DataInputs(
             t=t,
             obs=obs,
             obs_se=obs_se,
