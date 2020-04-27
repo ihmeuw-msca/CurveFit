@@ -143,7 +143,8 @@ class LnAlphaBetaPrior(IndividualPriorInitializerComponent):
             alpha_idx = sol.model.param_set.get_param_index('alpha')
             beta_idx = sol.model.param_set.get_param_index('beta')
 
-            params = sol.model.get_params(x=sol.x_opt)
+            model = sol.get_model_instance()
+            params = model.get_params(x=sol.x_opt)
 
             alphas = alphas.append(params[alpha_idx, 0])
             betas = betas.append(params[beta_idx, 0])
@@ -204,7 +205,8 @@ class BetaPrior(JointPriorInitializerComponent):
             num_fe=solver.model.param_set.num_fe
         )
 
-        beta_idx = solver.model.param_set.get_param_index('beta')
+        model = solver.get_model_instance()
+        beta_idx = model.param_set.get_param_index('beta')
 
         beta_fe_mean = fe[beta_idx]
         beta_fe_std = np.std(re[:, beta_idx])
