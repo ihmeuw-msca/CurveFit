@@ -37,12 +37,12 @@ class GaussianMixtures(Model):
 
     def objective(self, x, data):
         if self.data_inputs is None:
-            self.data_inputs = self.convert_inputs(data)
+            self.convert_inputs(data)
         return self._objective_and_gradient(x, self.data_inputs.t, self.data_inputs.obs, self.data_inputs.obs_se)[0]
 
     def gradient(self, x, data):
         if self.data_inputs is None:
-            self.data_inputs = self.convert_inputs(data)
+            self.convert_inputs(data)
         return self._objective_and_gradient(x, self.data_inputs.t, self.data_inputs.obs, self.data_inputs.obs_se)[1]
 
     @property
@@ -61,7 +61,8 @@ class GaussianMixtures(Model):
 
     def convert_inputs(self, data):
         if isinstance(data, DataInputs):
-            return data
+            self.data_inputs = data
+            return 
         
         df = data[0]
         data_specs = data[1]
@@ -70,4 +71,4 @@ class GaussianMixtures(Model):
         obs = df[data_specs.col_obs].to_numpy()
         obs_se = df[data_specs.col_obs_se].to_numpy()
         
-        return DataInputs(t=t, obs=obs, obs_se=obs_se)
+        self.data_inputs = DataInputs(t=t, obs=obs, obs_se=obs_se)
