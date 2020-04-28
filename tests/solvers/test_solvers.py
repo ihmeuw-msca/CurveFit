@@ -91,7 +91,7 @@ class TestCompositeSolvers:
         assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 1e-2
 
         for x in xs_init:
-            assert core_model.objective(x, None) >= solver.fun_val_opt
+            assert core_model.objective(x, data) >= solver.fun_val_opt
 
     def test_gaussian_mixture_integration(self):
         gm_model = GaussianMixtures(stride=1.0, size=3)
@@ -111,6 +111,29 @@ class TestCompositeSolvers:
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         
         assert np.linalg.norm(y_pred - y_true) < np.linalg.norm(y_pred_base - y_true)
+
+    def test_multi_init_outside_gaussian_mixture(self):
+        params_set, params_true, x_true = simulate_params(1)
+        data = simulate_data(gaussian_pdf, params_true)
+        core_model = CoreModel(params_set, gaussian_pdf, normal_loss)
+
+        gm_model = GaussianMixtures(stride=1.0, size=3)
+        solver_inner = GaussianMixturesIntegration(gm_model)
+
+        num_init = 5
+        xs_init = np.random.randn(num_init, x_true.shape[1]* 2)
+        sample_fun = lambda x: xs_init
+        solver = MultipleInitializations(sample_fun)
+        solver.set_solver(solver_inner)
+        solver.set_model_instance(core_model)
+        solver.fit(data=data, options={'maxiter': 200})
+        
+        y_pred = solver.predict(t=data[0]['t'].to_numpy())
+        y_true = data[0]['obs'].to_numpy()
+        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 1e-2
+
+        for x in xs_init:
+            assert core_model.objective(x, None) >= solver.fun_val_opt
 
     def test_smart_initialization_run(self):
         params_set, params_true, _ = simulate_params(3)

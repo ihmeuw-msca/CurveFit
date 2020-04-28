@@ -11,10 +11,6 @@ def simulate_params(n_groups):
     var1 = Variable('constant_one', lambda x: x, 0.0, 0.0)
     var2 = Variable('constant_one', np.exp, 0.0, 0.0)
 
-    if n_groups == 1:
-        var1.re_bounds = [0.0, 0.0]
-        var2.re_bounds = [0.0, 0.0]
-
     param1 = Parameter('p1', np.exp, [var1])
     param2 = Parameter('p2', lambda x: x, [var1, var2])
     param3 = Parameter('p3', np.exp, [var1])
@@ -38,7 +34,7 @@ def simulate_params(n_groups):
 def simulate_data(curve_fun, params_true):
     n_groups = params_true.shape[0]
     
-    n_data = np.random.randint(low=5, high=20, size=n_groups)
+    n_data = np.random.randint(low=10, high=50, size=n_groups)
     n_data_total = sum(n_data)
     y = np.zeros(n_data_total)
     t = np.zeros(n_data_total)
