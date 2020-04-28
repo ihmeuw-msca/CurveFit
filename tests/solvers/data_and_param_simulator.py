@@ -8,8 +8,8 @@ from curvefit.core.data import DataSpecs
 CHARS = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
 def simulate_params(n_groups):
-    var1 = Variable('constant_one', lambda x: x, 0.0, 0.0)
-    var2 = Variable('constant_one', np.exp, 0.0, 0.0)
+    var1 = Variable('constant_one', lambda x: x, 0.0, 0.0, fe_bounds=[-np.inf, 0.0])
+    var2 = Variable('constant_one', np.exp, 0.0, 0.0, fe_bounds=[-np.inf, 0.0])
 
     if n_groups == 1:
         var1.re_bounds = [0.0, 0.0]
@@ -38,7 +38,7 @@ def simulate_params(n_groups):
 def simulate_data(curve_fun, params_true):
     n_groups = params_true.shape[0]
     
-    n_data = np.random.randint(low=5, high=20, size=n_groups)
+    n_data = np.random.randint(low=10, high=30, size=n_groups)
     n_data_total = sum(n_data)
     y = np.zeros(n_data_total)
     t = np.zeros(n_data_total)
