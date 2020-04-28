@@ -9,7 +9,7 @@ from curvefit.solvers.solvers import Solver
 # TODO: add tests
 class Draws:
     """
-        {begin_markdown _Draws}
+        {begin_markdown Draws}
 
         {spell_markdown subclassed covs}
 
@@ -68,7 +68,7 @@ class Draws:
                 theta=self.predictive_validity.theta
             ).get_draws()
             '''
-        {end_markdown _Draws}
+        {end_markdown Draws}
         """
 
     def __init__(self, num_draws, prediction_times):
