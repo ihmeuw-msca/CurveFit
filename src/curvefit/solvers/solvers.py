@@ -1,6 +1,7 @@
 import numpy as np
 from copy import deepcopy
 import scipy.optimize as sciopt
+from dataclasses import dataclass
 
 from curvefit.core.effects2params import effects2params
 from curvefit.core.prototype import Prototype
@@ -14,12 +15,52 @@ class SolverNotDefinedError(Exception):
     pass
 
 
+@dataclass(frozen=True)
+class SolverOptions:
+    """
+    {begin_markdown DataSpecs}
+
+    # `curvefit.solvers.solvers.SolverOptions`
+    ## Parameter specification for a Solver
+
+    TODO: make docs after we decide what parameters we want to be here. It would be perfect to have
+    some universal set of parameters like (numiter, rtol, atol) and then translate it to a solver-specific
+    parameters via .to_dict() but I am not sure if it's always possible.
+
+    ## Arguments
+
+    {end_markdown DataSpecs}
+    """
+    ftol: float
+    gtol: float
+    maxiter: int
+    disp: bool
+
+    def __post_init__(self):
+        assert self.maxiter > 0, "maxiter should be positive"
+
+    def to_dict(self, solver_type="sciopt"):
+        # Different solvers have different naming for their options:
+        # for instance, some may have atol instead of gtol.
+        # Also, parameters may translate to each other differently,
+        # because every solver may use different stopping criterion.
+        # Hence this subroutine was made solver-specific
+        if solver_type == "sciopt":
+            return {
+                "ftol": self.ftol,
+                "gtol": self.gtol,
+                "maxiter": self.maxiter,
+                "disp": self.disp
+            }
+
+
 class Solver(Prototype):
 
     def __init__(self, model_instance=None):
         self.model = model_instance
         self.x_opt = None
         self.fun_val_opt = None
+        self.options = None
 
     def set_model_instance(self, model_instance):
         self.model = model_instance
@@ -32,6 +73,9 @@ class Solver(Prototype):
             return self.model
         else:
             raise ModelNotDefinedError()
+
+    def set_options(self, options: SolverOptions):
+        self.options = options
 
     def fit(self, data, x_init=None, options=None):
         raise NotImplementedError()
@@ -52,7 +96,7 @@ class ScipyOpt(Solver):
             x0=x_init,
             jac=lambda x: self.model.gradient(x, data),
             bounds=self.model.bounds,
-            options=options,
+            options=self.options.to_dict(solver_type ="sciopt") if self.options is not None else None,
         )
 
         self.x_opt = result.x
@@ -143,13 +187,13 @@ class SmartInitialization(CompositeSolver):
         super().__init__()
 
     def fit(self, data, x_init=None, options=None):
-         if self.assert_solver_defined() is True:
+        if self.assert_solver_defined() is True:
             df = data[0]
             data_specs = data[1]
             group_names = df[data_specs.col_group].unique()
             if len(group_names) == 1:
                 raise RuntimeError('SmartInitialization is only for multiple groups.')
-            
+
             model = self.get_model_instance()
             re_bounds = deepcopy(model.param_set.re_bounds)
             model.param_set.re_bounds = self._set_bounds_zeros(model.param_set.re_bounds)
@@ -161,7 +205,7 @@ class SmartInitialization(CompositeSolver):
                 model.erase_data()
             xs = np.array(xs)
             self.x_mean = np.mean(xs, axis=0)[:model.param_set.num_fe]
-            x_init = np.concatenate((self.x_mean, np.reshape(xs[:, :model.param_set.num_fe] - self.x_mean, (-1, ))))
+            x_init = np.concatenate((self.x_mean, np.reshape(xs[:, :model.param_set.num_fe] - self.x_mean, (-1,))))
             model.param_set.re_bounds = re_bounds
             self.solver.fit(data, x_init, options)
             self.x_opt = self.solver.x_opt
@@ -175,4 +219,3 @@ class SmartInitialization(CompositeSolver):
             for b in bounds:
                 bds.append(self._set_bounds_zeros(b))
             return bds
-
