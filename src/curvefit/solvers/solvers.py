@@ -1,6 +1,7 @@
 import numpy as np
 from copy import deepcopy
 import scipy.optimize as sciopt
+from dataclasses import dataclass
 
 from curvefit.core.effects2params import effects2params
 from curvefit.core.prototype import Prototype
@@ -14,13 +15,52 @@ class SolverNotDefinedError(Exception):
     pass
 
 
+@dataclass(frozen=True)
+class SolverOptions:
+    """
+    {begin_markdown DataSpecs}
+
+    # `curvefit.solvers.solvers.SolverOptions`
+    ## Parameter specification for a Solver
+
+    TODO: make docs after we decide what parameters we want to be here. It would be perfect to have
+    some universal set of parameters like (numiter, rtol, atol) and then translate it to a solver-specific
+    parameters via .to_dict() but I am not sure if it's always possible.
+
+    ## Arguments
+
+    {end_markdown DataSpecs}
+    """
+    ftol: float
+    gtol: float
+    maxiter: int
+    disp: bool
+
+    def __post_init__(self):
+        assert self.maxiter > 0, "maxiter should be positive"
+
+    def to_dict(self, solver_type="sciopt"):
+        # Different solvers have different naming for their options:
+        # for instance, some may have atol instead of gtol.
+        # Also, parameters may translate to each other differently,
+        # because every solver may use different stopping criterion.
+        # Hence this subroutine was made solver-specific
+        if solver_type == "sciopt":
+            return {
+                "ftol": self.ftol,
+                "gtol": self.gtol,
+                "maxiter": self.maxiter,
+                "disp": self.disp
+            }
+
+
 class Solver(Prototype):
 
     def __init__(self, model_instance=None):
         self.model = model_instance
         self.x_opt = None
         self.fun_val_opt = None
-        self.status = None
+        self.options = None
 
     def set_model_instance(self, model_instance):
         self.model = model_instance
@@ -34,8 +74,8 @@ class Solver(Prototype):
         else:
             raise ModelNotDefinedError()
 
-    def get_fit_status(self):
-        return self.status
+    def set_options(self, options: SolverOptions):
+        self.options = options
 
     def fit(self, data, x_init=None, options=None):
         raise NotImplementedError()
