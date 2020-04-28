@@ -25,9 +25,6 @@ class Draws:
 
     - `num_draws (int)`: the number of draws to take
     - `prediction_times (np.array)`: which times to produce final predictions (draws) at
-    - `exp_smoothing (float)`: amount of exponential smoothing --> higher value means more weight
-            given to the more recent models
-    - `max_last` (optional int) number of models from previous observations to use since the maximum time
 
     ## Methods
     ### `create_draws`
@@ -115,7 +112,7 @@ class Draws:
             forecast_out_times = self.prediction_times[add_noise] - max_t
             error = residual_model.simulate_residuals(
                 num_simulations=self.num_draws,
-                covariate_specs={'num_data': num_obs, 'far_out': forecast_out_times}
+                covariate_specs={'num_data': np.array([num_obs]), 'far_out': forecast_out_times}
             )
             no_error = np.zeros(shape=(self.num_draws, sum(no_noise)))
             all_error = np.hstack([no_error, error])
@@ -143,9 +140,11 @@ class Draws:
         if not 0 < quantiles < 0.5:
             raise ValueError("quantiles should be from 0 to 0.5. "
                              "Example: if you pass 0.05 it will return 5th and 95th percentile.")
-        return np.mean(draws, axis=0), \
-               np.quantile(draws, q=quantiles, axis=0), \
-               np.quantile(draws, q=1-quantiles, axis=0)
+        return (
+            np.mean(draws, axis=0),
+            np.quantile(draws, q=quantiles, axis=0),
+            np.quantile(draws, q=1-quantiles, axis=0)
+        )
 
     def get_draws_summary(self, group=None, quantiles=0.05):
         if self._draws is None:
