@@ -14,6 +14,9 @@ def simulate_params(n_groups):
     if n_groups == 1:
         var1.re_bounds = [0.0, 0.0]
         var2.re_bounds = [0.0, 0.0]
+    else:
+        var1.re_bounds = [-1.0 ,1.0]
+        var2.re_bounds = [-1.0, 1.0]
 
     param1 = Parameter('p1', np.exp, [var1])
     param2 = Parameter('p2', lambda x: x, [var1, var2])
