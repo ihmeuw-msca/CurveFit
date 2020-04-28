@@ -30,6 +30,17 @@ nav:
             - Model: 'extract_md/Model.md'
         - core_model:
             - CoreModel: 'extract_md/CoreModel.md'
+    - uncertainty:
+        - residuals:
+            - Residuals: 'extract_md/Residuals.md'
+            - ResidualInfo: 'extract_md/ResidualInfo.md'
+        - predictive validity:
+            - PredictiveValidity: 'extract_md/PredictiveValidity.md'
+        - residual model:
+            - _ResidualModel: 'extract_md/_ResidualModel.md'
+            - SmoothResidualModel: 'extract_md/SmoothResidualModel.md'
+        - draws:
+            - Draws: 'extract_md/Draws.md'
     - utils:
         - smoothing:
             - local_deviations: 'extract_md/local_deviations.md'
