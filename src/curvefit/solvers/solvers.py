@@ -21,7 +21,7 @@ class Solver(Prototype):
         self.model = model_instance
         self.x_opt = None
         self.fun_val_opt = None
-        self.options = None
+        self.status = None
 
     def set_model_instance(self, model_instance):
         self.model = model_instance
@@ -35,8 +35,8 @@ class Solver(Prototype):
         else:
             raise ModelNotDefinedError()
 
-    def set_options(self, options: dict):
-        self.options = options
+    def get_fit_status(self):
+        return self.status
 
     def fit(self, data, x_init=None, options=None):
         raise NotImplementedError()
@@ -51,7 +51,8 @@ class ScipyOpt(Solver):
         self.model.convert_inputs(data)
         if x_init is None:
             x_init = self.model.x_init
-
+        else:
+            x_init = x_init[:len(self.model.x_init)]
         result = sciopt.minimize(
             fun=lambda x: self.model.objective(x, data),
             x0=x_init,
@@ -62,6 +63,7 @@ class ScipyOpt(Solver):
 
         self.x_opt = result.x
         self.fun_val_opt = result.fun
+        self.status = result.message
 
 
 class CompositeSolver(Solver):
@@ -88,6 +90,10 @@ class CompositeSolver(Solver):
     def get_model_instance(self):
         if self.assert_solver_defined() is True:
             return self.solver.get_model_instance()
+
+    def get_fit_status(self):
+        if self.assert_solver_defined() is True:
+            return self.solver.get_fit_status()
 
     def assert_solver_defined(self):
         if self.solver is not None:
@@ -167,7 +173,8 @@ class SmartInitialization(CompositeSolver):
             xs = []
             for group in group_names:
                 data_sub = (df[df[data_specs.col_group] == group], data_specs)
-                self.solver.fit(data_sub, x_init, options)
+                assert model.data_inputs is None
+                self.solver.fit(data_sub, None, options)
                 xs.append(self.solver.x_opt)
                 model.erase_data()
             xs = np.array(xs)
