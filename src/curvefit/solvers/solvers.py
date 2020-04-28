@@ -1,7 +1,6 @@
 import numpy as np
 from copy import deepcopy
 import scipy.optimize as sciopt
-from dataclasses import dataclass
 
 from curvefit.core.effects2params import effects2params
 from curvefit.core.prototype import Prototype
