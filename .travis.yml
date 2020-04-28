@@ -1,5 +1,6 @@
 env:
   - LD_LIBRARY_PATH="$HOME/prefix/cppad:$LD_LIBRARY_PATH"
+  - DYLD_LIBRARY_PATH="$HOME/prefix/cppad:$DYLD_LIBRARY_PATH"
 language: python
 python:
   - "3.7"
