@@ -39,6 +39,8 @@ nav:
         - residual model:
             - _ResidualModel: 'extract_md/_ResidualModel.md'
             - SmoothResidualModel: 'extract_md/SmoothResidualModel.md'
+        - draws:
+            - Draws: 'extract_md/Draws.md'
     - utils:
         - smoothing:
             - local_deviations: 'extract_md/local_deviations.md'
