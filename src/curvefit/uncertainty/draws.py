@@ -2,6 +2,8 @@ import numpy as np
 from curvefit.utils.data import data_translator
 from curvefit.core.data import Data
 from curvefit.uncertainty.residual_model import _ResidualModel
+from curvefit.models.base import Model
+from curvefit.solvers.solvers import Solver
 
 
 # TODO: add tests
@@ -20,6 +22,7 @@ class Draws:
          `evaluation_space`, etc) are passed via create_draws(...).
 
         ## Arguments
+
         - `num_draws (int)`: the number of draws to take
         - `prediction_times (np.array)`: which times to produce final predictions (draws) at
         - `exp_smoothing (float)`: amount of exponential smoothing --> higher value means more weight
@@ -29,6 +32,7 @@ class Draws:
         ## Methods
         ### `create_draws`
             Fills in the `draws` dictionary by generating `num_groups` sample trajectories per location
+
             - `data (curvefit.core.data.Data)`: data
             - `model_prototype (curvefit.models.base.Model)`: a model object
             - `solver_prototype (curvefit.solvers.solver.Solver)`: a solver used to fit the model
@@ -40,8 +44,17 @@ class Draws:
 
         ## `get_draws`
             Returns generated draws
+
             - `group (str)`: Group for which the draws are requested. Defaults to None, in which case returns
                 a dictionary of all draws indexed by groups.
+
+        ## `get_draws_summary`
+            Returns mean and (lower, higher) quantiles of draws
+
+            - `group (str)`: Group for which draws summary is requested. Defaults to None, in which case returns
+                a dictionary of statistics for all draws indexed by groups.
+            - `quantiles (float)`: which quantiles to generate. Should be between 0 and 0.5. For instance,
+                if quantiles = 0.05 is passed then it returns 5'th and 95'th percentiles.
 
         ## Usage
         In `ModelRunner.run()`:
@@ -55,15 +68,13 @@ class Draws:
                 theta=self.predictive_validity.theta
             ).get_draws()
             '''
-        {end_markdown _ResidualModel}
+        {end_markdown _Draws}
         """
 
-    def __init__(self, num_draws, prediction_times, exp_smoothing=None, max_last=None):
+    def __init__(self, num_draws, prediction_times):
 
         self.num_draws = num_draws
         self.prediction_times = prediction_times
-        self.exp_smoothing = exp_smoothing
-        self.max_last = max_last
         self._draws = None
 
         assert type(self.num_draws) == int
@@ -71,27 +82,15 @@ class Draws:
 
         assert type(self.prediction_times) == np.ndarray
 
-        if self.exp_smoothing is not None:
-            assert type(self.exp_smoothing) == float
-            if self.max_last is None:
-                raise RuntimeError("Need to pass in how many of the last models to use.")
-            else:
-                assert type(self.max_last) == int
-                assert self.max_last > 0
-        else:
-            if self.max_last is not None:
-                raise RuntimeError("Need to pass in exponential smoothing parameter.")
-
-    # TODO: Implement exponential smoothing (do we need it?)
     def create_draws(self,
                      data: Data,
-                     model_prototype,
-                     solver_prototype,
+                     model_prototype: Model,
+                     solver_prototype: Solver,
                      residual_model: _ResidualModel,
-                     evaluation_space,
+                     evaluation_space: callable,
                      theta: float):
 
-        self._draws = {group: [] for group in data.groups}
+        self._draws = {}
         for group in data.groups:
 
             # Initializing model and doing the "best fit"
@@ -126,7 +125,7 @@ class Draws:
             noisy_forecast = data_translator(
                 data=noisy_forecast, input_space=evaluation_space, output_space=evaluation_space
             )
-            self._draws[group].append(noisy_forecast)
+            self._draws[group] = noisy_forecast
 
         return self
 
@@ -138,3 +137,21 @@ class Draws:
             return self._draws[group]
         else:
             return self._draws
+
+    @staticmethod
+    def _get_mean_and_quantiles_for_draws(draws, quantiles=0.05):
+        if not 0 < quantiles < 0.5:
+            raise ValueError("quantiles should be from 0 to 0.5. "
+                             "Example: if you pass 0.05 it will return 5th and 95th percentile.")
+        return np.mean(draws, axis=0), \
+               np.quantile(draws, q=quantiles, axis=0), \
+               np.quantile(draws, q=1-quantiles, axis=0)
+
+    def get_draws_summary(self, group=None, quantiles=0.05):
+        if self._draws is None:
+            raise RuntimeError("Draws are not created yet: call create_draws(..) first.")
+        if group is not None:
+            return self._get_mean_and_quantiles_for_draws(self._draws[group], quantiles=quantiles)
+        else:
+            return {group: self._get_mean_and_quantiles_for_draws(draws, quantiles=quantiles)
+                    for group, draws in self._draws.items()}
