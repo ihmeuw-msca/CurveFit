@@ -8,10 +8,7 @@ from curvefit.models.core_model import CoreModel
 from curvefit.core.functions import gaussian_cdf, gaussian_pdf, ln_gaussian_cdf, ln_gaussian_pdf, normal_loss, st_loss
 from curvefit.models.gaussian_mixtures import GaussianMixtures
 
-from data_and_param_simulator import simulate_params, simulate_data
-
-import warnings
-warnings.filterwarnings("error")
+from tests.solvers.data_and_param_simulator import simulate_params, simulate_data
 
 
 class Rosenbrock(Model):
@@ -38,9 +35,11 @@ class Rosenbrock(Model):
 def rb():
     return Rosenbrock()
 
+
 @pytest.fixture(scope='module', params=[ln_gaussian_pdf, ln_gaussian_cdf, gaussian_pdf, gaussian_cdf])
 def curve_fun(request):
     return request.param
+
 
 @pytest.fixture(scope='module', params=np.arange(100, 115))
 def seed(request):
@@ -63,8 +62,8 @@ class TestBaseSolvers:
         solver.fit(data=data, options={'maxiter': 200})
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         y_true = data[0]['obs'].to_numpy()
-        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
-        
+        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2 
+
 
 class TestCompositeSolvers:
 
