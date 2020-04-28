@@ -69,6 +69,10 @@ class ModelRunner:
                 solver_prototype=self.solver
             )
 
+        # Delete random effects from this point forward because all final models
+        # are individual rather than joint models
+        self.model.parameter_set = self.model.parameter_set.delete_random_effects()
+
         # Run predictive validity
         self.predictive_validity.run_predictive_validity(
             data=self.data,

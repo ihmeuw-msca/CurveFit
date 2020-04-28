@@ -163,7 +163,6 @@ class LnAlphaBetaPrior(IndividualPriorInitializerComponent):
         # Extract the ln-alpha-beta prior
         prior = self._extract_prior(solver=solver)
         param_set.param_function_fe_gprior[param_function_index] = prior
-        param_set.__post__init()
 
         return param_set
 
@@ -223,7 +222,6 @@ class BetaPrior(JointPriorInitializerComponent):
         # Extract the beta prior from the individual solvers
         prior = self._extract_prior(solver=solvers)
         param_set.fe_gprior[param_index] = prior
-        param_set.__post__init()
 
         return param_set
 
