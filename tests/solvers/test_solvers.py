@@ -51,6 +51,12 @@ class TestBaseSolvers:
         solver.fit(data=None, options={'maxiter': 20})
         assert np.abs(solver.fun_val_opt) < 1e-5
 
+    def test_set_options(self, rb):
+        options = {'maxiter': 20}
+        solver = ScipyOpt(rb)
+        solver.set_options(options)
+        assert solver.options == options
+
     def test_scipyopt_core_model(self, curve_fun, seed):
         np.random.seed(seed)
         params_set, params_true, _ = simulate_params(1)
