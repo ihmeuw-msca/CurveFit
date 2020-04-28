@@ -5,8 +5,8 @@ install:
   - pip install -i https://test.pypi.org/simple/ cppad_py==2020.4.27 --verbose
   - python setup.py install
 script:
-  - export LD_LIBRARY_PATH="$HOME/prefix/cppad:$LD_LIBRARY_PATH"
-  - export DYLD_LIBRARY_PATH="$HOME/prefix/cppad:$DYLD_LIBRARY_PATH"
+  - export LD_LIBRARY_PATH=$HOME/prefix/cppad:$LD_LIBRARY_PATH
+  - export DYLD_LIBRARY_PATH=$HOME/prefix/cppad:$DYLD_LIBRARY_PATH
   - sudo apt-get install swig
   - pytest tests
   - make examples
