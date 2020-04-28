@@ -10,6 +10,8 @@ class ModelRunner:
 
     Runs a full model, including initialization for model priors,
     predictive validity, and creating draws.
+    
+    ## Syntax
 
     ## Arguments
 
