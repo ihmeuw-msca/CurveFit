@@ -40,6 +40,8 @@ nav:
         - residual model:
             - _ResidualModel: 'extract_md/_ResidualModel.md'
             - SmoothResidualModel: 'extract_md/SmoothResidualModel.md'
+        - draws:
+            - Draws: 'extract_md/Draws.md'
     - initializers:
         - initializer_component:
             - PriorInitializerComponent: 'extract_md/PriorInitializerComponent.md'

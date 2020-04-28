@@ -32,7 +32,8 @@ file_list = [
     'src/curvefit/uncertainty/residual_model.py',
     'src/curvefit/uncertainty/residuals.py',
     'src/curvefit/uncertainty/predictive_validity.py',
-
+    'src/curvefit/uncertainty/draws.py',
+  
     'src/curvefit/initializer/initializer.py',
     'src/curvefit/initializer/initializer_component.py',
 ]
