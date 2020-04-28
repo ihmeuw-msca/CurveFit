@@ -9,67 +9,67 @@ from curvefit.solvers.solvers import Solver
 # TODO: add tests
 class Draws:
     """
-        {begin_markdown Draws}
+    {begin_markdown Draws}
 
-        {spell_markdown subclassed covs}
+    {spell_markdown subclassed covs}
 
-        # `curvefit.uncertainty.draws.Draws`
-        ## A class for generating draws: predictions plus random residuals according to provided ResidualModel
+    # `curvefit.uncertainty.draws.Draws`
+    ## A class for generating draws: predictions plus random residuals according to provided ResidualModel
 
-        This class simulates possible trajectories by adjusting out-of-sample part of the prediction
-        with expected residuals from ResidualModel. The user-controlled parameters are passed via init; the
-        parameters which need to be consistent to other parts of the pipeline (like `model`, `solver`,
-         `evaluation_space`, etc) are passed via create_draws(...).
+    This class simulates possible trajectories by adjusting out-of-sample part of the prediction
+    with expected residuals from ResidualModel. The user-controlled parameters are passed via init; the
+    parameters which need to be consistent to other parts of the pipeline (like `model`, `solver`,
+     `evaluation_space`, etc) are passed via create_draws(...).
 
-        ## Arguments
+    ## Arguments
 
-        - `num_draws (int)`: the number of draws to take
-        - `prediction_times (np.array)`: which times to produce final predictions (draws) at
-        - `exp_smoothing (float)`: amount of exponential smoothing --> higher value means more weight
-                given to the more recent models
-        - `max_last` (optional int) number of models from previous observations to use since the maximum time
+    - `num_draws (int)`: the number of draws to take
+    - `prediction_times (np.array)`: which times to produce final predictions (draws) at
+    - `exp_smoothing (float)`: amount of exponential smoothing --> higher value means more weight
+            given to the more recent models
+    - `max_last` (optional int) number of models from previous observations to use since the maximum time
 
-        ## Methods
-        ### `create_draws`
-            Fills in the `draws` dictionary by generating `num_groups` sample trajectories per location
+    ## Methods
+    ### `create_draws`
+        Fills in the `draws` dictionary by generating `num_groups` sample trajectories per location
 
-            - `data (curvefit.core.data.Data)`: data
-            - `model_prototype (curvefit.models.base.Model)`: a model object
-            - `solver_prototype (curvefit.solvers.solver.Solver)`: a solver used to fit the model
-            - `residual_model (curvefit.uncertainty.residual_model._ResidualModel)' a residual model object, should be
-                 fitted before being passed here.
-            - `evaluation_space (callable)`: which space to generate draws in. It should be the same as used
-                in `PredictiveValidity` instance which generated the residual matrix passed to the `residual_model`
-            - `theta (float)`: between 0 and 1, how much scaling of the residuals to do relative to the prediction mean
+        - `data (curvefit.core.data.Data)`: data
+        - `model_prototype (curvefit.models.base.Model)`: a model object
+        - `solver_prototype (curvefit.solvers.solver.Solver)`: a solver used to fit the model
+        - `residual_model (curvefit.uncertainty.residual_model._ResidualModel)' a residual model object, should be
+             fitted before being passed here.
+        - `evaluation_space (callable)`: which space to generate draws in. It should be the same as used
+            in `PredictiveValidity` instance which generated the residual matrix passed to the `residual_model`
+        - `theta (float)`: between 0 and 1, how much scaling of the residuals to do relative to the prediction mean
 
-        ## `get_draws`
-            Returns generated draws
+    ## `get_draws`
+        Returns generated draws
 
-            - `group (str)`: Group for which the draws are requested. Defaults to None, in which case returns
-                a dictionary of all draws indexed by groups.
+        - `group (str)`: Group for which the draws are requested. Defaults to None, in which case returns
+            a dictionary of all draws indexed by groups.
 
-        ## `get_draws_summary`
-            Returns mean and (lower, higher) quantiles of draws
+    ## `get_draws_summary`
+        Returns mean and (lower, higher) quantiles of draws
 
-            - `group (str)`: Group for which draws summary is requested. Defaults to None, in which case returns
-                a dictionary of statistics for all draws indexed by groups.
-            - `quantiles (float)`: which quantiles to generate. Should be between 0 and 0.5. For instance,
-                if quantiles = 0.05 is passed then it returns 5'th and 95'th percentiles.
+        - `group (str)`: Group for which draws summary is requested. Defaults to None, in which case returns
+            a dictionary of statistics for all draws indexed by groups.
+        - `quantiles (float)`: which quantiles to generate. Should be between 0 and 0.5. For instance,
+            if quantiles = 0.05 is passed then it returns 5'th and 95'th percentiles.
 
-        ## Usage
-        In `ModelRunner.run()`:
-        ```python
-            draws = self.draws.create_draws(
-                data=self.data,
-                model_prototype=self.model,
-                solver_prototype=self.solver,
-                residual_model=self.residual_model,
-                evaluation_space = self.predictive_validity.evaluation_space,
-                theta=self.predictive_validity.theta
-            ).get_draws()
-            '''
-        {end_markdown Draws}
-        """
+    ## Usage
+    In `ModelRunner.run()`:
+    ```python
+        draws = self.draws.create_draws(
+            data=self.data,
+            model_prototype=self.model,
+            solver_prototype=self.solver,
+            residual_model=self.residual_model,
+            evaluation_space = self.predictive_validity.evaluation_space,
+            theta=self.predictive_validity.theta
+        ).get_draws()
+        ```
+    {end_markdown Draws}
+    """
 
     def __init__(self, num_draws, prediction_times):
 
@@ -97,8 +97,8 @@ class Draws:
             model = model_prototype.clone()
             solver = solver_prototype.clone()
             solver.set_model_instance(model)
-            current_group_data = data._get_df(group=group, copy=False)
-            solver.fit(current_group_data)
+            (current_group_data, data_specs) = data._get_df(group=group, copy=False, return_specs=True)
+            solver.fit(data=(current_group_data, data_specs))
 
             # getting predictions for draws times
             predictions = solver.predict(
