@@ -138,8 +138,11 @@ class GaussianMixturesIntegration(CompositeSolver):
 
     def fit(self, data, x_init=None, options=None):
         if self.assert_solver_defined() is True:
-            self.solver.fit(data, x_init, options)
             model = self.get_model_instance()
+            if model.curve_fun.__name__ != 'gaussian_pdf':
+                raise RuntimeError('Only works with observation in gaussian pdf space.')
+            
+            self.solver.fit(data, x_init, options)
             params = effects2params(
                 self.solver.x_opt,
                 model.data_inputs.group_sizes,

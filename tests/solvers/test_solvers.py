@@ -8,7 +8,7 @@ from curvefit.models.core_model import CoreModel
 from curvefit.core.functions import gaussian_cdf, gaussian_pdf, ln_gaussian_cdf, ln_gaussian_pdf, normal_loss, st_loss
 from curvefit.models.gaussian_mixtures import GaussianMixtures
 
-from tests.solvers.data_and_param_simulator import simulate_params, simulate_data
+from data_and_param_simulator import simulate_params, simulate_data
 
 
 class Rosenbrock(Model):
@@ -125,6 +125,12 @@ class TestCompositeSolvers:
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
 
         assert np.linalg.norm(y_pred - y_true) < np.linalg.norm(y_pred_base - y_true)
+
+        solver.predict(t=data[0]['t'].to_numpy(), predict_fun=ln_gaussian_cdf)
+
+        core_model.curve_fun = gaussian_cdf
+        with pytest.raises(RuntimeError):
+            solver.fit(data=data, options={'maxiter': 10})
 
     def test_multi_init_outside_gaussian_mixture(self):
         params_set, params_true, x_true = simulate_params(1)
