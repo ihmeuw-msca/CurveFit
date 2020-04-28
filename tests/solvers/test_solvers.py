@@ -62,7 +62,7 @@ class TestBaseSolvers:
         solver.fit(data=data, options={'maxiter': 200})
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         y_true = data[0]['obs'].to_numpy()
-        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2 
+        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
 
 
 class TestCompositeSolvers:
@@ -70,7 +70,7 @@ class TestCompositeSolvers:
     def test_multi_init(self, rb):
         num_init = 3
         xs_init = np.random.uniform(
-            low=[b[0] for b in rb.bounds], 
+            low=[b[0] for b in rb.bounds],
             high=[b[1] for b in rb.bounds],
             size=(num_init, rb.n_dim),
         )
@@ -80,7 +80,7 @@ class TestCompositeSolvers:
         assert solver.model is None
         assert isinstance(solver.get_model_instance(), Rosenbrock)
         solver.fit(data=None, options={'maxiter': 15})
-        
+
         for x in xs_init:
             assert rb.objective(x, None) >= solver.fun_val_opt
 
@@ -118,7 +118,7 @@ class TestCompositeSolvers:
         solver.set_model_instance(core_model)
         solver.fit(data=data, options={'maxiter': 10})
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
-        
+
         assert np.linalg.norm(y_pred - y_true) < np.linalg.norm(y_pred_base - y_true)
 
     def test_multi_init_outside_gaussian_mixture(self):
@@ -136,7 +136,7 @@ class TestCompositeSolvers:
         solver.set_solver(solver_inner)
         solver.set_model_instance(core_model)
         solver.fit(data=data, options={'maxiter': 200})
-        
+
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         y_true = data[0]['obs'].to_numpy()
         assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
@@ -160,7 +160,7 @@ class TestCompositeSolvers:
         solver.set_solver(solver_inner)
         solver.set_model_instance(core_model)
         solver.fit(data=data, options={'maxiter': 200})
-        
+
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         y_true = data[0]['obs'].to_numpy()
         assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
@@ -174,9 +174,3 @@ class TestCompositeSolvers:
         solver = SmartInitialization()
         solver.set_model_instance(core_model)
         solver.fit(data=data, options={'maxiter': 50})
-
-
-
-
-
-
