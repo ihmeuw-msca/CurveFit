@@ -99,7 +99,7 @@ class Model(Prototype):
 
     def gradient(self, x, data):
         if self.data_inputs is None:
-            self.data_inputs = self.convert_inputs(data)
+            self.convert_inputs(data)
         finfo = np.finfo(float)
         step = finfo.tiny / finfo.eps
         x_c = x + 0j
