@@ -9,6 +9,7 @@ nav:
     - covariate_xam: 'extract_md/covariate_xam.md'
     - random_effect_xam: 'extract_md/random_effect_xam.md'
     - param_time_fun_xam: 'extract_md/param_time_fun_xam.md'
+    - prior_initializer_xam: 'extract_md/prior_initializer_xam.md'
   - Developer Doc:
     - core:
         - data:
@@ -41,6 +42,15 @@ nav:
             - SmoothResidualModel: 'extract_md/SmoothResidualModel.md'
         - draws:
             - Draws: 'extract_md/Draws.md'
+    - initializers:
+        - initializer_component:
+            - PriorInitializerComponent: 'extract_md/PriorInitializerComponent.md'
+            - JointPriorInitializerComponent: 'extract_md/JointPriorInitializerComponent.md'
+            - IndividualPriorInitializerComponent: 'extract_md/IndividualPriorInitializerComponent.md'
+            - LnAlphaBetaPrior: 'extract_md/LnAlphaBetaPrior.md'
+            - BetaPrior: 'extract_md/BetaPrior.md'
+        - initializer:
+            - PriorInitializer: 'extract_md/PriorInitializer.md'
     - utils:
         - smoothing:
             - local_deviations: 'extract_md/local_deviations.md'

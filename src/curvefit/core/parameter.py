@@ -197,6 +197,13 @@ class ParameterSet(Prototype):
 
     - `self.num_fe (int)`: total number of effects for the parameter set (number of variables)
 
+    ## Methods
+
+    ### `delete_random_effects`
+    Returns a copy of itself but with random effects bounds set to 0. This means that the parameter set
+    will not have any random effects in the model. Useful for when the same parameter set will be used to fit
+    jointly to many groups before being fit to individual groups.
+
     ## Usage
 
     ```python
@@ -259,6 +266,20 @@ class ParameterSet(Prototype):
         except ValueError:
             raise RuntimeError(f"No {param_name} parameter in this parameter set.")
         return param_index
+
+    def get_param_function_index(self, param_function_name):
+        try:
+            param_function_index = self.param_function_name.index(param_function_name)
+        except ValueError:
+            raise RuntimeError(f"No {param_function_name} parameter in this parameter set.")
+        return param_function_index
+
+    def delete_random_effects(self):
+        param_set = self.clone()
+        bounds = np.array(self.re_bounds)
+        bounds[:] = 0.
+        param_set.re_bounds = bounds.tolist()
+        return param_set
 
 
 def consolidate(cls, instance_list, exclude=None):
