@@ -97,7 +97,7 @@ class Draws:
             model = model_prototype.clone()
             solver = solver_prototype.clone()
             solver.set_model_instance(model)
-            (current_group_data, data_specs) = data._get_df(group=group, copy=False, return_specs=True)
+            current_group_data, data_specs = data._get_df(group=group, copy=False, return_specs=True)
             solver.fit(data=(current_group_data, data_specs))
 
             # getting predictions for draws times
