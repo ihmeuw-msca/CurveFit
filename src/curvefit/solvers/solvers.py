@@ -154,9 +154,9 @@ class GaussianMixturesIntegration(CompositeSolver):
             self.fun_val_opt = gm_solver.fun_val_opt
 
     def predict(self, t, predict_fun=None):
-        if predict_fun is None:
-            predict_fun = gaussian_pdf
         pred_gau_pdf = self.gm_model.predict(self.x_opt, t)
+        if predict_fun is None:
+            return pred_gau_pdf
         return data_translator(pred_gau_pdf, gaussian_pdf, predict_fun)
 
 
