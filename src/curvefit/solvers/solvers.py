@@ -15,45 +15,6 @@ class SolverNotDefinedError(Exception):
     pass
 
 
-@dataclass(frozen=True)
-class SolverOptions:
-    """
-    {begin_markdown SolverOptions}
-
-    # `curvefit.solvers.solvers.SolverOptions`
-    ## Parameter specification for a Solver
-
-    TODO: make docs after we decide what parameters we want to be here. It would be perfect to have
-    some universal set of parameters like (numiter, rtol, atol) and then translate it to a solver-specific
-    parameters via .to_dict() but I am not sure if it's always possible.
-
-    ## Arguments
-
-    {end_markdown SolverOptions}
-    """
-    ftol: float
-    gtol: float
-    maxiter: int
-    disp: bool
-
-    def __post_init__(self):
-        assert self.maxiter > 0, "maxiter should be positive"
-
-    def to_dict(self, solver_type="sciopt"):
-        # Different solvers have different naming for their options:
-        # for instance, some may have atol instead of gtol.
-        # Also, parameters may translate to each other differently,
-        # because every solver may use different stopping criterion.
-        # Hence this subroutine was made solver-specific
-        if solver_type == "sciopt":
-            return {
-                "ftol": self.ftol,
-                "gtol": self.gtol,
-                "maxiter": self.maxiter,
-                "disp": self.disp
-            }
-
-
 class Solver(Prototype):
 
     def __init__(self, model_instance=None):
@@ -74,7 +35,7 @@ class Solver(Prototype):
         else:
             raise ModelNotDefinedError()
 
-    def set_options(self, options: SolverOptions):
+    def set_options(self, options: dict):
         self.options = options
 
     def fit(self, data, x_init=None, options=None):
