@@ -94,6 +94,7 @@ class PriorInitializer:
         return solvers
 
     def initialize(self, data, model_prototype, solver_prototype):
+        print("Running prior initializer.")
 
         if 'individual' in self.component_types:
             self.individual_solvers = self._run_individual(

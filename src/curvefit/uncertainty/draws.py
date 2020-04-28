@@ -87,6 +87,7 @@ class Draws:
                      evaluation_space: callable,
                      theta: float):
 
+        print("Creating draws.")
         self._draws = {}
         for group in data.groups:
 

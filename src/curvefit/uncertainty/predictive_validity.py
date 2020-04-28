@@ -1,4 +1,5 @@
 import pandas as pd
+from tqdm import tqdm
 
 from curvefit.uncertainty.residuals import Residuals, ResidualInfo
 
@@ -93,16 +94,16 @@ class PredictiveValidity:
         if self.debug_mode:
             self.group_records[group] = []
 
-        for i, t in enumerate(self.group_residuals[group].residual_info.times):
+        df, specs = data._get_df(group=group, return_specs=True)
+        for i, t in tqdm(enumerate(self.group_residuals[group].residual_info.times)):
 
             if self.debug_mode:
                 model = model.clone()
                 solver = solver.clone()
                 solver.set_model_instance(model)
 
-            df, specs = data._get_df(group=group, return_specs=True)
-            df = df.query(f"{data.data_specs.col_t} <= {t}")
-            solver.fit(data=(df, specs))
+            df_i = df.query(f"{data.data_specs.col_t} <= {t}")
+            solver.fit(data=(df_i, specs))
 
             if self.debug_mode:
                 self.group_records[group].append(solver)
@@ -119,13 +120,13 @@ class PredictiveValidity:
         )
 
     def run_predictive_validity(self, data, model_prototype, solver_prototype):
+        print("Running predictive validity.")
 
         model = model_prototype.clone()
         solver = solver_prototype.clone()
         solver.set_model_instance(model)
 
         for group in data.groups:
-
             self.group_residuals[group] = Residuals(
                 residual_info=self._make_group_info(data=data, group_name=group),
                 data_specs=data.data_specs

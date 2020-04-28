@@ -1,3 +1,4 @@
+import time
 
 
 class ModelRunner:
@@ -60,6 +61,7 @@ class ModelRunner:
         self.initializer_data = initializer_data
 
     def run(self):
+        start = time.time()
 
         # Initialize the priors
         if self.prior_initializer is not None:
@@ -94,3 +96,5 @@ class ModelRunner:
             evaluation_space=self.predictive_validity.evaluation_space,
             theta=self.predictive_validity.theta
         )
+        end = time.time()
+        print(f"Elapsed time: {end - start}.")
