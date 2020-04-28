@@ -8,7 +8,7 @@ from curvefit.models.core_model import CoreModel
 from curvefit.core.functions import gaussian_cdf, gaussian_pdf, ln_gaussian_cdf, ln_gaussian_pdf, normal_loss, st_loss
 from curvefit.models.gaussian_mixtures import GaussianMixtures
 
-from data_and_param_simulator import simulate_params, simulate_data
+from tests.solver.data_and_param_simulator import simulate_params, simulate_data
 
 
 class Rosenbrock(Model):
