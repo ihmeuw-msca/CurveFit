@@ -29,6 +29,7 @@ examples:
 	python example/unzip_x.py
 	python example/effects2params.py
 	python example/objective_fun.py
+	python example/prior_initializer.py
 
 cppad_py: phony
 	pytest cppad_py
