@@ -22,6 +22,7 @@ class Solver(Prototype):
         self.x_opt = None
         self.fun_val_opt = None
         self.options = None
+        self.status = None
 
     def set_model_instance(self, model_instance):
         self.model = model_instance
@@ -37,6 +38,9 @@ class Solver(Prototype):
 
     def set_options(self, options: dict):
         self.options = options
+    
+    def get_fit_status(self):
+        return self.status
 
     def fit(self, data, x_init=None, options=None):
         raise NotImplementedError()
