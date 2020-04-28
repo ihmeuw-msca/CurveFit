@@ -87,7 +87,7 @@ class CompositeSolver(Solver):
             raise SolverNotDefinedError()
 
     def predict(self, **kwargs):
-        return self.solver.predict(self.x_opt, **kwargs)
+        return self.solver.predict(**kwargs)
 
 
 class MultipleInitializations(CompositeSolver):
@@ -98,8 +98,6 @@ class MultipleInitializations(CompositeSolver):
 
     def fit(self, data, x_init=None, options=None):
         if self.assert_solver_defined() is True:
-            if x_init is None:
-                x_init = self.get_model_instance().x_init
             fun_vals = []
             xs_opt = []
             xs_init = self.sample_fun(x_init)
@@ -120,8 +118,6 @@ class GaussianMixturesIntegration(CompositeSolver):
 
     def fit(self, data, x_init=None, options=None):
         if self.assert_solver_defined() is True:
-            if x_init is None:
-                x_init = self.get_model_instance().x_init
             self.solver.fit(data, x_init, options)
             model = self.get_model_instance()
             params = effects2params(
@@ -155,8 +151,6 @@ class SmartInitialization(CompositeSolver):
                 raise RuntimeError('SmartInitialization is only for multiple groups.')
             
             model = self.get_model_instance()
-            if x_init is None:
-                x_init = model.x_init
             re_bounds = deepcopy(model.param_set.re_bounds)
             model.param_set.re_bounds = self._set_bounds_zeros(model.param_set.re_bounds)
             xs = []
@@ -166,8 +160,8 @@ class SmartInitialization(CompositeSolver):
                 xs.append(self.solver.x_opt)
                 model.erase_data()
             xs = np.array(xs)
-            x_mean = np.mean(xs, axis=0)
-            x_init = np.concatenate((x_mean, np.reshape(xs - x_mean, (-1, ))))
+            self.x_mean = np.mean(xs, axis=0)[:model.param_set.num_fe]
+            x_init = np.concatenate((self.x_mean, np.reshape(xs[:, :model.param_set.num_fe] - self.x_mean, (-1, ))))
             model.param_set.re_bounds = re_bounds
             self.solver.fit(data, x_init, options)
             self.x_opt = self.solver.x_opt

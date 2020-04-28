@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from scipy.optimize import rosen, rosen_der
 
-from curvefit.solvers.solvers import ScipyOpt, MultipleInitializations, GaussianMixturesIntegration
+from curvefit.solvers.solvers import ScipyOpt, MultipleInitializations, GaussianMixturesIntegration, SmartInitialization
 from curvefit.models.base import Model
 from curvefit.models.core_model import CoreModel
 from curvefit.core.functions import gaussian_cdf, gaussian_pdf, ln_gaussian_cdf, ln_gaussian_pdf, normal_loss, st_loss
@@ -84,6 +84,7 @@ class TestCompositeSolvers:
         solver_base = ScipyOpt(core_model)
         solver_base.fit(data=data, options={'maxiter': 10})
         y_pred_base = solver_base.predict(t=data[0]['t'].to_numpy())
+        core_model.erase_data()
 
         solver = GaussianMixturesIntegration(gm_model)
         solver.set_model_instance(core_model)
@@ -92,7 +93,14 @@ class TestCompositeSolvers:
         
         assert np.linalg.norm(y_pred - y_true) < np.linalg.norm(y_pred_base - y_true)
 
+    def test_smart_initialization(self):
+        params_set, params_true, x_true = simulate_params(3)
+        data = simulate_data(gaussian_pdf, params_true)
+        core_model = CoreModel(params_set, gaussian_pdf, normal_loss)
 
+        solver = SmartInitialization()
+        solver.set_model_instance(core_model)
+        solver.fit(data=data, options={'maxiter': 50})
 
 
 
