@@ -4,6 +4,8 @@ import scipy.optimize as sciopt
 
 from curvefit.core.effects2params import effects2params
 from curvefit.core.prototype import Prototype
+from curvefit.utils.data import data_translator
+from curvefit.core.functions import gaussian_pdf
 
 
 class ModelNotDefinedError(Exception):
@@ -151,8 +153,11 @@ class GaussianMixturesIntegration(CompositeSolver):
             self.x_opt = gm_solver.x_opt
             self.fun_val_opt = gm_solver.fun_val_opt
 
-    def predict(self, t):
-        return self.gm_model.predict(self.x_opt, t)
+    def predict(self, t, predict_fun=None):
+        if predict_fun is None:
+            predict_fun = gaussian_pdf
+        pred_gau_pdf = self.gm_model.predict(self.x_opt, t)
+        return data_translator(pred_gau_pdf, gaussian_pdf, predict_fun)
 
 
 class SmartInitialization(CompositeSolver):
