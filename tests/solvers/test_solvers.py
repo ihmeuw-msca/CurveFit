@@ -42,6 +42,9 @@ def rb():
 def curve_fun(request):
     return request.param
 
+@pytest.fixture(scope='module', params=np.arange(100, 115))
+def seed(request):
+    return request.param
 
 
 class TestBaseSolvers:
@@ -51,7 +54,8 @@ class TestBaseSolvers:
         solver.fit(data=None, options={'maxiter': 20})
         assert np.abs(solver.fun_val_opt) < 1e-5
 
-    def test_scipyopt_core_model(self, curve_fun):
+    def test_scipyopt_core_model(self, curve_fun, seed):
+        np.random.seed(seed)
         params_set, params_true, _ = simulate_params(1)
         data = simulate_data(curve_fun, params_true)
         core_model = CoreModel(params_set, curve_fun, normal_loss)
@@ -59,7 +63,7 @@ class TestBaseSolvers:
         solver.fit(data=data, options={'maxiter': 200})
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         y_true = data[0]['obs'].to_numpy()
-        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 1e-2
+        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
         
 
 class TestCompositeSolvers:
@@ -94,7 +98,7 @@ class TestCompositeSolvers:
         solver.fit(data=data, options={'maxiter': 200})
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         y_true = data[0]['obs'].to_numpy()
-        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 1e-2
+        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
 
         for x in xs_init:
             assert core_model.objective(x, data) >= solver.fun_val_opt
@@ -136,7 +140,7 @@ class TestCompositeSolvers:
         
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         y_true = data[0]['obs'].to_numpy()
-        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 1e-2
+        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
 
         for x in xs_init:
             assert core_model.objective(x, None) >= solver.fun_val_opt
@@ -160,9 +164,10 @@ class TestCompositeSolvers:
         
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         y_true = data[0]['obs'].to_numpy()
-        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 1e-2
+        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
 
-    def test_smart_initialization_run(self, curve_fun):
+    def test_smart_initialization_run(self, curve_fun, seed):
+        np.random.seed(seed)
         params_set, params_true, _ = simulate_params(3)
         data = simulate_data(curve_fun, params_true)
         core_model = CoreModel(params_set, curve_fun, normal_loss)

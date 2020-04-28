@@ -9,7 +9,7 @@ CHARS = list('abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ')
 
 def simulate_params(n_groups):
     var1 = Variable('constant_one', lambda x: x, 0.0, 0.0, fe_bounds=[-np.inf, 0.0])
-    var2 = Variable('constant_one', np.exp, 0.0, 0.0)
+    var2 = Variable('constant_one', np.exp, 0.0, 0.0, fe_bounds=[-np.inf, 0.0])
 
     if n_groups == 1:
         var1.re_bounds = [0.0, 0.0]
