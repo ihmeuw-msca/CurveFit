@@ -39,7 +39,7 @@ def rb():
 def curve_fun(request):
     return request.param
 
-@pytest.fixture(scope='module', params=np.arange(100, 115))
+@pytest.fixture(scope='module', params=np.arange(100, 105))
 def seed(request):
     return request.param
 
@@ -163,15 +163,31 @@ class TestCompositeSolvers:
         y_true = data[0]['obs'].to_numpy()
         assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
 
-    def test_smart_initialization_run(self, curve_fun, seed):
-        np.random.seed(seed)
-        params_set, params_true, _ = simulate_params(3)
+    def test_smart_initialization(self, curve_fun):
+        np.random.seed(100)
+        num_groups = 3
+        params_set, params_true, x_true = simulate_params(num_groups)
         data = simulate_data(curve_fun, params_true)
         core_model = CoreModel(params_set, curve_fun, normal_loss)
 
+        num_init = 3
+        xs_init = - np.random.rand(num_init, x_true.shape[1]* (num_groups + 1)) * 3
+        sample_fun = lambda x: xs_init
+        solver_inner = MultipleInitializations(sample_fun)
+
         solver = SmartInitialization()
+        solver.set_solver(solver_inner)
         solver.set_model_instance(core_model)
-        solver.fit(data=data, options={'maxiter': 50})
+        solver.fit(data=data, options={'maxiter': 500})
+
+        ys = data[0]['obs'].to_numpy()
+        ts = data[0]['t'].to_numpy()
+        start = 0
+        for i, s in enumerate(core_model.data_inputs.group_sizes):
+            y_true = ys[start: start + s]
+            y_pred = solver.predict(t=ts[start: start + s], is_multi_groups=True)[i]
+            assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 5e-2 
+            start += s
 
 
 
