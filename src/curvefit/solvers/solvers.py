@@ -18,7 +18,7 @@ class SolverNotDefinedError(Exception):
 @dataclass(frozen=True)
 class SolverOptions:
     """
-    {begin_markdown DataSpecs}
+    {begin_markdown SolverOptions}
 
     # `curvefit.solvers.solvers.SolverOptions`
     ## Parameter specification for a Solver
@@ -29,7 +29,7 @@ class SolverOptions:
 
     ## Arguments
 
-    {end_markdown DataSpecs}
+    {end_markdown SolverOptions}
     """
     ftol: float
     gtol: float
