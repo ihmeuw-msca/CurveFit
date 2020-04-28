@@ -66,6 +66,7 @@ class _ResidualModel:
         self.cv_bounds = cv_bounds
         self.covariates = covariates
         self.exclude_groups = exclude_groups
+        self._is_fitted = False
 
         assert type(self.covariates) == dict
         for k, v in self.covariates.items():
@@ -85,7 +86,11 @@ class _ResidualModel:
             for i in self.exclude_groups:
                 assert type(i) == str
 
+    def is_fitted(self):
+        return self._is_fitted
+
     def fit_residuals(self, residual_df):
+        self._is_fitted = True  # Need to set it manually if override fit_residuals in a subclass.
         pass
 
     @staticmethod
@@ -203,6 +208,7 @@ class SmoothResidualModel(_ResidualModel):
         assert type(self.robust) == bool
 
         self.smoothed_residual_data = None
+        self._is_fitted = False
 
     def fit_residuals(self, residual_df):
         df = residual_df.copy()
@@ -233,6 +239,7 @@ class SmoothResidualModel(_ResidualModel):
                 i += 1
 
         self.smoothed_residual_data = smoothed
+        self._is_fitted = True
 
     def _extrapolate(self, num_data):
         df = self.smoothed_residual_data.copy()
@@ -269,6 +276,9 @@ class SmoothResidualModel(_ResidualModel):
         return df
 
     def simulate_residuals(self, covariate_specs, num_simulations):
+        if not self.is_fitted():
+            raise RuntimeError("Call fit_residuals(...) to fit the model first")
+
         pred_res_std = self._predict_residuals(covariate_specs=covariate_specs)
 
         # Bound the residual standard deviation (or CV) between the upper and lower bounds set
