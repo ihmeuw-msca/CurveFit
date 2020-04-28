@@ -71,7 +71,7 @@ class ModelRunner:
 
         # Delete random effects from this point forward because all final models
         # are individual rather than joint models
-        self.model.parameter_set = self.model.parameter_set.delete_random_effects()
+        self.model.param_set = self.model.param_set.delete_random_effects()
 
         # Run predictive validity
         self.predictive_validity.run_predictive_validity(
@@ -85,6 +85,10 @@ class ModelRunner:
         )
         # Create draws by simulating forward residuals
         self.draws.create_draws(
+            data=self.data,
+            model_prototype=self.model,
+            solver_prototype=self.solver,
             residual_model=self.residual_model,
+            evaluation_space=self.predictive_validity.evaluation_space,
             theta=self.predictive_validity.theta
         )

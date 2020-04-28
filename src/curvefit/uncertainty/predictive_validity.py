@@ -100,8 +100,9 @@ class PredictiveValidity:
                 solver = solver.clone()
                 solver.set_model_instance(model)
 
-            df = data._get_df(group=group).query(f"{data.data_specs.col_t} <= {t}")
-            solver.fit(data=df)
+            df, specs = data._get_df(group=group, return_specs=True)
+            df = df.query(f"{data.data_specs.col_t} <= {t}")
+            solver.fit(data=(df, specs))
 
             if self.debug_mode:
                 self.group_records[group].append(solver)
@@ -121,6 +122,7 @@ class PredictiveValidity:
 
         model = model_prototype.clone()
         solver = solver_prototype.clone()
+        solver.set_model_instance(model)
 
         for group in data.groups:
 
@@ -136,4 +138,4 @@ class PredictiveValidity:
         dfs = []
         for group, residuals in self.group_residuals.items():
             dfs.append(residuals._residual_df())
-        return pd.concat(dfs)
+        return pd.concat(dfs).reset_index()
