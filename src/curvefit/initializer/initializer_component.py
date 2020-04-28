@@ -143,15 +143,14 @@ class LnAlphaBetaPrior(IndividualPriorInitializerComponent):
         betas = np.array([])
 
         for sol in solver:
-
             alpha_idx = sol.model.param_set.get_param_index('alpha')
             beta_idx = sol.model.param_set.get_param_index('beta')
 
             model = sol.get_model_instance()
             params = model.get_params(x=sol.x_opt)
 
-            alphas = alphas.append(params[alpha_idx, 0])
-            betas = betas.append(params[beta_idx, 0])
+            alphas = np.append(alphas, params[alpha_idx, 0])
+            betas = np.append(betas, params[beta_idx, 0])
 
         prior_mean = np.log(alphas * betas).mean()
         prior_std = np.log(alphas * betas).std()

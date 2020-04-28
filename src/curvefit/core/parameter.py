@@ -267,6 +267,13 @@ class ParameterSet(Prototype):
             raise RuntimeError(f"No {param_name} parameter in this parameter set.")
         return param_index
 
+    def get_param_function_index(self, param_function_name):
+        try:
+            param_function_index = self.param_function_name.index(param_function_name)
+        except ValueError:
+            raise RuntimeError(f"No {param_function_name} parameter in this parameter set.")
+        return param_function_index
+
     def delete_random_effects(self):
         param_set = self.clone()
         bounds = np.array(self.re_bounds)
