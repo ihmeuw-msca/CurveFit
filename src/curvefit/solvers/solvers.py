@@ -43,7 +43,8 @@ class Solver(Prototype):
     - `data (Tuple[pd.DataFrame, DataSpecs])`: the input data frame to be fit,
         and data specifications object
     - `options (None | Options)`: an optional Options object that has
-        fit specifications for the underlying solver
+        fit specifications for the underlying solver; overrides
+        the options that have already been set
 
     ### `predict`
     Create predictions based on the optimal values estimated by the solver.
@@ -51,7 +52,7 @@ class Solver(Prototype):
     - `**kwargs`: keyword arguments passed to `self.model_instance.predict()`
 
     ### `set_options`
-    Set a set of options that will be used in the optimization.
+    Set a dictionary of options that will be used in the optimization.
 
     ### `set_model_instance`
     Attach a new model instance.
