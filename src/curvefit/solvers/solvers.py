@@ -271,7 +271,7 @@ class GaussianMixturesIntegration(CompositeSolver):
             )
             obs_gau_pdf = data_translator(data_inputs_gm.obs, model.curve_fun, gaussian_pdf)
             data_inputs_gm.obs = obs_gau_pdf
-            gm_solver.fit(data_inputs_gm, options={'maxiter': 50})
+            gm_solver.fit(data_inputs_gm)
             self.x_opt = gm_solver.x_opt
             self.fun_val_opt = gm_solver.fun_val_opt
 
