@@ -4,6 +4,39 @@ from curvefit.models.base import Model, DataInputs
 
 
 class GaussianMixtures(Model):
+    """
+    {begin_markdown GaussianMixtures}
+    {spell_markdown init}
+
+    # `curvefit.models.gaussian_mixtures.GaussianMixtures`
+    ## Fit a linear combination of some Gaussian distributions
+
+    The `GaussianMixtures` model allows you to fit weights for a linear combination
+    of Gaussian distributions using least squares. It is typically used
+    on top of a [`CoreModel`](CoreModel.md).
+
+    ## Arguments
+
+    - `stride (int)`: the distance between the Gaussian atoms; how far to space them out
+        over the independent variable
+    - `size (int)`: number of Gaussian atoms to include, replicated over different
+        locations determined by `stride`
+    - `params (np.array)`: parameters to build the Gaussian distributions; must
+        be parameters from a Gaussian family function in `curvefit.core.functions`
+
+    ## Methods
+
+    ### `compute_design_matrix`
+    Calculates the design matrix from the Gaussian atoms that will be used in order
+    to get their optimal linear combination.
+
+    - `t (np.array)`: how far in time should the predictions that will go into
+        the design matrix extend
+
+    See additional methods in [`CoreModel`](CoreModel.md).
+
+    {end_markdown GaussianMixtures}
+    """
 
     def __init__(self, stride, size, params=None):
         super().__init__()
