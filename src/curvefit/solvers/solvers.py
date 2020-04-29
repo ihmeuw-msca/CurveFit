@@ -152,7 +152,7 @@ class GaussianMixturesIntegration(CompositeSolver):
             self.gm_model.set_params(params[:, 0])
             gm_solver = ScipyOpt(self.gm_model)
             data_inputs_gm = DataInputs(
-                t=model.get_data().t, 
+                t=model.data_inputs.t, 
                 obs=model.data_inputs.obs, 
                 obs_se=model.data_inputs.obs_se,
             )
