@@ -98,7 +98,7 @@ class CoreModel(Model):
         t = df[data_specs.col_t].to_numpy()
         obs = df[data_specs.col_obs].to_numpy()
         obs_se = df[data_specs.col_obs_se].to_numpy()
-        obs_se *= np.abs(obs).mean() / obs_se.mean()
+        obs_se = obs_se * np.abs(obs).mean() / obs_se.mean()
 
         covs_mat = []
         for covs in self.param_set.covariate:
