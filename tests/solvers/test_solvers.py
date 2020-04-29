@@ -123,13 +123,13 @@ class TestCompositeSolvers:
 
         solver = GaussianMixturesIntegration(gm_model)
         solver.set_model_instance(core_model)
-        solver.fit(data=data, options={'maxiter': 10})
+        solver.fit(data=data, options={'maxiter': 20})
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         core_model.erase_data()
 
         if curve_fun.__name__ == 'gaussian_pdf':
             solver_base = ScipyOpt(core_model)
-            solver_base.fit(data=data, options={'maxiter': 10})
+            solver_base.fit(data=data, options={'maxiter': 20})
             y_pred_base = solver_base.predict(t=data[0]['t'].to_numpy())
 
             assert np.linalg.norm(y_pred - y_true) < np.linalg.norm(y_pred_base - y_true)
