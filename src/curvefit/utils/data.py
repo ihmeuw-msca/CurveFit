@@ -59,6 +59,7 @@ def data_translator(data, input_space, output_space,
         output_data = data - np.insert(data[:, :-1], 0, 0.0, axis=1)
         if 'ln' in output_space:
             output_data = np.log(output_data)
+        output_data[0, 0] = output_data[0, 1]
 
     # reverting the shape back if necessary
     if data_ndim == 1:
