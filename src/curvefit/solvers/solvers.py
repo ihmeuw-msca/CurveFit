@@ -148,6 +148,7 @@ class GaussianMixturesIntegration(CompositeSolver):
                 model.data_inputs.covariates_matrices,
                 model.param_set.link_fun,
                 model.data_inputs.var_link_fun,
+                expand=False,
             )
             self.gm_model.set_params(params[:, 0])
             gm_solver = ScipyOpt(self.gm_model)
