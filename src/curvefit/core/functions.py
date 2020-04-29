@@ -1,8 +1,5 @@
-# -*- coding: utf-8 -*-
-# ---------------------------------------------------------------------------
-# model functions:
-# ---------------------------------------------------------------------------
-'''{begin_markdown param_time_fun}
+"""
+{begin_markdown param_time_fun}
 {spell_markdown
     params
     expit
@@ -13,42 +10,41 @@
 }
 # Predefined Parametric Functions of Time
 
-## head Syntax
-`result = curvefit.core.functions.fun(t, params)`
+## Syntax
+```python
+result = curvefit.core.functions.fun(t, params)
+```
 
-## t
-This is a `list` or one dimensional `numpy.array`.
+## Arguments
 
-## params
-This is either a `list`, or `numpy.array` with one or two dimensions.
-In any case, `len(params) == 3`.
-If `params` is a two dimensional array, `params.shape[1] == len(t)`.
-We use the notation below for the values in `params`:
+- `t (np.array)`: This is a `list` or one dimensional `numpy.array`.
+- `params (np.array | List[float])`: This is either a `list`, or `numpy.array` with one or two dimensions.
+    In any case, `len(params) == 3`.
+    If `params` is a two dimensional array, `params.shape[1] == len(t)`.
+    We use the notation below for the values in `params`:
 
-Notation | Definition
---- | ---
-\( \alpha \) | `params[0]`
-\( \beta \) | `params[1]`
-\( p \) | `params[2]`
+    Notation | Definition
+    --- | ---
+    \( \alpha \) | `params[0]`
+    \( \beta \) | `params[1]`
+    \( p \) | `params[2]`
+- `fun (Callable)`: the possible values for *fun* are listed in the subheadings below:
 
-## fun
-The possible values for *fun* are listed in the subheadings below:
-
-### expit
+### `expit`
 This is the generalized logistic function which is defined by
 \[
     \mbox{expit} ( t , \alpha , \beta , p ) =
     \frac{p}{ 1.0 + \exp [ - \alpha ( t - \beta ) ] }
 \]
 
-### ln_expit
+### `ln_expit`
 This is the log of the generalized logistic function which is defined by
 \[
     \mbox{ln_expit} ( t , \alpha , \beta , p ) =
         \log \circ \; \mbox{expit} ( t , \alpha , \beta , p )
 \]
 
-### gaussian_cdf
+### `gaussian_cdf`
 This is the generalized Gaussian cumulative distribution function which is defined by
 \[
     \mbox{gaussian_cdf} ( t , \alpha , \beta , p ) = \frac{p}{2} \left[
@@ -57,7 +53,7 @@ This is the generalized Gaussian cumulative distribution function which is defin
     \right]
 \]
 
-### ln_gaussian_cdf
+### `ln_gaussian_cdf`
 This is the log of the
 generalized Gaussian cumulative distribution function which is defined by
 \[
@@ -65,7 +61,7 @@ generalized Gaussian cumulative distribution function which is defined by
         \log \circ \; \mbox{gaussian_cdf} ( t , \alpha , \beta , p )
 \]
 
-### gaussian_pdf
+### `gaussian_pdf`
 This is the derivative of the
 generalized Gaussian cumulative distribution function which is defined by
 \[
@@ -73,7 +69,7 @@ generalized Gaussian cumulative distribution function which is defined by
         \partial_t \; \mbox{gaussian_cdf} ( t , \alpha , \beta , p )
 \]
 
-### ln_gaussian_pdf
+### `ln_gaussian_pdf`
 This is the log of the derivative of the
 generalized Gaussian cumulative distribution function which is defined by
 \[
@@ -81,7 +77,7 @@ generalized Gaussian cumulative distribution function which is defined by
         \log \circ \; \mbox{gaussian_pdf} ( t , \alpha , \beta , p )
 \]
 
-### dgaussian_pdf
+### `dgaussian_pdf`
 This is the second derivative of the
 generalized Gaussian cumulative distribution function which is defined by
 \[
@@ -90,7 +86,7 @@ generalized Gaussian cumulative distribution function which is defined by
 \]
 
 
-## result
+## Result
 The result is a `list` or one dimensional `numpy.array` with
 `len(result) == len(t)`.
 If *params* is a `list` or one dimensional array
@@ -105,10 +101,15 @@ If *params* is a two dimensional array
 ## Example
 [param_time_fun_xam](param_time_fun_xam.md)
 
-{end_markdown param_time_fun}'''
+{end_markdown param_time_fun}
+"""
 # ----------------------------------------------------------------------------
 import numpy as np
 from scipy import special
+
+# ---------------------------------------------------------------------------
+# Curve Functions
+# ---------------------------------------------------------------------------
 
 
 # logistic function
@@ -187,7 +188,7 @@ def dgaussian_pdf(t, params):
     return -2.0*a**2*p*tmp*np.exp(-tmp**2)/np.sqrt(np.pi)
 
 # ---------------------------------------------------------------------------
-# Other fuctions
+# Loss Functions
 # ---------------------------------------------------------------------------
 
 

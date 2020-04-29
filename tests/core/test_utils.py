@@ -41,32 +41,6 @@ def test_get_obs_se(func):
     assert np.allclose(result['obs_se'], func(data['t']))
 
 
-@pytest.mark.parametrize('t', [np.arange(5)])
-@pytest.mark.parametrize(('start_day', 'end_day', 'pred_fun'),
-                         [(1, 3, gaussian_pdf)])
-@pytest.mark.parametrize(('mat1', 'mat2', 'result'),
-                         [(np.ones(5), np.ones(5), np.ones(5)),
-                          (np.arange(5), np.ones(5),
-                           np.array([1.0, 1.0, 1.5, 3.0, 4.0]))])
-def test_convex_combination(t, mat1, mat2, pred_fun, start_day, end_day,
-                            result):
-    my_result = utils.convex_combination(t, mat1, mat2, pred_fun,
-                                         start_day=start_day,
-                                         end_day=end_day)
-
-    assert np.allclose(result, my_result)
-
-@pytest.mark.parametrize(('w1', 'w2', 'pred_fun'),
-                         [(0.3, 0.7, gaussian_pdf)])
-@pytest.mark.parametrize(('mat1', 'mat2', 'result'),
-                         [(np.ones(5), np.ones(5), np.ones(5)),
-                          (np.ones(5), np.zeros(5), np.ones(5)*0.3),
-                          (np.zeros(5), np.ones(5), np.ones(5)*0.7)])
-def test_model_average(mat1, mat2, w1, w2, pred_fun, result):
-    my_result = utils.model_average(mat1, mat2, w1, w2, pred_fun)
-    assert np.allclose(result, my_result)
-
-
 @pytest.mark.parametrize('data', [np.arange(1, 6)[None, :]])
 @pytest.mark.parametrize(('input_space', 'output_space'),
                          [('gaussian_cdf', 'gaussian_pdf'),
@@ -104,10 +78,12 @@ def test_data_translator_exp(data, input_space, output_space):
 @pytest.mark.parametrize('slopes', [0.5])
 @pytest.mark.parametrize('slope_at', [1, 2, 3])
 def test_solve_p_from_dgaussian_pdf(alpha, beta, slopes, slope_at):
-    result = utils.solve_p_from_dgaussian_pdf(alpha,
-                                      beta,
-                                      slopes,
-                                      slope_at=slope_at)
+    result = utils.solve_p_from_dgaussian_pdf(
+        alpha,
+        beta,
+        slopes,
+        slope_at=slope_at
+    )
     np.random.seed(100)
 
     def fun(t, a, b, p, s):

@@ -3,32 +3,38 @@ import pandas as pd
 from copy import deepcopy
 from collections import OrderedDict
 from curvefit.core.functions import *
+from curvefit.utils.data import data_translator
 
 
 def sizes_to_indices(sizes):
-    """{begin_markdown sizes_to_indices}
-    {spell_markdown subvector subvectors iterable}
-    # Converting sizes to corresponding indices.
+    """
+    {begin_markdown sizes_to_indices}
+    {spell_markdown subvector subvectors iterable utils}
+    # `curvefit.core.utils.sizes_to_indices`
+    ## Converting sizes to corresponding indices.
 
     ## Syntax
     `indices = curvefit.sizes_to_indices(sizes)`
 
-    ## sizes
-    The argument *sizes* is an iterable object with integer values.
-    The i-th value in `sizes[i]` is the number of elements in the i-th
-    subvector of a larger total vector that contains the subvectors in order.
+    ## Arguments
 
-    ## indices
-    The return value *indices* is a `list` of one dimensional numpy arrays.
-    The value `indices[i]` has length equal to the i-th size.
-    It starts (ends) with the index in the total vector
-    of the first (last) element of the i-th subvector.  The elements of
-    `indices[i]` are monotone and increase by one between elements.
+    - `sizes (iterable)`: The argument *sizes* is an iterable object with integer values.
+        The i-th value in `sizes[i]` is the number of elements in the i-th
+        subvector of a larger total vector that contains the subvectors in order.
+
+    ## Returns
+
+    - `indices`: The return value *indices* is a `list` of one dimensional numpy arrays.
+        The value `indices[i]` has length equal to the i-th size.
+        It starts (ends) with the index in the total vector
+        of the first (last) element of the i-th subvector.  The elements of
+        `indices[i]` are monotone and increase by one between elements.
 
     ## Example
     [sizes_to_indices_xam](sizes_to_indices_xam.md)
 
-    {end_markdown sizes_to_indices}"""
+    {end_markdown sizes_to_indices}
+    """
     indices = []
     a = 0
     b = 0
@@ -56,7 +62,6 @@ def get_obs_se(df, col_t, func=lambda x: 1 / (1 + x)):
     return data
 
 
-# TODO: replace with the data translator?
 def get_derivative_of_column_in_ln_space(df, col_obs, col_t, col_grp):
     """
     Adds a new column for the derivative of col_obs.
@@ -96,165 +101,9 @@ def get_derivative_of_column_in_ln_space(df, col_obs, col_t, col_grp):
     return df_result
 
 
-# TODO: replace by the data translator?
 def cumulative_derivative(array):
     arr = array.copy()
     return arr - np.insert(arr[:, :-1], 0, 0.0, axis=1)
-
-
-# TODO: change to use the data translator
-def convex_combination(t, pred1, pred2, pred_fun,
-                       start_day=2, end_day=20):
-    """Combine the prediction.
-
-    Args:
-        t (np.ndarray): Time axis for the prediction.
-        pred1 (np.ndarray): First set of the prediction.
-        pred2 (np.ndarray): Second set of the prediction.
-        pred_fun (function): Function that used to generate the prediction.
-        start_day (int, optional):
-            Which day start to blend, before follow `pred2`.
-        end_day (int, optional):
-            Which day end to blend, after follow `pred1`.
-    """
-    pred_ndim = pred1.ndim
-    if pred1.ndim == 1:
-        pred1 = pred1[None, :]
-    if pred2.ndim == 1:
-        pred2 = pred2[None, :]
-
-    num_time_points = t.size
-    assert pred1.shape == pred2.shape
-    assert pred1.shape[1] == num_time_points
-    assert callable(pred_fun)
-    assert start_day < end_day
-
-    a = 1.0 / (end_day - start_day)
-    b = -start_day * a
-    lam = np.maximum(0.0, np.minimum(1.0, a * t + b))
-
-    if pred_fun.__name__ == 'ln_gaussian_cdf':
-        pred1 = np.exp(pred1)
-        pred2 = np.exp(pred2)
-        pred1_tmp = cumulative_derivative(pred1)
-        pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
-        pred = np.log(np.cumsum(pred_tmp, axis=1))
-    elif pred_fun.__name__ == 'gaussian_cdf':
-        pred1_tmp = cumulative_derivative(pred1)
-        pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
-        pred = np.cumsum(pred_tmp, axis=1)
-    elif pred_fun.__name__ == 'ln_gaussian_pdf':
-        pred1_tmp = np.exp(pred1)
-        pred2_tmp = np.exp(pred2)
-        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
-        pred = np.log(pred_tmp)
-    elif pred_fun.__name__ == 'gaussian_pdf':
-        pred = lam * pred1 + (1.0 - lam) * pred2
-    else:
-        pred = None
-        RuntimeError('Unknown prediction functional form')
-
-    if pred_ndim == 1:
-        pred = pred.ravel()
-
-    return pred
-
-
-# TODO: use data_translator
-def model_average(pred1, pred2, w1, w2, pred_fun):
-    """
-    Average two models together in linear space.
-
-    Args:
-        pred1: (np.array) first set of predictions
-        pred2: (np.array) second set of predictions
-        w1: (float) weight for first predictions
-        w2: (float) weight for second predictions
-        pred_fun (function): Function that used to generate the prediction.
-    """
-    assert callable(pred_fun)
-    assert w1 + w2 == 1
-
-    if pred_fun.__name__ == 'ln_gaussian_cdf':
-        pred1 = np.exp(pred1)
-        pred2 = np.exp(pred2)
-        pred1_tmp = cumulative_derivative(pred1)
-        pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
-        pred = np.log(np.cumsum(pred_tmp, axis=1))
-    elif pred_fun.__name__ == 'gaussian_cdf':
-        pred1_tmp = cumulative_derivative(pred1)
-        pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
-        pred = np.cumsum(pred_tmp, axis=1)
-    elif pred_fun.__name__ == 'ln_gaussian_pdf':
-        pred1_tmp = np.exp(pred1)
-        pred2_tmp = np.exp(pred2)
-        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
-        pred = np.log(pred_tmp)
-    elif pred_fun.__name__ == 'gaussian_pdf':
-        pred = w1 * pred1 + w2 * pred2
-    else:
-        pred = None
-        RuntimeError('Unknown prediction functional form')
-
-    return pred
-
-
-def get_initial_params(model, groups, fit_arg_dict):
-    """
-    Runs a separate model for each group fixing the random effects to 0
-    and calculates what the initial values should be for the optimization
-    of the whole model.
-
-    Args:
-        model: (curvefit.CurveModel)
-        groups: (list) list of groups to get smart starting params for
-        fit_arg_dict: keyword arguments in dict that are passed to the
-            fit_params function
-
-    Returns:
-        (np.array) fe_init: fixed effects initial value
-        (np.array) re_init: random effects initial value
-    """
-    fixed_effects = OrderedDict()
-    fit_kwargs = deepcopy(fit_arg_dict)
-
-    # Fit a model for each group with fit_kwargs carried over
-    # from the settings for the overall model with a couple of adjustments.
-    for g in groups:
-        fixed_effects[g] = model.run_one_group_model(group=g, **fit_kwargs)
-    return fixed_effects
-
-
-def compute_starting_params(fe_dict):
-    """
-    Compute the starting parameters for a dictionary of fixed effects
-    by averaging them to get fixed effects for overall model and finding
-    deviation from average as the random effect.
-    Args:
-        fe_dict: OrderedDict of fixed effects to put together that are ordered
-            in the way that you want them to go into the model
-
-    Returns:
-        (np.array) fe_init: fixed effects initial value
-        (np.array) re_init: random effects initial value
-    """
-    fe_values = []
-    for k, v in fe_dict.items():
-        fe_values.append(v)
-    all_fixed_effects = np.vstack(fe_values)
-
-    # The new fixed effects initial value is the mean of the fixed effects
-    # across all single-group models.
-    fe_init = all_fixed_effects.mean(axis=0)
-
-    # The new random effects initial value is the single-group models' deviations
-    # from the mean, which is now the new fixed effects initial value.
-    re_init = (all_fixed_effects - fe_init).ravel()
-    return fe_init, re_init
 
 
 def solve_p_from_dgaussian_pdf(alpha, beta, slopes, slope_at=14):
@@ -461,8 +310,7 @@ def smooth_mat(mat, radius=None):
 
 
 def split_by_group(df, col_group):
-    """{begin_markdown split_by_group}
-    {spell_markdown dataframe}
+    """
     # Split the dataframe by the group definition.
 
     ## Syntax
@@ -479,8 +327,7 @@ def split_by_group(df, col_group):
     corresponding dataframe.
 
     ## Example
-
-    {end_markdown split_by_group}"""
+    """
     assert col_group in df
     data = {
         group: df[df[col_group] == group].reset_index(drop=True)

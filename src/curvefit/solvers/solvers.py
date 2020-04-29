@@ -18,6 +18,53 @@ class SolverNotDefinedError(Exception):
 
 
 class Solver(Prototype):
+    """
+    {begin_markdown Solver}
+    {spell_markdown kwargs}
+
+    # `curvefit.solvers.solvers.Solver`
+    ## Solver base class that fits a Model
+
+    In order to fit a `curvefit.models.base.Model`, you must
+    first define a `Solver` and assign the model to the solver.
+    The reason for this is that there might be multiple ways that
+    you could solve a particular model.
+
+    ## Arguments
+
+    - `model_instance (curvefit.models.base.Model)`: the model instance
+        that will be solved
+
+    ## Methods
+
+    ### `fit`
+    Fit the solver to some data using `self.model_instance`.
+
+    - `data (Tuple[pd.DataFrame, DataSpecs])`: the input data frame to be fit,
+        and data specifications object
+    - `options (None | Options)`: an optional Options object that has
+        fit specifications for the underlying solver; overrides
+        the options that have already been set
+
+    ### `predict`
+    Create predictions based on the optimal values estimated by the solver.
+
+    - `**kwargs`: keyword arguments passed to `self.model_instance.predict()`
+
+    ### `set_options`
+    Set a dictionary of options that will be used in the optimization.
+
+    ### `set_model_instance`
+    Attach a new model instance.
+
+    ### `detach_model_instance`
+    Detach the current model instance.
+
+    ### `get_model_instance`
+    Get the current model instance.
+
+    {end_markdown Solver}
+    """
 
     def __init__(self, model_instance=None):
         self.model = model_instance
@@ -52,6 +99,17 @@ class Solver(Prototype):
 
 
 class ScipyOpt(Solver):
+    """
+    {begin_markdown ScipyOpt}
+
+    # `curvefit.solvers.solvers.ScipyOpt`
+    ## Scipy Optimize Solver
+    Use `scipy` optimize to fit the model using the L-BFGS-B method.
+
+    See [`Solver`](Solver.md) for arguments and methods.
+
+    {end_markdown ScipyOpt}
+    """
 
     def fit(self, data, x_init=None, options=None):
         self.model.convert_inputs(data)
@@ -73,6 +131,23 @@ class ScipyOpt(Solver):
 
 
 class CompositeSolver(Solver):
+    """
+    {begin_markdown CompositeSolver}
+
+    # `curvefit.solvers.solvers.CompositeSolver`
+    ## Composite Solver
+    General base class for a solver with multiple elements. Used to
+    create composites of solvers.
+
+    ## Arguments
+
+    - `solver (curvefit.solvers.solvers.Solver)`: a base solver
+        to build the composite off of
+
+    See [`Solver`](Solver.md) for more arguments and methods.
+
+    {end_markdown CompositeSolver}
+    """
 
     def __init__(self, solver=None):
         super().__init__(model_instance=None)
@@ -112,6 +187,26 @@ class CompositeSolver(Solver):
 
 
 class MultipleInitializations(CompositeSolver):
+    """
+    {begin_markdown MultipleInitialization}
+    {spell_markdown Initialization}
+
+    # `curvefit.solvers.solvers.MultipleInitialization`
+    ## MultipleInitialization Solver
+    Uses a sampling function to sample initial values around
+    the initial values specified in the model instance, and picks
+    the initial values which attain lowest objective function value.
+
+    ## Arguments
+
+    - `sample_fun (Callable)`: some function to use to sample
+        initial points around the initial points specified in the model
+        instance
+
+    See [`CompositeSolver`](CompositeSolver.md) for more arguments and methods.
+
+    {end_markdown MultipleInitialization}
+    """
 
     def __init__(self, sample_fun, solver=None):
         super().__init__()
@@ -132,6 +227,23 @@ class MultipleInitializations(CompositeSolver):
 
 
 class GaussianMixturesIntegration(CompositeSolver):
+    """
+    {begin_markdown GaussianMixturesIntegration}
+
+    # `curvefit.solvers.solvers.GaussianMixturesIntegration`
+    ## GaussianMixturesIntegration Solver
+    The solver that is used to find the linear combination of Gaussian atoms
+    built on top of one core model instance.
+
+    ## Arguments
+
+    - `gm_model (curvefit.models.gaussian_mixtures.GaussianMixtures)`: some
+        a model instance of a gaussian mixture model
+
+    See [`CompositeSolver`](CompositeSolver.md) for more arguments and methods.
+
+    {end_markdown GaussianMixturesIntegration}
+    """
 
     def __init__(self, gm_model, solver=None):
         super().__init__()
@@ -171,6 +283,22 @@ class GaussianMixturesIntegration(CompositeSolver):
 
 
 class SmartInitialization(CompositeSolver):
+    """
+    {begin_markdown SmartInitialization}
+    {spell_markdown Initialization}
+
+    # `curvefit.solvers.solvers.SmartInitialization`
+    ## SmartInitialization Solver
+    Built on top of any solver; used when there are many groups that will be
+    fit to using random effects. First fits individual models for each group,
+    and uses their fixed effect values minus the fixed effects mean across all groups as the
+    random effects initial values (finding a "smart" initial value for better
+    convergence).
+
+    See [`CompositeSolver`](CompositeSolver.md) for more arguments and methods.
+
+    {end_markdown SmartInitialization}
+    """
 
     def __init__(self, solver=None):
         super().__init__()

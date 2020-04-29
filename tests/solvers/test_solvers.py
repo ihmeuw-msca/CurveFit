@@ -10,6 +10,9 @@ from curvefit.models.gaussian_mixtures import GaussianMixtures
 
 from data_and_param_simulator import simulate_params, simulate_data
 
+import warnings
+warnings.filterwarnings("error")
+
 
 class Rosenbrock(Model):
 
@@ -181,14 +184,14 @@ class TestCompositeSolvers:
         core_model = CoreModel(params_set, curve_fun, normal_loss)
 
         num_init = 3
-        xs_init = - np.random.rand(num_init, x_true.shape[1]* (num_groups + 1)) * 3
+        xs_init = - np.random.rand(num_init, x_true.shape[1] * (num_groups + 1)) * 3
         sample_fun = lambda x: xs_init
         solver_inner = MultipleInitializations(sample_fun)
 
         solver = SmartInitialization()
         solver.set_solver(solver_inner)
         solver.set_model_instance(core_model)
-        solver.fit(data=data, options={'maxiter': 500})
+        solver.fit(data=data, options={'maxiter': 500, 'ftol': 1e-16, 'gtol': 1e-16})
 
         ys = data[0]['obs'].to_numpy()
         ts = data[0]['t'].to_numpy()
