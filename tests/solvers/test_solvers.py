@@ -14,7 +14,6 @@ import warnings
 warnings.filterwarnings("error")
 
 
-
 class Rosenbrock(Model):
 
     def __init__(self, n_dim=2):
@@ -178,21 +177,21 @@ class TestCompositeSolvers:
             assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
 
     def test_smart_initialization(self, curve_fun):
-        np.random.seed(100)
+        np.random.seed(20)
         num_groups = 3
         params_set, params_true, x_true = simulate_params(num_groups)
         data = simulate_data(curve_fun, params_true)
         core_model = CoreModel(params_set, curve_fun, normal_loss)
 
         num_init = 3
-        xs_init = - np.random.rand(num_init, x_true.shape[1]* (num_groups + 1)) * 3
+        xs_init = - np.random.rand(num_init, x_true.shape[1] * (num_groups + 1)) * 3
         sample_fun = lambda x: xs_init
         solver_inner = MultipleInitializations(sample_fun)
 
         solver = SmartInitialization()
         solver.set_solver(solver_inner)
         solver.set_model_instance(core_model)
-        solver.fit(data=data, options={'maxiter': 500})
+        solver.fit(data=data, options={'maxiter': 500, 'ftol': 1e-16, 'gtol': 1e-16})
 
         ys = data[0]['obs'].to_numpy()
         ts = data[0]['t'].to_numpy()
