@@ -39,7 +39,7 @@ nav:
             - Model: 'extract_md/Model.md'
         - core_model:
             - CoreModel: 'extract_md/CoreModel.md'
-        - 
+        -
     - uncertainty:
         - residuals:
             - Residuals: 'extract_md/Residuals.md'
