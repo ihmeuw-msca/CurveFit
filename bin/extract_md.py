@@ -30,6 +30,9 @@ file_list = [
 
     'src/curvefit/models/base.py',
     'src/curvefit/models/core_model.py',
+    'src/curvefit/models/gaussian_mixtures.py',
+
+    'src/curvefit/solvers/solvers.py',
 
     'src/curvefit/uncertainty/residual_model.py',
     'src/curvefit/uncertainty/residuals.py',

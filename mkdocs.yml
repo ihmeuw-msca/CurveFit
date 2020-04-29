@@ -37,9 +37,18 @@ nav:
         - base:
             - DataInputs: 'extract_md/DataInputs.md'
             - Model: 'extract_md/Model.md'
-        - core_model:
+        - core model:
             - CoreModel: 'extract_md/CoreModel.md'
-        -
+        - gaussian atoms:
+            - GaussianMixtures: 'extract_md/GaussianMixtures.md'
+    - solvers:
+        - solvers:
+            - Solver: 'extract_md/Solver.md'
+            - ScipyOpt: 'extract_md/ScipyOpt.md'
+            - CompositeSolver: 'extract_md/CompositeSolver.md'
+            - MultipleInitialization: 'extract_md/MultipleInitialization.md'
+            - GaussianMixturesIntegration : 'extract_md/GaussianMixturesIntegration.md'
+            - SmartInitialization: 'extract_md/SmartInitialization.md'
     - uncertainty:
         - residuals:
             - Residuals: 'extract_md/Residuals.md'
