@@ -4,6 +4,9 @@ import scipy.optimize as sciopt
 
 from curvefit.core.effects2params import effects2params
 from curvefit.core.prototype import Prototype
+from curvefit.utils.data import data_translator
+from curvefit.core.functions import gaussian_pdf
+from curvefit.models.base import DataInputs
 
 
 class ModelNotDefinedError(Exception):
@@ -20,6 +23,8 @@ class Solver(Prototype):
         self.model = model_instance
         self.x_opt = None
         self.fun_val_opt = None
+        self.options = None
+        self.status = None
 
     def set_model_instance(self, model_instance):
         self.model = model_instance
@@ -32,6 +37,12 @@ class Solver(Prototype):
             return self.model
         else:
             raise ModelNotDefinedError()
+
+    def set_options(self, options: dict):
+        self.options = options
+    
+    def get_fit_status(self):
+        return self.status
 
     def fit(self, data, x_init=None, options=None):
         raise NotImplementedError()
@@ -46,17 +57,19 @@ class ScipyOpt(Solver):
         self.model.convert_inputs(data)
         if x_init is None:
             x_init = self.model.x_init
-
+        else:
+            x_init = x_init[:len(self.model.x_init)]
         result = sciopt.minimize(
             fun=lambda x: self.model.objective(x, data),
             x0=x_init,
             jac=lambda x: self.model.gradient(x, data),
             bounds=self.model.bounds,
-            options=options,
+            options=options if options is not None else self.options,
         )
 
         self.x_opt = result.x
         self.fun_val_opt = result.fun
+        self.status = result.message
 
 
 class CompositeSolver(Solver):
@@ -67,6 +80,10 @@ class CompositeSolver(Solver):
 
     def set_solver(self, solver):
         self.solver = solver
+
+    def set_options(self, options: dict):
+        if self.assert_solver_defined():
+            self.solver.set_options(options)
 
     def set_model_instance(self, model_instance):
         if self.assert_solver_defined() is True:
@@ -79,6 +96,10 @@ class CompositeSolver(Solver):
     def get_model_instance(self):
         if self.assert_solver_defined() is True:
             return self.solver.get_model_instance()
+
+    def get_fit_status(self):
+        if self.assert_solver_defined() is True:
+            return self.solver.get_fit_status()
 
     def assert_solver_defined(self):
         if self.solver is not None:
@@ -117,24 +138,36 @@ class GaussianMixturesIntegration(CompositeSolver):
         self.gm_model = gm_model
 
     def fit(self, data, x_init=None, options=None):
-        if self.assert_solver_defined() is True:
+        if self.assert_solver_defined() is True:         
             self.solver.fit(data, x_init, options)
-            model = self.get_model_instance()
+            model = self.get_model_instance()  
+            self.input_curve_fun = model.curve_fun
             params = effects2params(
                 self.solver.x_opt,
                 model.data_inputs.group_sizes,
                 model.data_inputs.covariates_matrices,
                 model.param_set.link_fun,
                 model.data_inputs.var_link_fun,
+                expand=False,
             )
             self.gm_model.set_params(params[:, 0])
             gm_solver = ScipyOpt(self.gm_model)
-            gm_solver.fit(data)
+            data_inputs_gm = DataInputs(
+                t=model.data_inputs.t, 
+                obs=model.data_inputs.obs, 
+                obs_se=model.data_inputs.obs_se,
+            )
+            obs_gau_pdf = data_translator(data_inputs_gm.obs, model.curve_fun, gaussian_pdf)
+            data_inputs_gm.obs = obs_gau_pdf
+            gm_solver.fit(data_inputs_gm)
             self.x_opt = gm_solver.x_opt
             self.fun_val_opt = gm_solver.fun_val_opt
 
-    def predict(self, t):
-        return self.gm_model.predict(self.x_opt, t)
+    def predict(self, t, predict_fun=None):
+        pred_gau_pdf = self.gm_model.predict(self.x_opt, t)
+        if predict_fun is None:
+            return data_translator(pred_gau_pdf, gaussian_pdf, self.input_curve_fun)
+        return data_translator(pred_gau_pdf, gaussian_pdf, predict_fun)
 
 
 class SmartInitialization(CompositeSolver):
@@ -151,19 +184,20 @@ class SmartInitialization(CompositeSolver):
             group_names = df[data_specs.col_group].unique()
             if len(group_names) == 1:
                 raise RuntimeError('SmartInitialization is only for multiple groups.')
-            
+
             model = self.get_model_instance()
             re_bounds = deepcopy(model.param_set.re_bounds)
             model.param_set.re_bounds = self._set_bounds_zeros(model.param_set.re_bounds)
             xs = []
             for group in group_names:
                 data_sub = (df[df[data_specs.col_group] == group], data_specs)
-                self.solver.fit(data_sub, x_init, options)
+                assert model.data_inputs is None
+                self.solver.fit(data_sub, None, options)
                 xs.append(self.solver.x_opt)
                 model.erase_data()
             xs = np.array(xs)
             self.x_mean = np.mean(xs, axis=0)[:model.param_set.num_fe]
-            x_init = np.concatenate((self.x_mean, np.reshape(xs[:, :model.param_set.num_fe] - self.x_mean, (-1, ))))
+            x_init = np.concatenate((self.x_mean, np.reshape(xs[:, :model.param_set.num_fe] - self.x_mean, (-1,))))
             model.param_set.re_bounds = re_bounds
             self.solver.fit(data, x_init, options)
             self.x_opt = self.solver.x_opt
@@ -177,4 +211,3 @@ class SmartInitialization(CompositeSolver):
             for b in bounds:
                 bds.append(self._set_bounds_zeros(b))
             return bds
-

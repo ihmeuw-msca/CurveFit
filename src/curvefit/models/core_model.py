@@ -174,8 +174,10 @@ class CoreModel(Model):
         param_gprior_means = np.array([])
         param_gprior_stds = np.array([])
         if self.param_set.param_function:
-            for fun, gprior in zip(self.param_set.param_function,
-                                   self.param_set.param_function_fe_gprior):
+            for fun, gprior in zip(
+                self.param_set.param_function,
+                self.param_set.param_function_fe_gprior
+            ):
                 param_gprior_funs.append(fun)
                 param_gprior_means = np.append(param_gprior_means, gprior[0])
                 param_gprior_stds = np.append(param_gprior_stds, gprior[1])
