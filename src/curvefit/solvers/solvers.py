@@ -6,6 +6,7 @@ from curvefit.core.effects2params import effects2params
 from curvefit.core.prototype import Prototype
 from curvefit.utils.data import data_translator
 from curvefit.core.functions import gaussian_pdf
+from curvefit.models.base import DataInputs
 
 
 class ModelNotDefinedError(Exception):
@@ -137,12 +138,10 @@ class GaussianMixturesIntegration(CompositeSolver):
         self.gm_model = gm_model
 
     def fit(self, data, x_init=None, options=None):
-        if self.assert_solver_defined() is True:
-            model = self.get_model_instance()
-            if model.curve_fun.__name__ != 'gaussian_pdf':
-                raise RuntimeError('Only works with observation in gaussian pdf space.')
-            
+        if self.assert_solver_defined() is True:         
             self.solver.fit(data, x_init, options)
+            model = self.get_model_instance()  
+            self.input_curve_fun = model.curve_fun
             params = effects2params(
                 self.solver.x_opt,
                 model.data_inputs.group_sizes,
@@ -152,14 +151,21 @@ class GaussianMixturesIntegration(CompositeSolver):
             )
             self.gm_model.set_params(params[:, 0])
             gm_solver = ScipyOpt(self.gm_model)
-            gm_solver.fit(data)
+            data_inputs_gm = DataInputs(
+                t=model.get_data().t, 
+                obs=model.data_inputs.obs, 
+                obs_se=model.data_inputs.obs_se,
+            )
+            obs_gau_pdf = data_translator(data_inputs_gm.obs, model.curve_fun, gaussian_pdf)
+            data_inputs_gm.obs = obs_gau_pdf
+            gm_solver.fit(data_inputs_gm)
             self.x_opt = gm_solver.x_opt
             self.fun_val_opt = gm_solver.fun_val_opt
 
     def predict(self, t, predict_fun=None):
         pred_gau_pdf = self.gm_model.predict(self.x_opt, t)
         if predict_fun is None:
-            return pred_gau_pdf
+            return data_translator(pred_gau_pdf, gaussian_pdf, self.input_curve_fun)
         return data_translator(pred_gau_pdf, gaussian_pdf, predict_fun)
 
 

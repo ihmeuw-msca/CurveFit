@@ -107,35 +107,30 @@ class TestCompositeSolvers:
         for x in xs_init:
             assert core_model.objective(x, data) >= solver.fun_val_opt
 
-    def test_gaussian_mixture_integration(self):
+    def test_gaussian_mixture_integration(self, curve_fun):
         gm_model = GaussianMixtures(stride=1.0, size=3)
         params_set, params_true, _ = simulate_params(1)
-        data = simulate_data(gaussian_pdf, params_true)
-        core_model = CoreModel(params_set, gaussian_pdf, normal_loss)
+        data = simulate_data(curve_fun, params_true)
+        core_model = CoreModel(params_set, curve_fun, normal_loss)
         y_true = data[0]['obs'].to_numpy()
-
-        solver_base = ScipyOpt(core_model)
-        solver_base.fit(data=data, options={'maxiter': 10})
-        y_pred_base = solver_base.predict(t=data[0]['t'].to_numpy())
-        core_model.erase_data()
 
         solver = GaussianMixturesIntegration(gm_model)
         solver.set_model_instance(core_model)
         solver.fit(data=data, options={'maxiter': 10})
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
+        core_model.erase_data()
 
-        assert np.linalg.norm(y_pred - y_true) < np.linalg.norm(y_pred_base - y_true)
+        if curve_fun.__name__ == 'gaussian_pdf':
+            solver_base = ScipyOpt(core_model)
+            solver_base.fit(data=data, options={'maxiter': 10})
+            y_pred_base = solver_base.predict(t=data[0]['t'].to_numpy())
 
-        solver.predict(t=data[0]['t'].to_numpy(), predict_fun=ln_gaussian_cdf)
+            assert np.linalg.norm(y_pred - y_true) < np.linalg.norm(y_pred_base - y_true)
 
-        core_model.curve_fun = gaussian_cdf
-        with pytest.raises(RuntimeError):
-            solver.fit(data=data, options={'maxiter': 10})
-
-    def test_multi_init_outside_gaussian_mixture(self):
+    def test_multi_init_outside_gaussian_mixture(self, curve_fun):
         params_set, params_true, x_true = simulate_params(1)
-        data = simulate_data(gaussian_pdf, params_true)
-        core_model = CoreModel(params_set, gaussian_pdf, normal_loss)
+        data = simulate_data(curve_fun, params_true)
+        core_model = CoreModel(params_set, curve_fun, normal_loss)
 
         gm_model = GaussianMixtures(stride=1.0, size=3)
         solver_inner = GaussianMixturesIntegration(gm_model)
@@ -148,17 +143,18 @@ class TestCompositeSolvers:
         solver.set_model_instance(core_model)
         solver.fit(data=data, options={'maxiter': 200})
 
-        y_pred = solver.predict(t=data[0]['t'].to_numpy())
-        y_true = data[0]['obs'].to_numpy()
-        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
+        if curve_fun.__name__ == 'gaussian_pdf':
+            y_pred = solver.predict(t=data[0]['t'].to_numpy())
+            y_true = data[0]['obs'].to_numpy()
+            assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
 
         for x in xs_init:
             assert core_model.objective(x, None) >= solver.fun_val_opt
 
-    def test_gaussian_mixture_outside_multi_init(self):
+    def test_gaussian_mixture_outside_multi_init(self, curve_fun):
         params_set, params_true, x_true = simulate_params(1)
-        data = simulate_data(gaussian_pdf, params_true)
-        core_model = CoreModel(params_set, gaussian_pdf, normal_loss)
+        data = simulate_data(curve_fun, params_true)
+        core_model = CoreModel(params_set, curve_fun, normal_loss)
 
         num_init = 5
         xs_init = np.random.randn(num_init, x_true.shape[1]* 2)
@@ -172,9 +168,10 @@ class TestCompositeSolvers:
         solver.set_model_instance(core_model)
         solver.fit(data=data, options={'maxiter': 200})
 
-        y_pred = solver.predict(t=data[0]['t'].to_numpy())
-        y_true = data[0]['obs'].to_numpy()
-        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
+        if curve_fun.__name__ == 'gaussian_pdf':
+            y_pred = solver.predict(t=data[0]['t'].to_numpy())
+            y_true = data[0]['obs'].to_numpy()
+            assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
 
     def test_smart_initialization(self, curve_fun):
         np.random.seed(100)
