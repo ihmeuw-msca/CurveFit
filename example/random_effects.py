@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-'''
+"""
 {begin_markdown random_effect_xam}
 {spell_markdown
     params
@@ -51,7 +51,7 @@ The constant one is the only covariate in this example.
 ### Problem Settings
 The following settings are used to simulate the data and check
 that the solution is correct:
-```python '''
+```python """
 import math
 
 n_time = 21  # number of time points used in the simulation
@@ -63,7 +63,7 @@ b_true = [20.0, -2.0, -1.0, +1.0, +2.0]
 a_true = [math.log(2.0) / b_true[0], -0.2, -0.1, +0.1, +0.2]
 # simulation values used for phi_0, ..., phi_4
 phi_true = [math.log(0.1), -0.3, -0.15, +0.15, +0.3]
-'''```
+"""```
 The fixed effects are initialized to be their true values divided by three.
 The random effects are initialized to be zero.
 
@@ -96,16 +96,10 @@ and a standard deviation, equal to  1/100 times the true value.
 The mean must be the true value for the optimal fit to be perfect.
 
 ## Example Source Code
-```python '''
+```python """
 # -------------------------------------------------------------------------
-import scipy
-import sys
 import pandas
 import numpy
-
-# TODO: Ask Brad what this is
-#import sandbox
-#sandbox.path()
 
 from curvefit.core.functions import expit, normal_loss
 from curvefit.core.data import Data
@@ -113,31 +107,27 @@ from curvefit.core.parameter import Variable, Parameter, ParameterSet
 from curvefit.models.core_model import CoreModel
 from curvefit.solvers.solvers import ScipyOpt
 
-#
 # number of parameters, fixed effects, random effects
 num_params = 3
 num_fe = 3
 num_re = num_fe * n_group
 
-#
 # true values of parameters
 alpha_true = numpy.exp(a_true[0] + numpy.array(a_true[1:]))
 beta_true = b_true[0] + numpy.array(b_true[1:])
 p_true = numpy.exp(phi_true[0] + numpy.array(phi_true[1:]))
 params_true = [alpha_true, beta_true, p_true]
 
-#
 # identity function
 def identity_fun(x):
     return x
 
 
-#
 # link function used for alpha, p
 def exp_fun(x):
     return numpy.exp(x)
 
-#
+
 # -----------------------------------------------------------------------
 # data_frame
 num_data = n_time * n_group
@@ -205,7 +195,7 @@ phi_intercept = Variable(
     re_init=0.0,
     # TODO: Originally it was [phi_true[0], phi_true[0] / 100]
     # and I don't understand why it worked
-    fe_gprior=[phi_true[0], exp_fun(phi_true[0]) / 100.0],
+    fe_gprior=[phi_true[0], abs(phi_true[0]) / 100.0],
     fe_bounds=[-numpy.inf, numpy.inf],
     re_bounds=[-numpy.inf, numpy.inf]
 )
@@ -237,7 +227,6 @@ for i in range(num_fe):
     assert numpy.allclose(params_estimate[i], params_true[i], rtol=rel_tol)
 
 print('random_effect.py: OK')
-sys.exit(0)
-''' ```
+""" ```
 {end_markdown random_effect_xam}
-'''
+"""

@@ -29,8 +29,8 @@ def simulate_params(n_groups):
         re_true = np.zeros((n_groups, n_var))
     else:
         re_true = np.random.randn(n_groups, n_var)
-    
-    x_true = re_true + fe_true 
+
+    x_true = re_true + fe_true
     param_true = np.zeros((n_groups, 3))
     param_true[:, 0] = np.exp(x_true[:, 0])
     param_true[:, 1] = x_true[:, 1] + np.exp(x_true[:, 2])
@@ -41,7 +41,7 @@ def simulate_params(n_groups):
 
 def simulate_data(curve_fun, params_true):
     n_groups = params_true.shape[0]
-    
+
     n_data = np.random.randint(low=10, high=30, size=n_groups)
     n_data_total = sum(n_data)
     y = np.zeros(n_data_total)
@@ -68,8 +68,3 @@ def simulate_data(curve_fun, params_true):
     data_specs = DataSpecs('t', 'obs', ['constant_one'], 'group', curve_fun, 'obs_se')
 
     return df, data_specs
-
-
-
-
-

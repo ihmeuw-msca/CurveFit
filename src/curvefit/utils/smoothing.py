@@ -64,7 +64,7 @@ def local_deviations(df, col_val,
         if robust:
             std = df_filter[col_val].mad() * 1.4826
         else:
-            std = df_filter[col_val].std()
+            std = df_filter[col_val].std(ddof=0)
 
         subset = np.all(new_df[col_axis] == j, axis=1).values
         new_df.loc[subset, 'residual_std'] = std

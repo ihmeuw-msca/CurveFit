@@ -6,12 +6,11 @@ from curvefit.models.base import Model
 from curvefit.solvers.solvers import Solver
 
 
-# TODO: add tests
 class Draws:
     """
     {begin_markdown Draws}
 
-    {spell_markdown subclassed covs}
+    {spell_markdown subclassed covs init quantiles}
 
     # `curvefit.uncertainty.draws.Draws`
     ## A class for generating draws: predictions plus random residuals according to provided ResidualModel
@@ -123,6 +122,10 @@ class Draws:
             noisy_forecast = data_translator(
                 data=noisy_forecast, input_space=evaluation_space, output_space=evaluation_space
             )
+
+            if evaluation_space.__name__.startswith('ln_'):
+                noisy_forecast = noisy_forecast - noisy_forecast.var(axis=0) / 2
+
             self._draws[group] = noisy_forecast
 
         return self

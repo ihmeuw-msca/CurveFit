@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-'''
+"""
 {begin_markdown get_started_xam}
 {spell_markdown
     params
@@ -11,6 +11,7 @@
     py
     ftol
     gtol
+    optimizer
     expit
 }
 
@@ -52,13 +53,13 @@ While the social distance is in the data set, it is not used.
 ### Problem Settings
 The following settings are used to simulate the data and check
 that the solution is correct:
-```python '''
+```python """
 n_data = 21  # number simulated measurements to generate
 beta_true = 20.0  # max death rate at 20 days
 alpha_true = 2.0 / beta_true  # alpha_true * beta_true = 2.0
 p_true = 0.1  # maximum cumulative death fraction
 rel_tol = 1e-5  # relative tolerance used to check optimal solution
-'''```
+"""```
 
 ### Time Grid
 A grid of *n_data* points in time, \( t_i \), where
@@ -79,15 +80,10 @@ Note that when we do the fitting, we model each data point as having
 noise.
 
 ## Example Source Code
-```python '''
+```python """
 # -------------------------------------------------------------------------
-import sys
 import pandas
 import numpy
-
-# TODO: Ask Brad what this is
-# import sandbox
-# sandbox.path()
 
 from curvefit.core.functions import expit, normal_loss
 from curvefit.core.data import Data
@@ -95,7 +91,7 @@ from curvefit.core.parameter import Variable, Parameter, ParameterSet
 from curvefit.models.core_model import CoreModel
 from curvefit.solvers.solvers import ScipyOpt
 
-#
+
 # for this model number of parameters is same as number of fixed effects
 num_params = 3
 num_fe = 3
@@ -188,9 +184,9 @@ params_estimate = model.get_params(solver.x_opt, expand=False)
 for i in range(num_params):
     rel_error = params_estimate[i] / params_true[i] - 1.0
     assert abs(rel_error) < rel_tol
-#
+
 print('get_started_old.py: OK')
-sys.exit(0)
-''' ```
+
+""" ```
 {end_markdown get_started_xam}
-'''
+"""

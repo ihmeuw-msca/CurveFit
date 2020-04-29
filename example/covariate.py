@@ -1,5 +1,5 @@
 #! /usr/bin/env python3
-'''
+"""
 {begin_markdown covariate_xam}
 {spell_markdown
     params
@@ -8,6 +8,9 @@
     init
     ftol
     gtol
+    optimizer
+    allclose
+    rtol
     erf
 }
 
@@ -56,7 +59,7 @@ For this simulation, the social distance covariate has two values:
 ### Problem Settings
 The following settings are used to simulate the data and check
 that the solution is correct:
-```python '''
+```python """
 import math
 
 n_data = 21  # number simulated measurements to generate
@@ -65,7 +68,7 @@ a_true = math.log(2.0 / b_true)  # a used to simulate data
 c_true = 1.0 / b_true  # c used to simulate data
 phi_true = math.log(0.1)  # phi used to simulate data
 rel_tol = 1e-5  # relative tolerance used to check optimal solution
-'''```
+"""```
 The fixed effects
 \( a \), \( b \), \( c \), and \( \phi \)
 are initialized so that they correspond to
@@ -90,16 +93,12 @@ Note that when we do the fitting, we model each data point as having noise.
 
 
 ## Example Source Code
-```python '''
+```python """
 # -------------------------------------------------------------------------
 import sys
 import pandas
 import numpy
 import scipy
-
-# TODO: Ask Brad what this is
-# import sandbox
-# sandbox.path()
 
 from curvefit.core.functions import gaussian_cdf, normal_loss
 from curvefit.core.data import Data
@@ -113,19 +112,16 @@ def identity_fun(x):
     return x
 
 
-#
 # link function used for alpha, p
 def exp_fun(x):
     return numpy.exp(x)
 
 
-#
 # inverse of function used for alpha, p
 def log_fun(x):
     return numpy.log(x)
 
 
-#
 # true value for fixed effects
 fe_true = numpy.array([a_true, b_true, c_true, phi_true])
 num_fe = len(fe_true)
@@ -232,9 +228,9 @@ params_estimate = model.get_params(solver.x_opt, expand=True)
 
 for i in range(3):
     assert numpy.allclose(params_estimate[i], params_value[i], rtol=rel_tol)
-#
+
 print('covariate.py: OK')
-sys.exit(0)
-''' ```
+
+""" ```
 {end_markdown covariate_xam}
-'''
+"""

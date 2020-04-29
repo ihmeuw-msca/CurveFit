@@ -21,9 +21,9 @@ tests:
 	pytest tests
 
 examples:
-	python example/old/get_started_old.py
-	python example/old/covariate_old.py
-	python example/old/random_effect_old.py
+	python example/get_started.py
+	python example/covariate.py
+	# python example/random_effects.py
 	python example/sizes_to_indices.py
 	python example/param_time_fun.py
 	python example/unzip_x.py

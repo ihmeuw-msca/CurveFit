@@ -85,7 +85,7 @@ import scipy
 import sys
 import pandas
 import numpy
-import example.old.sandbox as sandbox
+import sandbox
 sandbox.path()
 import curvefit
 #

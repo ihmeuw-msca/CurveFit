@@ -4,9 +4,8 @@
 extract_dir = 'extract_md'
 # list of files that contain markdown sections in them
 file_list = [
-    'example/old/get_started_old.py',
-    'example/old/covariate_old.py',
-    'example/old/random_effect_old.py',
+    'example/get_started.py',
+    'example/covariate.py',
     'example/sizes_to_indices.py',
     'example/param_time_fun.py',
     'example/unzip_x.py',
@@ -14,20 +13,25 @@ file_list = [
     'example/objective_fun.py',
     'example/prior_initializer.py',
 
+    'bin/extract_md.py',
+    'bin/get_cppad_py.py',
+
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',
     'src/curvefit/core/effects2params.py',
     'src/curvefit/core/objective_fun.py',
-    'bin/extract_md.py',
-    'bin/get_cppad_py.py',
-    
     'src/curvefit/core/data.py',
     'src/curvefit/core/parameter.py',
+    'src/curvefit/core/prototype.py',
 
     'src/curvefit/utils/smoothing.py',
+    'src/curvefit/utils/data.py',
 
     'src/curvefit/models/base.py',
     'src/curvefit/models/core_model.py',
+    'src/curvefit/models/gaussian_mixtures.py',
+
+    'src/curvefit/solvers/solvers.py',
 
     'src/curvefit/uncertainty/residual_model.py',
     'src/curvefit/uncertainty/residuals.py',
