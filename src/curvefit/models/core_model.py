@@ -93,7 +93,7 @@ class CoreModel(Model):
             param_gprior=self.data_inputs.param_gprior_info,
         )
 
-    def get_params(self, x, expand=True):
+    def get_params(self, x, expand=False):
         return effects2params(
             x,
             self.data_inputs.group_sizes,

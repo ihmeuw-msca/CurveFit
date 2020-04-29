@@ -177,7 +177,7 @@ class TestCompositeSolvers:
             assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
 
     def test_smart_initialization(self, curve_fun):
-        np.random.seed(20)
+        np.random.seed(100)
         num_groups = 3
         params_set, params_true, x_true = simulate_params(num_groups)
         data = simulate_data(curve_fun, params_true)
