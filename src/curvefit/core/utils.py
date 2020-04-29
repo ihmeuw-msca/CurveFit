@@ -9,7 +9,7 @@ from curvefit.utils.data import data_translator
 def sizes_to_indices(sizes):
     """
     {begin_markdown sizes_to_indices}
-    {spell_markdown subvector subvectors iterable}
+    {spell_markdown subvector subvectors iterable utils}
     # `curvefit.core.utils.sizes_to_indices`
     ## Converting sizes to corresponding indices.
 
@@ -310,8 +310,7 @@ def smooth_mat(mat, radius=None):
 
 
 def split_by_group(df, col_group):
-    """{begin_markdown split_by_group}
-    {spell_markdown dataframe}
+    """
     # Split the dataframe by the group definition.
 
     ## Syntax
@@ -328,8 +327,7 @@ def split_by_group(df, col_group):
     corresponding dataframe.
 
     ## Example
-
-    {end_markdown split_by_group}"""
+    """
     assert col_group in df
     data = {
         group: df[df[col_group] == group].reset_index(drop=True)

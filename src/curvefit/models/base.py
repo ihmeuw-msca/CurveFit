@@ -69,6 +69,7 @@ class DataInputs:
 class Model(Prototype):
     """
     {begin_markdown Model}
+    {spell_markdown subclassed}
 
     # `curvefit.models.base.Model`
     ## Base model

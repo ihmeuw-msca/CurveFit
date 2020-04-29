@@ -5,7 +5,7 @@ def data_translator(data, input_space, output_space,
                     threshold=1e-16):
     """
     {begin_markdown data_translator}
-    {spell_markdown }
+    {spell_markdown utils}
 
     # `curvefit.utils.data.data_translator`
     ## Translate data from one space to another, only for Gaussian-family functions

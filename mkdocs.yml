@@ -30,7 +30,7 @@ nav:
         - objective function:
             - objective_fun: 'extract_md/objective_fun.md'
         - prototype:
-            - prototype: 'extract_md/prototype.md'
+            - Prototype: 'extract_md/Prototype.md'
         - utilities:
             - sizes_to_indices: 'extract_md/sizes_to_indices.md'
     - models:
