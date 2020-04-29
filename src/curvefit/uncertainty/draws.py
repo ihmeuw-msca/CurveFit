@@ -6,7 +6,6 @@ from curvefit.models.base import Model
 from curvefit.solvers.solvers import Solver
 
 
-# TODO: add tests
 class Draws:
     """
     {begin_markdown Draws}

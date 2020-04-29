@@ -3,18 +3,23 @@ import numpy as np
 
 def data_translator(data, input_space, output_space,
                     threshold=1e-16):
-    """Data translator, move data from one space to the other.
+    """
+    {begin_markdown data_translator}
+    {spell_markdown }
 
-    Args:
-        data (np.ndarray): data matrix or vector
-        input_space (str | callable): input data space.
-        output_space (str | callable): output data space.
-        threshold (float, optional):
-            Thresholding for the number below 0 in the linear space.
+    # `curvefit.utils.data.data_translator`
+    ## Translate data from one space to another, only for Gaussian-family functions
 
-    Returns:
-        np.ndarray:
-            translated data.
+    ## Arguments
+
+    - `data (np.ndarray)`: data matrix or vector
+    - `input_space (str | callable)`: input data space.
+    - `output_space (str | callable)`: output data space.
+    - `threshold (float, optional)`: threshold for numbers below 0 in linear space.
+
+    ## Returns
+    - `np.ndarray`: translated data.
+    {end_markdown data_translator}
     """
     if callable(input_space):
         input_space = input_space.__name__
@@ -23,8 +28,8 @@ def data_translator(data, input_space, output_space,
 
     total_space = ['gaussian_cdf', 'gaussian_pdf', 'ln_gaussian_cdf', 'ln_gaussian_pdf']
 
-    assert input_space in total_space
-    assert output_space in total_space
+    assert input_space in total_space, "input space not supported"
+    assert output_space in total_space, "output space not supported"
     assert isinstance(data, np.ndarray)
     assert threshold > 0.0
 
@@ -32,7 +37,7 @@ def data_translator(data, input_space, output_space,
     if data_ndim == 1:
         data = data[None, :]
 
-    # thresholding the data in the linear space
+    # threshold the data in the linear space
     if input_space in ['gaussian_cdf', 'gaussian_pdf']:
         data = np.maximum(threshold, data)
 

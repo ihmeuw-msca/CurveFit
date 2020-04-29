@@ -4,7 +4,7 @@ nav:
   - Methods: 'methods.md'
   - Code: 'code.md'
   - Release Notes: 'updates.md'
-  - Examples:
+  - User Examples:
     - get_started_xam: 'extract_md/get_started_xam.md'
     - covariate_xam: 'extract_md/covariate_xam.md'
     - random_effect_xam: 'extract_md/random_effect_xam.md'
@@ -22,15 +22,24 @@ nav:
         - residual models:
             - _ResidualModel: 'extract_md/_ResidualModel.md'
             - SmoothResidualModel: 'extract_md/SmoothResidualModel.md'
-        - effects2params:
+        - variables to parameters:
             - unzip_x: 'extract_md/unzip_x.md'
             - effects2params: 'extract_md/effects2params.md'
+        - functions:
+            - param_time_fun: 'extract_md/param_time_fun.md'
+        - objective function:
+            - objective_fun: 'extract_md/objective_fun.md'
+        - prototype:
+            - prototype: 'extract_md/prototype.md'
+        - utilities:
+            - sizes_to_indices: 'extract_md/sizes_to_indices.md'
     - models:
         - base:
             - DataInputs: 'extract_md/DataInputs.md'
             - Model: 'extract_md/Model.md'
         - core_model:
             - CoreModel: 'extract_md/CoreModel.md'
+        - 
     - uncertainty:
         - residuals:
             - Residuals: 'extract_md/Residuals.md'
@@ -43,7 +52,7 @@ nav:
         - draws:
             - Draws: 'extract_md/Draws.md'
     - initializers:
-        - initializer_component:
+        - initializer component:
             - PriorInitializerComponent: 'extract_md/PriorInitializerComponent.md'
             - JointPriorInitializerComponent: 'extract_md/JointPriorInitializerComponent.md'
             - IndividualPriorInitializerComponent: 'extract_md/IndividualPriorInitializerComponent.md'
@@ -57,13 +66,13 @@ nav:
             - local_smoother: 'extract_md/local_smoother.md'
             - convolve_sum: 'extract_md/convolve_sum.md'
             - df_to_mat: 'extract_md/df_to_mat.md'
-    - other:
-      - sizes_to_indices: 'extract_md/sizes_to_indices.md'
-      - split_by_group: 'extract_md/split_by_group.md'
-      - param_time_fun: 'extract_md/param_time_fun.md'
-      - objective_fun: 'extract_md/objective_fun.md'
-      - extract_md.py: 'extract_md/extract_md.py.md'
-      - get_cppad_py.py: 'extract_md/get_cppad_py.py.md'
+        - data:
+            - data_translator: 'extract_md/data_translator.md'
+    - general:
+        - markdown extractor:
+            - extract_md.py: 'extract_md/extract_md.py.md'
+        - cppad-py:
+            - get_cppad_py.py: 'extract_md/get_cppad_py.py.md'
     - Developer Examples:
       - unzip_x_xam: 'extract_md/unzip_x_xam.md'
       - sizes_to_indices_xam: 'extract_md/sizes_to_indices_xam.md'

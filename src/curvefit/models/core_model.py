@@ -26,7 +26,43 @@ class CoreModel(Model):
 
     ## Attributes
 
+    - `self.data_inputs (curvefit.models.base.DataInputs)`: data inputs that have been
+        converted during data fitting -- helper for the objective function
+
     ## Methods
+
+    ### `objective`
+    Returns a function that can be called in a [`Solver`](Solver.md) that is the
+    objective function given the current variables and data.
+
+    - `x (np.array)`: an array of variable values that can be converted to parameters,
+        these will be the parameters that the objective function is evaluated at
+    - `data (Tuple[pd.DataFrame, DataSpecs])`: the input data frame to be fit,
+        and data specifications object
+
+    ### `get_params`
+    Wrapper for [`effects2params`](effects2params.md) to convert the values of
+    `x` (the variables) into parameters for the model.
+
+    - `x (np.array)`: an array of variable values that can be converted to parameters
+
+    ### `predict`
+    Create predictions given some variable values `x` and at some times `t`.
+    Can optionally pass a different functional form as long as it is in the same
+    family (e.g. Gaussian).
+
+    - `x (np.array)`: an array of variable values that can be converted to parameters
+    - `t (np.array)`: times to evaluate the function
+    - `predict_fun (Callable)`: function from `curvefit.core.functions`
+    - `is_multi_groups (bool)`: whether or not the model was fit on data for multiple
+        groups
+
+    ### `convert_inputs`
+    Convert a data frame and specifications into inputs for the objective
+    function of the model.
+
+    - `data (Tuple[pd.DataFrame, DataSpecs])`: the input data frame to be fit,
+        and data specifications object
 
     {end_markdown CoreModel}
     """

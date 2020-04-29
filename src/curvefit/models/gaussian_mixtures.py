@@ -4,6 +4,11 @@ from curvefit.models.base import Model, DataInputs
 
 
 class GaussianMixtures(Model):
+    """
+
+
+
+    """
 
     def __init__(self, stride, size, params=None):
         super().__init__()

@@ -42,10 +42,11 @@ class DataInputs:
     - `bounds (np.ndarray)`: bounds for variables
     - `fe_gprior (np.ndarray)`: array of fixed effects Gaussian priors for the variables
     - `re_gprior (np.ndarray)`: array of random effects Gaussian priors for the variables
-    - `param_gprior_info (Tuple[Callable, List[float], List[float]])`: tuple of
+    - `param_gprior_info (Tuple[Callable, Tuple[List[float], List[float]]])`: tuple of
         information about the parameter functional Gaussian priors;
         first element is a composite function of all of the parameter functional priors;
-        second element is a list of means; third element is a list of standard deviations
+        second element is another tuple and the first element is a
+        list of means, the second element is a list of standard deviations
 
     {end_markdown DataInputs}
     """
@@ -62,7 +63,7 @@ class DataInputs:
     bounds: np.ndarray = None
     fe_gprior: np.ndarray = None
     re_gprior: np.ndarray = None
-    param_gprior_info: Tuple[Callable, List[float], List[float]] = None
+    param_gprior_info: Tuple[Callable, Tuple[List[float], List[float]]] = None
 
 
 class Model(Prototype):
@@ -70,6 +71,28 @@ class Model(Prototype):
     {begin_markdown Model}
 
     # `curvefit.models.base.Model`
+    ## Base model
+
+    The base model; must be subclassed. See [`CoreModel`](CoreModel.md).
+
+    ## Methods
+
+    ### `get_data`
+    Returns the `DataInputs` object that was used to fit the model; or None.
+
+    ### `erase_data`
+    Get rid of the current data in the model.
+
+    ### `detach_data`
+    Get rid of the current data in the model but return them from the function.
+
+    ### `gradient`
+    Returns the gradient function using a complex step
+    based on some current variable values `x` and `DataInputs`.
+
+    - `x (np.array)`: an array of variable values that can be converted to parameters
+    - `data (Tuple[pd.DataFrame, DataSpecs])`: the input data frame to be fit,
+        and data specifications object
 
     {end_markdown Model}
     """

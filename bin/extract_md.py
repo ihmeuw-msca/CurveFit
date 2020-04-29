@@ -14,17 +14,19 @@ file_list = [
     'example/objective_fun.py',
     'example/prior_initializer.py',
 
+    'bin/extract_md.py',
+    'bin/get_cppad_py.py',
+
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',
     'src/curvefit/core/effects2params.py',
     'src/curvefit/core/objective_fun.py',
-    'bin/extract_md.py',
-    'bin/get_cppad_py.py',
-    
     'src/curvefit/core/data.py',
     'src/curvefit/core/parameter.py',
+    'src/curvefit/core/prototype.py',
 
     'src/curvefit/utils/smoothing.py',
+    'src/curvefit/utils/data.py',
 
     'src/curvefit/models/base.py',
     'src/curvefit/models/core_model.py',
