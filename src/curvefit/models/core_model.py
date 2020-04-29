@@ -98,6 +98,7 @@ class CoreModel(Model):
         t = df[data_specs.col_t].to_numpy()
         obs = df[data_specs.col_obs].to_numpy()
         obs_se = df[data_specs.col_obs_se].to_numpy()
+        obs_se *= np.abs(obs).mean() / obs_se.mean()
 
         covs_mat = []
         for covs in self.param_set.covariate:
@@ -134,18 +135,19 @@ class CoreModel(Model):
         assert re_gprior.shape == (self.param_set.num_fe, num_groups, 2)
 
         param_gprior_funs = []
-        param_gprior_means = []
-        param_gprior_stds = []
-        if self.param_set.parameter_functions is not None:
-            for fun_prior in self.param_set.parameter_functions:
-                param_gprior_funs.append(fun_prior[0])
-                param_gprior_means.append(fun_prior[1][0])
-                param_gprior_stds.append(fun_prior[1][1])
+        param_gprior_means = np.array([])
+        param_gprior_stds = np.array([])
+        if self.param_set.param_function:
+            for fun, gprior in zip(self.param_set.param_function,
+                                   self.param_set.param_function_fe_gprior):
+                param_gprior_funs.append(fun)
+                param_gprior_means = np.append(param_gprior_means, gprior[0])
+                param_gprior_stds = np.append(param_gprior_stds, gprior[1])
 
             def param_gprior_fun(p):
-                return [f(p) for f in param_gprior_funs[0]]
+                return np.concatenate([f(p) for f in param_gprior_funs])
 
-            param_gprior_info = (param_gprior_fun, param_gprior_means, param_gprior_stds)
+            param_gprior_info = (param_gprior_fun, (param_gprior_means, param_gprior_stds))
         else:
             param_gprior_info = None
 

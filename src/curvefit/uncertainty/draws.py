@@ -123,6 +123,10 @@ class Draws:
             noisy_forecast = data_translator(
                 data=noisy_forecast, input_space=evaluation_space, output_space=evaluation_space
             )
+
+            if evaluation_space.__name__.startswith('ln_'):
+                noisy_forecast = noisy_forecast - noisy_forecast.var(axis=0) / 2
+
             self._draws[group] = noisy_forecast
 
         return self

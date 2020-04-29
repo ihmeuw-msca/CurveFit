@@ -142,8 +142,10 @@ class SmartInitialization(CompositeSolver):
     def __init__(self, solver=None):
         super().__init__()
 
+        self.x_mean = None
+
     def fit(self, data, x_init=None, options=None):
-         if self.assert_solver_defined() is True:
+        if self.assert_solver_defined() is True:
             df = data[0]
             data_specs = data[1]
             group_names = df[data_specs.col_group].unique()
