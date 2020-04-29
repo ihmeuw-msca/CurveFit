@@ -67,15 +67,15 @@ class CoreModel(Model):
             expand=expand
         )
 
-    def predict(self, x, t, predict_fun=None, is_multi_group=False):
+    def predict(self, x, t, predict_fun=None, is_multi_groups=False):
         params = self.get_params(x=x)
         if predict_fun is None:
             predict_fun = self.curve_fun
-
-        if not is_multi_group:
+        
+        if not is_multi_groups:
             return predict_fun(t, params[:, 0])
         else:
-            pred = np.zeros((params.shape[1], len(t)))
+            pred = np.zeros((params.shape[1], len(t))) # num_groups by num_times
             for i in range(params.shape[1]):
                 pred[i, :] = predict_fun(t, params[:, i])
             return pred

@@ -14,6 +14,7 @@ import warnings
 warnings.filterwarnings("error")
 
 
+
 class Rosenbrock(Model):
 
     def __init__(self, n_dim=2):
@@ -38,9 +39,11 @@ class Rosenbrock(Model):
 def rb():
     return Rosenbrock()
 
+
 @pytest.fixture(scope='module', params=[ln_gaussian_pdf, ln_gaussian_cdf, gaussian_pdf, gaussian_cdf])
 def curve_fun(request):
     return request.param
+
 
 @pytest.fixture(scope='module', params=np.arange(100, 115))
 def seed(request):
@@ -63,8 +66,8 @@ class TestBaseSolvers:
         solver.fit(data=data, options={'maxiter': 200})
         y_pred = solver.predict(t=data[0]['t'].to_numpy())
         y_true = data[0]['obs'].to_numpy()
-        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2
-        
+        assert np.linalg.norm(y_pred - y_true) / np.linalg.norm(y_true) < 2e-2 
+
 
 class TestCompositeSolvers:
 

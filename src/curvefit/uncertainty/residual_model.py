@@ -211,6 +211,8 @@ class SmoothResidualModel(_ResidualModel):
         self._is_fitted = False
 
     def fit_residuals(self, residual_df):
+        print("Fitting residuals.")
+
         df = residual_df.copy()
         for k, v in self.covariates.items():
             if v is not None:

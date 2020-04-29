@@ -12,6 +12,7 @@ file_list = [
     'example/unzip_x.py',
     'example/effects2params.py',
     'example/objective_fun.py',
+    'example/prior_initializer.py',
 
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',
@@ -31,7 +32,10 @@ file_list = [
     'src/curvefit/uncertainty/residual_model.py',
     'src/curvefit/uncertainty/residuals.py',
     'src/curvefit/uncertainty/predictive_validity.py',
-    'src/curvefit/uncertainty/draws.py'
+    'src/curvefit/uncertainty/draws.py',
+  
+    'src/curvefit/initializer/initializer.py',
+    'src/curvefit/initializer/initializer_component.py',
 ]
 # list of extra words that the spell checker will consider correct
 extra_special_words = [

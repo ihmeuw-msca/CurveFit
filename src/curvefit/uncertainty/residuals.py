@@ -39,7 +39,7 @@ class ResidualInfo:
     def __post_init__(self):
         self.num_times = len(self.times)
         self.difference = np.array([int(round(x)) for x in np.diff(self.times)])
-        self.amount_data = np.array(range(len(self.obs)))
+        self.amount_data = np.array(range(len(self.obs))) + 1
 
 
 class Residuals:
@@ -116,7 +116,7 @@ class Residuals:
         self.prediction_matrix[i, :] = predictions
 
     def _compute_residuals(self, obs, theta):
-        for i in self.residual_matrix.shape[0]:
+        for i in range(self.residual_matrix.shape[0]):
             self.residual_matrix[i, :] = (self.prediction_matrix[i, :] - obs) / (self.prediction_matrix[i, :] ** theta)
 
     @staticmethod
