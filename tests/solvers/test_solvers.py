@@ -10,6 +10,10 @@ from curvefit.models.gaussian_mixtures import GaussianMixtures
 
 from data_and_param_simulator import simulate_params, simulate_data
 
+import warnings
+warnings.filterwarnings("error")
+
+
 
 class Rosenbrock(Model):
 

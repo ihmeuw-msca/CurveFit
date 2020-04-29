@@ -220,7 +220,7 @@ for j in range(n_group) :
         rel_err  = re_estimate[j,i] / re_truth[i]
         assert abs(rel_error) < rel_tol
 #
-print('random_effect.py: OK')
+print('random_effect_old.py: OK')
 sys.exit(0)
 ''' ```
 {end_markdown random_effect_xam}

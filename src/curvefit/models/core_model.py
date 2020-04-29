@@ -66,6 +66,7 @@ class CoreModel(Model):
 
     {end_markdown CoreModel}
     """
+
     def __init__(self, param_set, curve_fun, loss_fun):
         super().__init__()
 
@@ -92,14 +93,14 @@ class CoreModel(Model):
             param_gprior=self.data_inputs.param_gprior_info,
         )
 
-    def get_params(self, x):
+    def get_params(self, x, expand=True):
         return effects2params(
             x,
             self.data_inputs.group_sizes,
             self.data_inputs.covariates_matrices,
             self.param_set.link_fun,
             self.data_inputs.var_link_fun,
-            expand=False,
+            expand=expand
         )
 
     def predict(self, x, t, predict_fun=None, is_multi_groups=False):
@@ -126,7 +127,7 @@ class CoreModel(Model):
     def convert_inputs(self, data):
         if isinstance(data, DataInputs):
             self.data_inputs = data
-            return 
+            return
 
         df = data[0]
         data_specs = data[1]
@@ -158,7 +159,7 @@ class CoreModel(Model):
         fe_bounds = np.array(reduce(iconcat, self.param_set.fe_bounds, []))
         re_bounds = np.array(reduce(iconcat, self.param_set.re_bounds, []))
         re_bounds = np.repeat(re_bounds[None, :, :], num_groups, axis=0)
-        bounds = np.vstack([fe_bounds, re_bounds.reshape(self.param_set.num_fe * num_groups , 2)])
+        bounds = np.vstack([fe_bounds, re_bounds.reshape(self.param_set.num_fe * num_groups, 2)])
 
         fe_gprior = np.array(reduce(iconcat, self.param_set.fe_gprior, []))
         assert fe_gprior.shape == (self.param_set.num_fe, 2)
