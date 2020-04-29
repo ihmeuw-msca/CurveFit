@@ -11,6 +11,7 @@
     py
     ftol
     gtol
+    optimizer
     expit
 }
 

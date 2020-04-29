@@ -4,9 +4,9 @@
 extract_dir = 'extract_md'
 # list of files that contain markdown sections in them
 file_list = [
-    'example/old/get_started_old.py',
-    'example/old/covariate_old.py',
-    'example/old/random_effect_old.py',
+    'example/get_started.py',
+    'example/covariate.py',
+    # 'example/random_effect.py',
     'example/sizes_to_indices.py',
     'example/param_time_fun.py',
     'example/unzip_x.py',

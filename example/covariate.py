@@ -8,6 +8,9 @@
     init
     ftol
     gtol
+    optimizer
+    allclose
+    rtol
     erf
 }
 
