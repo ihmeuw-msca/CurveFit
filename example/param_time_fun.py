@@ -36,7 +36,7 @@ p      = numpy.array( [ 0.1, 0.2 ] )
 params = numpy.vstack( (alpha, beta, p) )
 #
 # check expit
-value     = curvefit.core.functions.expit(t, params)
+value     = curvefit.core.functions.expit_brad(t, params)
 check     = eval_expit(t, alpha, beta, p)
 rel_error = value / check - 1.0
 assert all( abs( rel_error ) < eps99 )
