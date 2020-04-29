@@ -26,7 +26,6 @@ class TestData:
             'group': np.repeat(['group1', 'group2'], repeats=3)
         })
 
-
     def test_data(self, df):
         d = Data(
             df=df,
@@ -42,7 +41,6 @@ class TestData:
         np.testing.assert_equal(d.df.group, np.repeat(['group1', 'group2'], repeats=3))
         np.testing.assert_equal(d.df.obs_se, np.array([1, 4, 5, 1, 6, 7]) ** (-2.))
 
-
     def test_get_df(self, df):
         d = Data(
             df=df,
@@ -54,7 +52,6 @@ class TestData:
         )
         pd.testing.assert_frame_equal(d.df, d._get_df())
         pd.testing.assert_frame_equal(d.df[0:3], d._get_df(group='group1'))
-
 
     def test_get_translated_observations(self, df):
         d = Data(
