@@ -96,7 +96,7 @@ import pandas
 import numpy
 import scipy
 import pdb
-import sandbox
+import example.old.sandbox as sandbox
 sandbox.path()
 import curvefit
 from curvefit.core.model import CurveModel
