@@ -47,6 +47,7 @@ def test_get_obs_se(func):
                           ('ln_gaussian_cdf', 'ln_gaussian_pdf')])
 def test_data_translator_diff(data, input_space, output_space):
     result = data_translator(data, input_space, output_space)
+    result[0, 0] = data[0, 0]
     if input_space.startswith('ln'):
         assert np.allclose(np.exp(data), np.cumsum(np.exp(result), axis=1))
     else:
