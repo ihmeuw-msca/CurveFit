@@ -12,6 +12,7 @@ file_list = [
     'example/effects2params.py',
     'example/objective_fun.py',
     'example/prior_initializer.py',
+    'example/random_effects.py',
 
     'bin/extract_md.py',
     'bin/get_cppad_py.py',
@@ -37,7 +38,7 @@ file_list = [
     'src/curvefit/uncertainty/residuals.py',
     'src/curvefit/uncertainty/predictive_validity.py',
     'src/curvefit/uncertainty/draws.py',
-  
+
     'src/curvefit/initializer/initializer.py',
     'src/curvefit/initializer/initializer_component.py',
 ]

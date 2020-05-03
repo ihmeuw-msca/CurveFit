@@ -33,6 +33,8 @@ class Variable:
     - `var_link_fun (Callable)`: link function for the variable
     - `fe_init (float)`: initial value to be used in the optimization for the fixed effect
     - `re_init (float)`: initial value to be used in the optimization for the random effect
+    - `re_zero_sum_std (float)`: standard deviation of the zero sum prior
+        for he random effects corresponding to this variable.
     - `fe_gprior (optional, List[float])`: list of Gaussian priors
         the fixed effect where the first element is the prior
         mean and the second element is the prior standard deviation
@@ -61,6 +63,7 @@ class Variable:
     var_link_fun: Callable
     fe_init: float
     re_init: float
+    re_zero_sum_std: float = field(default=np.inf)
     fe_gprior: List[float] = field(default_factory=lambda: [0.0, np.inf])
     re_gprior: List[float] = field(default_factory=lambda: [0.0, np.inf])
     fe_bounds: List[float] = field(default_factory=lambda: [-np.inf, np.inf])
@@ -130,6 +133,7 @@ class Parameter:
     var_link_fun: List[Callable] = field(init=False)
     fe_init: List[float] = field(init=False)
     re_init: List[float] = field(init=False)
+    re_zero_sum_std: List[float] = field(init=False)
     fe_gprior: List[List[float]] = field(init=False)
     re_gprior: List[List[float]] = field(init=False)
     fe_bounds: List[List[float]] = field(init=False)
@@ -234,6 +238,7 @@ class ParameterSet(Prototype):
     var_link_fun: List[List[Callable]] = field(init=False)
     fe_init: List[List[float]] = field(init=False)
     re_init: List[List[float]] = field(init=False)
+    re_zero_sum_std: List[List[float]] = field(init=False)
     fe_gprior: List[List[List[float]]] = field(init=False)
     re_gprior: List[List[List[float]]] = field(init=False)
     fe_bounds: List[List[List[float]]] = field(init=False)

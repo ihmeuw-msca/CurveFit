@@ -91,6 +91,7 @@ class CoreModel(Model):
             fe_gprior=self.data_inputs.fe_gprior,
             re_gprior=self.data_inputs.re_gprior,
             param_gprior=self.data_inputs.param_gprior_info,
+            re_zero_sum_std=self.data_inputs.re_zero_sum_std
         )
 
     def get_params(self, x, expand=False):
@@ -107,7 +108,7 @@ class CoreModel(Model):
         params = self.get_params(x=x)
         if predict_fun is None:
             predict_fun = self.curve_fun
-        
+
         if not is_multi_groups:
             return predict_fun(t, params[:, 0])
         else:
@@ -190,6 +191,8 @@ class CoreModel(Model):
         else:
             param_gprior_info = None
 
+        re_zero_sum_std = np.array(reduce(iconcat, self.param_set.re_zero_sum_std, []))
+
         self.data_inputs = DataInputs(
             t=t,
             obs=obs,
@@ -204,4 +207,5 @@ class CoreModel(Model):
             fe_gprior=fe_gprior,
             re_gprior=re_gprior,
             param_gprior_info=param_gprior_info,
+            re_zero_sum_std=re_zero_sum_std
         )

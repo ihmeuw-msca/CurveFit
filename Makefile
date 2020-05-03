@@ -23,7 +23,7 @@ tests:
 examples:
 	python example/get_started.py
 	python example/covariate.py
-	# python example/random_effects.py
+	python example/random_effects.py
 	python example/sizes_to_indices.py
 	python example/param_time_fun.py
 	python example/unzip_x.py

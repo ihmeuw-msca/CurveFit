@@ -68,6 +68,7 @@ class Solver(Prototype):
 
     def __init__(self, model_instance=None):
         self.model = model_instance
+        self.success = None
         self.x_opt = None
         self.fun_val_opt = None
         self.options = None
@@ -87,7 +88,7 @@ class Solver(Prototype):
 
     def set_options(self, options: dict):
         self.options = options
-    
+
     def get_fit_status(self):
         return self.status
 
@@ -125,6 +126,7 @@ class ScipyOpt(Solver):
             options=options if options is not None else self.options,
         )
 
+        self.success = result.success
         self.x_opt = result.x
         self.fun_val_opt = result.fun
         self.status = result.message
@@ -250,9 +252,9 @@ class GaussianMixturesIntegration(CompositeSolver):
         self.gm_model = gm_model
 
     def fit(self, data, x_init=None, options=None):
-        if self.assert_solver_defined() is True:         
+        if self.assert_solver_defined() is True:
             self.solver.fit(data, x_init, options)
-            model = self.get_model_instance()  
+            model = self.get_model_instance()
             self.input_curve_fun = model.curve_fun
             params = effects2params(
                 self.solver.x_opt,
@@ -265,8 +267,8 @@ class GaussianMixturesIntegration(CompositeSolver):
             self.gm_model.set_params(params[:, 0])
             gm_solver = ScipyOpt(self.gm_model)
             data_inputs_gm = DataInputs(
-                t=model.data_inputs.t, 
-                obs=model.data_inputs.obs, 
+                t=model.data_inputs.t,
+                obs=model.data_inputs.obs,
                 obs_se=model.data_inputs.obs_se,
             )
             obs_gau_pdf = data_translator(data_inputs_gm.obs, model.curve_fun, gaussian_pdf)

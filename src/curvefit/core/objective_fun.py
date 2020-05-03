@@ -4,7 +4,7 @@ from curvefit.core.effects2params import effects2params, unzip_x
 
 def objective_fun(x, t, obs, obs_se, covs, group_sizes,
                   model_fun, loss_fun, link_fun, var_link_fun,
-                  fe_gprior, re_gprior, param_gprior):
+                  fe_gprior, re_gprior, param_gprior, re_zero_sum_std):
     """
     {begin_markdown objective_fun}
     {spell_markdown covs gprior param params obj}
@@ -17,6 +17,7 @@ def objective_fun(x, t, obs, obs_se, covs, group_sizes,
     obj_val = curvefit.core.objective_fun.objective_fun(
         x, t, obs, obs_se, covs, group_sizes, model_fun, loss_fun,
         link_fun, var_link_fun, fe_gprior, re_gprior, param_gprior,
+        re_zero_sum_std
     )
     ```
 
@@ -101,6 +102,11 @@ def objective_fun(x, t, obs, obs_se, covs, group_sizes,
         ```python
             param_res = (range_gprior - param_gprior[1][[0]]) / param_gprior[1][1]
         ```
+    -   `re_zero_sum_std (np.array)`: is a vector with length *num_fe*,
+        `re_zero_sum_std[j]` is the standard deviation for the sum of the
+        random effect corresponding to the j-th fixed effect. Note that a
+        standard deviation of `np.inf` corresponds
+        to no prior on the sum of the corresponding random effects.
 
     ## Returns
     ### `obj_val`
@@ -128,6 +134,7 @@ def objective_fun(x, t, obs, obs_se, covs, group_sizes,
         var_link_fun,
         expand=True
     )
+
     # residual
     residual = (obs - model_fun(t, params))/obs_se
 
@@ -144,7 +151,12 @@ def objective_fun(x, t, obs, obs_se, covs, group_sizes,
         (re - re_gprior.T[0])**2/re_gprior.T[1]**2
     )
 
-    # parameter prior
+    # zero_sum_std
+    for j in range(num_fe) :
+        res_j    = numpy.sum( re[:,j] ) / re_zero_sum_std[j];
+        obj_val += 0.5 * res_j * res_j
+
+    # parameter prior (param_prior == None is not in documentation ?)
     if param_gprior is not None:
         params = effects2params(
             x,
