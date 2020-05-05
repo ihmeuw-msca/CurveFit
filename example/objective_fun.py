@@ -43,16 +43,16 @@ def gaussian_loss(x):
 # set parameters for the objective function
 num_fe = num_param
 num_re = num_group * num_fe
-fe = numpy.array(range(num_fe), dtype=float) / num_fe
-re = numpy.array(range(num_re), dtype=float) / num_re
+fe     = numpy.array(range(num_fe), dtype=float) / num_fe
+re     = numpy.array(range(num_re), dtype=float) / num_re
 group_sizes = (numpy.arange(num_group) + 1) * 2
 
 # observations
-x = numpy.concatenate((fe, re))
+x       = numpy.concatenate((fe, re))
 num_obs = sum(group_sizes)
-t = numpy.arange(num_obs, dtype=float)
-obs = numpy.arange(num_obs, dtype=float) / num_obs
-obs_se = (obs + 1.0) / 10.0
+t       = numpy.arange(num_obs, dtype=float)
+obs     = numpy.arange(num_obs, dtype=float) / num_obs
+obs_se  = (obs + 1.0) / 10.0
 
 # covariates
 covs = list()
@@ -87,6 +87,7 @@ re_gprior[:, :, 1] = (1.0 + re_gprior[:, :, 0] / 3.0)
 param_gprior_std = (1.0 + param_gprior_mean / 2.0)
 param_gprior_fun = identity_fun
 param_gprior = [param_gprior_fun, param_gprior_mean, param_gprior_std]
+re_zero_sum_std = numpy.array( num_fe * [numpy.inf] )
 # -----------------------------------------------------------------------
 # call to objective_fun
 obj_val = objective_fun(
@@ -102,7 +103,8 @@ obj_val = objective_fun(
     var_link_fun,
     fe_gprior,
     re_gprior,
-    param_gprior
+    param_gprior,
+    re_zero_sum_std,
 )
 # -----------------------------------------------------------------------
 # check objective_fun return value

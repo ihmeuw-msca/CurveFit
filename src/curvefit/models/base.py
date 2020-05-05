@@ -47,6 +47,10 @@ class DataInputs:
         first element is a composite function of all of the parameter functional priors;
         second element is another tuple and the first element is a
         list of means, the second element is a list of standard deviations
+    - `re_zero_sum_std: (np.ndarray)`: is a vector with length equal to the
+        number of fixed effects. It j-th component is the standard deviation
+        of the zero sum of the random effects corresponding to the j-th
+        fixed effect.
 
     {end_markdown DataInputs}
     """
@@ -64,6 +68,7 @@ class DataInputs:
     fe_gprior: np.ndarray = None
     re_gprior: np.ndarray = None
     param_gprior_info: Tuple[Callable, Tuple[List[float], List[float]]] = None
+    re_zero_sum_std: np.ndarray = None
 
 
 class Model(Prototype):
@@ -134,6 +139,3 @@ class Model(Prototype):
             x_c[i] -= step*1j
 
         return grad
-
-
-
