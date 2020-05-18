@@ -13,6 +13,7 @@ file_list = [
     'example/objective_fun.py',
     'example/prior_initializer.py',
     'example/random_effects.py',
+    'example/model_runner.py',
 
     'bin/extract_md.py',
     'bin/get_cppad_py.py',

@@ -1,7 +1,7 @@
 #! /usr/bin/env/python3
 """
 {begin_markdown model_runner_xam}
-{spell_markdown }
+{spell_markdown modeling initializer arange gprior concat covs func init}
 
 # Example and Test of `ModelRunner`
 
