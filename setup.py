@@ -17,7 +17,8 @@ setup(
         'matplotlib',
         'xspline',
         'scikit-learn',
-        'pydantic'
+        'pydantic',
+        'tqdm'
     ],
     zip_safe=False,
 )
