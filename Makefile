@@ -13,6 +13,8 @@ ifdef prefix
 else
 	python setup.py install
 endif
+	conda install swig
+	pip install -i https://test.pypi.org/simple/ cppad_py --verbose
 
 sdist: setup.py
 	python setup.py sdist
@@ -22,6 +24,7 @@ tests:
 
 examples:
 	python example/get_started.py
+	python example/model_runner.py
 	python example/covariate.py
 	python example/random_effects.py
 	python example/sizes_to_indices.py
