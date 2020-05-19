@@ -1,8 +1,10 @@
 import sys
 import numpy
-import curvefit
-import a_functions
-import a_objective_fun
+import curvefit.core.utils
+import curvefit.core.effects2params
+import curvefit.core.objective_fun
+from test_ad import a_functions
+from test_ad import a_objective_fun
 import cppad_py
 #
 def identity_fun (x):
@@ -58,6 +60,7 @@ def test_objective() :
     param_gprior_std   = (1.0 + param_gprior_mean / 2.0 )
     param_gprior_fun   = identity_fun
     param_gprior = [ param_gprior_fun, param_gprior_mean, param_gprior_std ]
+    re_zero_sum_std = num_fe * [ numpy.inf ]
     # -----------------------------------------------------------------------
     # call float objective_fun
     obj_val = curvefit.core.objective_fun.objective_fun(
@@ -73,7 +76,8 @@ def test_objective() :
             var_link_fun,
             fe_gprior,
             re_gprior,
-            param_gprior
+            param_gprior,
+            re_zero_sum_std,
     )
     # -----------------------------------------------------------------------
     # call a_double objective_fun
@@ -96,7 +100,8 @@ def test_objective() :
             a_var_link_fun,
             fe_gprior,
             re_gprior,
-            a_param_gprior
+            a_param_gprior,
+            re_zero_sum_std,
     )
     # f(x) = obj_val
     ay    = numpy.empty(1, dtype = cppad_py.a_double)
@@ -128,7 +133,8 @@ def test_objective() :
             var_link_fun,
             fe_gprior,
             re_gprior,
-            param_gprior
+            param_gprior,
+            re_zero_sum_std,
         )
         return obj_val
     #

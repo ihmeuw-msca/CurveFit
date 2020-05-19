@@ -1,6 +1,8 @@
 import numpy
-import curvefit
-import a_functions
+import curvefit.core.utils
+import curvefit.core.effects2params
+import curvefit.core.objective_fun
+from test_ad import a_functions
 from cppad_py import a_double
 
 def a_effects2params(
