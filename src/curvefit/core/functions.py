@@ -111,14 +111,6 @@ import numpy as np
 from scipy import special
 
 
-# process the parameter input
-def process_params(t, params):
-    params = np.array(params)
-    if params.ndim == 1:
-        params = np.repeat(params[:, None], t.size, axis=1)
-    return params
-
-
 # logistic function
 def expit(t, params):
     tmp = params[0]*(t - params[1])
@@ -126,12 +118,12 @@ def expit(t, params):
     posidx = ~negidx
     result = np.zeros(t.size, dtype=params.dtype)
     if params.ndim == 2:
-        result[negidx] = params[2][negidx]*np.exp(tmp[negidx]) / \
-            (1.0 + np.exp(tmp[negidx]))
+        result[negidx] = params[2][negidx]*np.exp(tmp[negidx])/ \
+                         (1.0 + np.exp(tmp[negidx]))
         result[posidx] = params[2][posidx]/(1.0 + np.exp(-tmp[posidx]))
     else:
-        result[negidx] = params[2]*np.exp(tmp[negidx]) / \
-            (1.0 + np.exp(tmp[negidx]))
+        result[negidx] = params[2]*np.exp(tmp[negidx])/ \
+                         (1.0 + np.exp(tmp[negidx]))
         result[posidx] = params[2]/(1.0 + np.exp(-tmp[posidx]))
     return result
 
@@ -145,7 +137,7 @@ def ln_expit(t, params):
     result[oidx] = np.log(tmp[oidx])
     if params.ndim == 2:
         result[zidx] = np.log(params[2][zidx]) + \
-            params[0][zidx]*(t[zidx] - params[1][zidx])
+                       params[0][zidx]*(t[zidx] - params[1][zidx])
     else:
         result[zidx] = np.log(params[2]) + params[0]*(t[zidx] - params[1])
     return result
@@ -156,73 +148,20 @@ def gaussian_cdf(t, params):
     return 0.5*params[2]*(special.erf(params[0]*(t - params[1])) + 1.0)
 
 
-# asymmetric cdf of the normal distribution
-def asym_gaussian_cdf(t, params):
-    params = process_params(t, params)
-    a = params[0]
-    b = params[1]
-    p = params[2]
-    r = params[3]
-
-    a1 = a
-    a2 = a1*r
-    p2 = 2.0*p/(1.0 + r)
-    p1 = p2*r
-
-    l_idx = t < b
-    r_idx = ~l_idx
-    result = np.zeros(t.size, dtype=params.dtype)
-    if any(l_idx):
-        result[l_idx] = gaussian_cdf(t[l_idx], [a1[l_idx],
-                                                b[l_idx],
-                                                p1[l_idx]])
-    if any(r_idx):
-        result[r_idx] = gaussian_cdf(t[r_idx], [a2[r_idx],
-                                                b[r_idx],
-                                                p2[r_idx]])
-        result[r_idx] += 0.5*(p1[r_idx] - p2[r_idx])
-    return result
-
-
 # log error function
 def ln_gaussian_cdf(t, params):
-    params = process_params(t, params)
     tmp = gaussian_cdf(t, params)
     x = params[0]*(t - params[1])
     result = np.zeros(t.size, dtype=params.dtype)
     zidx = tmp == 0.0
     oidx = ~zidx
     result[oidx] = np.log(tmp[oidx])
-    result[zidx] = np.log(params[2][zidx]/2) - x[zidx]**2 - \
-        np.log(-x[zidx]) - 0.5*np.log(np.pi)
-    return result
-
-
-# asymmetric cdf of the normal distribution
-def ln_asym_gaussian_cdf(t, params):
-    params = process_params(t, params)
-    a = params[0]
-    b = params[1]
-    p = params[2]
-    r = params[3]
-
-    a1 = a
-    a2 = a1*r
-    p2 = 2.0*p/(1.0 + r)
-    p1 = p2*r
-
-    l_idx = t < b
-    r_idx = ~l_idx
-    result = np.zeros(t.size, dtype=params.dtype)
-    if any(l_idx):
-        result[l_idx] = ln_gaussian_cdf(t[l_idx], [a1[l_idx],
-                                                   b[l_idx],
-                                                   p1[l_idx]])
-    if any(r_idx):
-        result[r_idx] = gaussian_cdf(t[r_idx], [a2[r_idx],
-                                                b[r_idx],
-                                                p2[r_idx]])
-        result[r_idx] = np.log(result[r_idx] + 0.5*(p1[r_idx] - p2[r_idx]))
+    if params.ndim == 2:
+        result[zidx] = np.log(params[2][zidx]/2) - x[zidx]**2 - \
+                       np.log(-x[zidx]) - 0.5*np.log(np.pi)
+    else:
+        result[zidx] = np.log(params[2]/2) - x[zidx]**2 - \
+                       np.log(-x[zidx]) - 0.5*np.log(np.pi)
     return result
 
 
@@ -233,63 +172,10 @@ def gaussian_pdf(t, params):
     )/np.sqrt(np.pi)
 
 
-# asymmetric cdf of the normal distribution
-def asym_gaussian_pdf(t, params):
-    params = process_params(t, params)
-    a = params[0]
-    b = params[1]
-    p = params[2]
-    r = params[3]
-
-    a1 = a
-    a2 = a1*r
-    p2 = 2.0*p/(1.0 + r)
-    p1 = p2*r
-
-    l_idx = t < params[1]
-    r_idx = ~l_idx
-    result = np.zeros(t.size, dtype=params.dtype)
-    if any(l_idx):
-        result[l_idx] = gaussian_pdf(t[l_idx], [a1[l_idx],
-                                                b[l_idx],
-                                                p1[l_idx]])
-    if any(r_idx):
-        result[r_idx] = gaussian_pdf(t[r_idx], [a2[r_idx],
-                                                b[r_idx],
-                                                p2[r_idx]])
-    return result
-
-
 # log derivative of gaussian_cdf function
 def ln_gaussian_pdf(t, params):
     return np.log(params[0]) + np.log(params[2]) - \
         (params[0]*(t - params[1]))**2 - 0.5*np.log(np.pi)
-
-
-def ln_asym_gaussian_pdf(t, params):
-    params = process_params(t, params)
-    a = params[0]
-    b = params[1]
-    p = params[2]
-    r = params[3]
-
-    a1 = a
-    a2 = a1*r
-    p2 = 2.0*p/(1.0 + r)
-    p1 = p2*r
-
-    l_idx = t < params[1]
-    r_idx = ~l_idx
-    result = np.zeros(t.size, dtype=params.dtype)
-    if any(l_idx):
-        result[l_idx] = ln_gaussian_pdf(t[l_idx], [a1[l_idx],
-                                                   b[l_idx],
-                                                   p1[l_idx]])
-    if any(r_idx):
-        result[r_idx] = ln_gaussian_pdf(t[r_idx], [a2[r_idx],
-                                                   b[r_idx],
-                                                   p2[r_idx]])
-    return result
 
 
 # second order dervivative of gaussian_cdf function
