@@ -292,6 +292,15 @@ def ln_asym_gaussian_pdf(t, params):
     return result
 
 
+def gompertz(t, params):
+    params = process_params(t, params)
+    a = params[0]
+    b = params[1]
+    ln_p = params[2]
+    c = np.exp(ln_p)
+    # da is unused for now, intentionally
+    return c * np.exp(-b * a * np.exp(-a*t))
+
 # second order dervivative of gaussian_cdf function
 def dgaussian_pdf(t, params):
     a = params[0]
