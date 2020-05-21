@@ -1,7 +1,9 @@
 import numpy
 import cppad_py
-import curvefit
-import a_functions
+import curvefit.core.utils
+import curvefit.core.effects2params
+import curvefit.core.objective_fun
+from test_ad import a_functions
 #
 def test_loss() :
     eps99  = 99.0 * numpy.finfo(float).eps
