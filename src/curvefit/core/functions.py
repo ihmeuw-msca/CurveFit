@@ -111,6 +111,25 @@ from scipy import special
 # Curve Functions
 # ---------------------------------------------------------------------------
 
+# This function is only used by this file, hence not included in documentation above.
+# erf is not a numpy ufunc so we make a version that works with both
+# float and a_double elements.
+def a_erf(array) :
+    import cppad_py
+    assert isinstance(array, np.ndarray)
+    vec = array.flatten('C')
+    #
+    # check for not a_double (assume all elements have the same type ?)
+    if type(vec[0]) != cppad_py.a_double :
+        return special.erf(array)
+    #
+    # a_double version of erf
+    erf_z = np.empty(array.shape, dtype = cppad_py.a_double)
+    for i in range( vec.size ) :
+        erf_z[i] = vec[i].erf()
+    #
+    erf_z = np.reshape(erf_z, array.shape, order='C' )
+    return erf_z
 
 # logistic function
 def expit(t, params):
@@ -144,12 +163,12 @@ def ln_expit(t, params):
     return result
 
 
-# error function cdf of the normal distribution
+# cdf of the normal distribution
 def gaussian_cdf(t, params):
-    return 0.5*params[2]*(special.erf(params[0]*(t - params[1])) + 1.0)
+    return 0.5*params[2]*(a_erf(params[0]*(t - params[1])) + 1.0)
 
 
-# log error function
+# log cdf of the normal distribution
 def ln_gaussian_cdf(t, params):
     tmp = gaussian_cdf(t, params)
     x = params[0]*(t - params[1])

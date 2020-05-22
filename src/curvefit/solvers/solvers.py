@@ -113,19 +113,38 @@ class ScipyOpt(Solver):
     """
 
     def fit(self, data, x_init=None, options=None):
+        import cppad_py
+        #
         self.model.convert_inputs(data)
         if x_init is None:
             x_init = self.model.x_init
         else:
             x_init = x_init[:len(self.model.x_init)]
+        #
+        # create a cppad_py.d_fun version of the objective
+        ax    = cppad_py.independent(x_init)
+        aobj  = self.model.objective(ax, data)
+        ay    = np.array( [ aobj ] )
+        d_fun = cppad_py.d_fun(ax, ay);
+        #
+        # evaluate objective using d_fun
+        def d_fun_objective(x) :
+            y = d_fun.forward(0, x)
+            return y[0]
+        #
+        # evaluate gradient of objective using d_fun
+        def d_fun_gradient(x) :
+            J = d_fun.jacobian(x)
+            return J.flatten()
+        #
         result = sciopt.minimize(
-            fun=lambda x: self.model.objective(x, data),
+            fun=d_fun_objective,
             x0=x_init,
-            jac=lambda x: self.model.gradient(x, data),
+            jac=d_fun_gradient,
             bounds=self.model.bounds,
             options=options if options is not None else self.options,
         )
-
+        #
         self.success = result.success
         self.x_opt = result.x
         self.fun_val_opt = result.fun
