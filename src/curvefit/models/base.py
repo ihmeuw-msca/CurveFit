@@ -126,6 +126,8 @@ class Model(Prototype):
     def objective(self, x, data):
         raise NotImplementedError()
 
+    # 2DO: remove this code or even better, use it to test the AD version of gradient;
+    # see 'def d_fun_gradient(x)' in ../solvers/solvers.py.
     def gradient(self, x, data):
         if self.data_inputs is None:
             self.convert_inputs(data)
