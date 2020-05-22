@@ -7,7 +7,7 @@ install:
   - pip install pymdown-extensions python-markdown-math
   - pip install pyspellchecker
 script:
-  - pytest tests
+  - pytest tests test_ad
   - bin/extract_md.py
   - make examples
   - mkdocs build
