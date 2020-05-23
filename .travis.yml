@@ -11,5 +11,4 @@ script:
   - bin/get_cppad_py.sh system
   - bin/run_tests.sh
   - bin/extract_md.py
-  - make examples
   - mkdocs build
