@@ -2,6 +2,7 @@ language: python
 python:
   - "3.7"
 install:
+  - apt-get swig
   - python setup.py install
   - pip install mkdocs mkdocs-material mkautodoc
   - pip install pymdown-extensions python-markdown-math
