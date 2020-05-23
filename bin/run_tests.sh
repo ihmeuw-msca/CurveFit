@@ -5,6 +5,7 @@ get_cppad_sh='build/external/cppad_py.git/bin/get_cppad.sh'
 eval $(sed -n '/^cppad_prefix=/p'  $get_cppad_sh)
 echo "export LD_LIBRARY_PATH=$cppad_prefix/lib:$LD_LIBRARY_PATH"
 export LD_LIBRARY_PATH="$cppad_prefix/lib:$LD_LIBRARY_PATH"
+export PYTHONPATH="$PYTHONPATH:."
 make tests
 make examples
 echo 'run_test.sh: OK'
