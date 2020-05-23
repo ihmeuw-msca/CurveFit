@@ -2,7 +2,7 @@ language: python
 python:
   - "3.7"
 install:
-  - apt-get install swig
+  - sudo apt-get install swig
   - python setup.py install
   - pip install mkdocs mkdocs-material mkautodoc
   - pip install pymdown-extensions python-markdown-math
