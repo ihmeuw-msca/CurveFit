@@ -19,8 +19,6 @@ then
 fi
 space="$1"
 # -----------------------------------------------------------------------------
-eval $(sed -n '/^cppad_prefix=/p'  bin/get_cppad.sh)
-export LD_LIBRARY_PATH="$cppad_prefix/lib:$LD_LIBRARY_PATH"
 if [ ! -e build/external ]
 then
     echo_eval mkdir -p build/external
@@ -34,6 +32,9 @@ fi
 echo_eval cd cppad_py.git
 echo_eval git reset --hard
 echo_eval git pull
+# -----------------------------------------------------------------------------
+eval $(sed -n '/^cppad_prefix=/p'  bin/get_cppad.sh)
+export LD_LIBRARY_PATH="$cppad_prefix/lib:$LD_LIBRARY_PATH"
 if [ "$space" == 'system' ]
 then
     echo_eval pip3 install .
