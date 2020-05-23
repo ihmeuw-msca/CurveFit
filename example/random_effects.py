@@ -206,8 +206,8 @@ parameters = ParameterSet([alpha, beta, p])
 optimizer_options = {
     'disp': 0,
     'maxiter': 300,
-    'ftol': 1e-8,
-    'gtol': 1e-8,
+    'ftol': 1e-9,
+    'gtol': 1e-9,
 }
 
 model = CoreModel(
