@@ -15,7 +15,6 @@ file_list = [
     'example/random_effects.py',
 
     'bin/extract_md.py',
-    'bin/get_cppad_py.py',
 
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',

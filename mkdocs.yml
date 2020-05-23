@@ -80,8 +80,6 @@ nav:
     - general:
         - markdown extractor:
             - extract_md.py: 'extract_md/extract_md.py.md'
-        - cppad-py:
-            - get_cppad_py.py: 'extract_md/get_cppad_py.py.md'
     - Developer Examples:
       - unzip_x_xam: 'extract_md/unzip_x_xam.md'
       - sizes_to_indices_xam: 'extract_md/sizes_to_indices_xam.md'
