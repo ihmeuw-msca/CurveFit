@@ -5,6 +5,7 @@ install:
   - sudo apt-get install swig
   - python setup.py install
   - pip install -i https://test.pypi.org/simple/ cppad_py
+  - pip install -U numpy
 script:
   - pytest tests
   - make examples
