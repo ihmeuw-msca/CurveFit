@@ -1,6 +1,10 @@
 [![Build Status](https://travis-ci.com/ihmeuw-msca/CurveFit.svg?branch=master)](https://travis-ci.com/ihmeuw-msca/CurveFit)
 
-# Curve Fitting for the COVID-19 Project
+## [NEW] Important Note
+This method and repository are no longer being used in the IHME COVID-19 forecasts.
+Please instead see the repositories for the [SEIIR Model](https://github.com/ihmeuw/covid-model-seiir) and [SEIIR model execution pipeline](https://github.com/ihmeuw/covid-model-seiir-pipeline).
+
+# Curve Fitting
 ## Institute for Health Metrics and Evaluation
 
 ## DOCUMENTATION SITE
