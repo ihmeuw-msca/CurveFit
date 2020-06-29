@@ -28,6 +28,8 @@ nav:
             - effects2params: 'extract_md/effects2params.md'
         - functions:
             - param_time_fun: 'extract_md/param_time_fun.md'
+            - normal_loss: 'extract_md/normal_loss.md'
+            - st_loss: 'extract_md/st_loss.md'
         - objective function:
             - objective_fun: 'extract_md/objective_fun.md'
         - prototype:
