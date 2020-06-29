@@ -34,9 +34,6 @@ examples:
 	python example/objective_fun.py
 	python example/prior_initializer.py
 
-cppad_py: phony
-	pytest cppad_py
-
 # Use mkdocs gh-deploy to make changes to the gh-pages branch.
 # This is for running extract_md.py and checking the differences before
 # deploying.

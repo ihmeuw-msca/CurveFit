@@ -1,7 +1,7 @@
 import numpy
-import a_functions
+from test_ad import a_functions
 from cppad_py import a_double
-from a_effects2params import a_effects2params
+from test_ad.a_effects2params import a_effects2params
 
 def identity_fun(x) :
     return x

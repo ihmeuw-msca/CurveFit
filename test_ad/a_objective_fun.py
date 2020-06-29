@@ -1,7 +1,9 @@
 import numpy
-import curvefit
-import a_effects2params
-import a_functions
+import curvefit.core.utils
+import curvefit.core.effects2params
+import curvefit.core.objective_fun
+from test_ad import a_effects2params
+from test_ad import a_functions
 
 def a_objective_fun(
         ax,
@@ -17,6 +19,7 @@ def a_objective_fun(
         fe_gprior,
         re_gprior,
         a_param_gprior,
+        re_zero_sum_std,
     ) :
     num_groups = len(group_sizes)
     num_fe     = len(fe_gprior)
@@ -50,6 +53,11 @@ def a_objective_fun(
     a_obj_val += numpy.sum(
         aresidual * aresidual / ( 2.0 * re_gprior.T[1]**2 )
     )
+    #
+    # zero_sum_std
+    for j in range(num_fe) :
+        ares_j    = numpy.sum( are[:,j] ) / re_zero_sum_std[j];
+        a_obj_val += 0.5 * ares_j * ares_j
     #
     # param_gprior
     if a_param_gprior is not None:
