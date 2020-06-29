@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
     name='curvefit',
-    version='0.0.0',
+    version='1.0.0',
     description='Curve Fitting Tool',
     url='https://github.com/ihmeuw-msca/CurveFit',
     license='MIT',
