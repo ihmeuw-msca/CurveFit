@@ -20,7 +20,7 @@ sdist: setup.py
 	python setup.py sdist
 
 tests:
-	pytest tests test_ad
+	pytest tests
 
 examples:
 	python example/get_started.py
