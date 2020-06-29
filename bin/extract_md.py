@@ -6,23 +6,47 @@ extract_dir = 'extract_md'
 file_list = [
     'example/get_started.py',
     'example/covariate.py',
-    'example/random_effect.py',
     'example/sizes_to_indices.py',
     'example/loss.py',
     'example/param_time_fun.py',
     'example/unzip_x.py',
     'example/effects2params.py',
     'example/objective_fun.py',
+    'example/prior_initializer.py',
+    'example/random_effects.py',
+    'example/model_runner.py',
+
+    'bin/extract_md.py',
+    'bin/get_cppad_py.py',
 
     'src/curvefit/core/utils.py',
     'src/curvefit/core/functions.py',
     'src/curvefit/core/effects2params.py',
     'src/curvefit/core/objective_fun.py',
-    'bin/extract_md.py',
-    'bin/get_cppad_py.py',
+    'src/curvefit/core/data.py',
+    'src/curvefit/core/parameter.py',
+    'src/curvefit/core/prototype.py',
+
+    'src/curvefit/utils/smoothing.py',
+    'src/curvefit/utils/data.py',
+
+    'src/curvefit/models/base.py',
+    'src/curvefit/models/core_model.py',
+    'src/curvefit/models/gaussian_mixtures.py',
+
+    'src/curvefit/solvers/solvers.py',
+
+    'src/curvefit/uncertainty/residual_model.py',
+    'src/curvefit/uncertainty/residuals.py',
+    'src/curvefit/uncertainty/predictive_validity.py',
+    'src/curvefit/uncertainty/draws.py',
+
+    'src/curvefit/initializer/initializer.py',
+    'src/curvefit/initializer/initializer_component.py',
 ]
 # list of extra words that the spell checker will consider correct
 extra_special_words = [
+    'bool',
     'covariates',
     'covariate',
     'cppad',
@@ -30,9 +54,15 @@ extra_special_words = [
     'curvemodel',
     'dict',
     'dtype',
+    'gprior'
+    'init',
+    'inits',
     'initialized',
     'initialize',
     'numpy',
+    'ndarray',
+    'param',
+    'params',
     'py',
     'sandbox',
     'scipy',

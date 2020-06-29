@@ -1,35 +1,40 @@
 import numpy as np
 import pandas as pd
-from xspline import XSpline
 from copy import deepcopy
 from collections import OrderedDict
 from curvefit.core.functions import *
+from curvefit.utils.data import data_translator
 
 
 def sizes_to_indices(sizes):
-    """{begin_markdown sizes_to_indices}
-    {spell_markdown subvector subvectors iterable}
-    # Converting sizes to corresponding indices.
+    """
+    {begin_markdown sizes_to_indices}
+    {spell_markdown subvector subvectors iterable utils}
+    # `curvefit.core.utils.sizes_to_indices`
+    ## Converting sizes to corresponding indices.
 
     ## Syntax
     `indices = curvefit.sizes_to_indices(sizes)`
 
-    ## sizes
-    The argument *sizes* is an iterable object with integer values.
-    The i-th value in `sizes[i]` is the number of elements in the i-th
-    subvector of a larger total vector that contains the subvectors in order.
+    ## Arguments
 
-    ## indices
-    The return value *indices* is a `list` of one dimensional numpy arrays.
-    The value `indices[i]` has length equal to the i-th size.
-    It starts (ends) with the index in the total vector
-    of the first (last) element of the i-th subvector.  The elements of
-    `indices[i]` are monotone and increase by one between elements.
+    - `sizes (iterable)`: The argument *sizes* is an iterable object with integer values.
+        The i-th value in `sizes[i]` is the number of elements in the i-th
+        subvector of a larger total vector that contains the subvectors in order.
+
+    ## Returns
+
+    - `indices`: The return value *indices* is a `list` of one dimensional numpy arrays.
+        The value `indices[i]` has length equal to the i-th size.
+        It starts (ends) with the index in the total vector
+        of the first (last) element of the i-th subvector.  The elements of
+        `indices[i]` are monotone and increase by one between elements.
 
     ## Example
     [sizes_to_indices_xam](sizes_to_indices_xam.md)
 
-    {end_markdown sizes_to_indices}"""
+    {end_markdown sizes_to_indices}
+    """
     indices = []
     a = 0
     b = 0
@@ -57,7 +62,6 @@ def get_obs_se(df, col_t, func=lambda x: 1 / (1 + x)):
     return data
 
 
-# TODO: replace with the data translator?
 def get_derivative_of_column_in_ln_space(df, col_obs, col_t, col_grp):
     """
     Adds a new column for the derivative of col_obs.
@@ -97,345 +101,9 @@ def get_derivative_of_column_in_ln_space(df, col_obs, col_t, col_grp):
     return df_result
 
 
-def local_smoother(df,
-                   col_val,
-                   col_axis,
-                   radius=None):
-    """Compute the neighbor mean and std of the residual matrix.
-
-    Args:
-        df (pd.DataFrame): Residual data frame.
-        col_val ('str'): Name for column that store the residual.
-        col_axis (list{str}): List of two axis column names.
-        radius (list{int} | None, optional):
-            List of the neighbor radius for each dimension.
-
-    Returns:
-        pd.DataFrame:
-            Return the data frame with two extra columns contains neighbor
-            mean and std.
-    """
-    radius = [0, 0] if radius is None else radius
-    assert col_val in df
-    assert len(col_axis) == 2
-    assert len(radius) == 2
-    assert all([col in df for col in col_axis])
-    assert all([r >= 0 for r in radius])
-
-    col_mean = '_'.join([col_val, 'mean'])
-    col_std = '_'.join([col_val, 'std'])
-
-    # group by the axis
-    df = df.groupby(col_axis, as_index=False).agg({
-        col_val: [np.sum, lambda x: np.sum(x**2), 'count']
-    })
-
-    col_sum = '_'.join([col_val, 'sum'])
-    col_sum2 = '_'.join([col_val, 'sum2'])
-    col_count = '_'.join([col_val, 'count'])
-
-    df.columns = df.columns.droplevel(1)
-    df.columns = list(df.columns[:-3]) + [col_sum, col_sum2, col_count]
-
-    sum_mat, indices, axis = df_to_mat(df, col_val=col_sum, col_axis=col_axis,
-                                       return_indices=True)
-    sum2_mat = df_to_mat(df, col_val=col_sum2, col_axis=col_axis)
-    count_mat = df_to_mat(df, col_val=col_count, col_axis=col_axis)
-
-    sum_vec = convolve_sum(sum_mat, radius)[indices[:, 0], indices[:, 1]]
-    sum2_vec = convolve_sum(sum2_mat, radius)[indices[:, 0], indices[:, 1]]
-    count_vec = convolve_sum(count_mat, radius)[indices[:, 0], indices[:, 1]]
-
-    df[col_mean] = sum_vec/count_vec
-    df[col_std] = np.sqrt(sum2_vec/count_vec - df[col_mean]**2)
-    df.drop(columns=[col_sum, col_sum2, col_count], inplace=True)
-
-    return df
-
-
-def neighbor_mean_std(df,
-                      col_val,
-                      col_group,
-                      col_axis,
-                      radius=None):
-    """Compute the neighbor mean and std of the residual matrix.
-
-    Args:
-        df (pd.DataFrame): Residual data frame.
-        col_val ('str'): Name for column that store the residual.
-        col_group ('str'): Name for column that store the group label.
-        col_axis (list{str}): List of two axis column names.
-        radius (list{int} | None, optional):
-            List of the neighbor radius for each dimension.
-
-    Returns:
-        pd.DataFrame:
-            Return the data frame with two extra columns contains neighbor
-            mean and std.
-    """
-    assert col_group in df
-    groups = df[col_group].unique()
-
-    df_list = []
-    for i, group in enumerate(groups):
-        df_sub = df[df[col_group] == group].reset_index(drop=True)
-        df_result = local_smoother(df_sub, col_val, col_axis,
-                                   radius=radius)
-        df_result[col_group] = group
-        df_list.append(df_result)
-
-    return pd.concat(df_list)
-
-
-# TODO: replace by the data translator?
 def cumulative_derivative(array):
     arr = array.copy()
     return arr - np.insert(arr[:, :-1], 0, 0.0, axis=1)
-
-
-# TODO: change to use the data translator
-def convex_combination(t, pred1, pred2, pred_fun,
-                       start_day=2, end_day=20):
-    """Combine the prediction.
-
-    Args:
-        t (np.ndarray): Time axis for the prediction.
-        pred1 (np.ndarray): First set of the prediction.
-        pred2 (np.ndarray): Second set of the prediction.
-        pred_fun (function): Function that used to generate the prediction.
-        start_day (int, optional):
-            Which day start to blend, before follow `pred2`.
-        end_day (int, optional):
-            Which day end to blend, after follow `pred1`.
-    """
-    pred_ndim = pred1.ndim
-    if pred1.ndim == 1:
-        pred1 = pred1[None, :]
-    if pred2.ndim == 1:
-        pred2 = pred2[None, :]
-
-    num_time_points = t.size
-    assert pred1.shape == pred2.shape
-    assert pred1.shape[1] == num_time_points
-    assert callable(pred_fun)
-    assert start_day < end_day
-
-    a = 1.0 / (end_day - start_day)
-    b = -start_day * a
-    lam = np.maximum(0.0, np.minimum(1.0, a * t + b))
-
-    if pred_fun.__name__ == 'ln_gaussian_cdf':
-        pred1 = np.exp(pred1)
-        pred2 = np.exp(pred2)
-        pred1_tmp = cumulative_derivative(pred1)
-        pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
-        pred = np.log(np.cumsum(pred_tmp, axis=1))
-    elif pred_fun.__name__ == 'gaussian_cdf':
-        pred1_tmp = cumulative_derivative(pred1)
-        pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
-        pred = np.cumsum(pred_tmp, axis=1)
-    elif pred_fun.__name__ == 'ln_gaussian_pdf':
-        pred1_tmp = np.exp(pred1)
-        pred2_tmp = np.exp(pred2)
-        pred_tmp = lam * pred1_tmp + (1.0 - lam) * pred2_tmp
-        pred = np.log(pred_tmp)
-    elif pred_fun.__name__ == 'gaussian_pdf':
-        pred = lam * pred1 + (1.0 - lam) * pred2
-    else:
-        pred = None
-        RuntimeError('Unknown prediction functional form')
-
-    if pred_ndim == 1:
-        pred = pred.ravel()
-
-    return pred
-
-
-# TODO: use data_translator
-def model_average(pred1, pred2, w1, w2, pred_fun):
-    """
-    Average two models together in linear space.
-
-    Args:
-        pred1: (np.array) first set of predictions
-        pred2: (np.array) second set of predictions
-        w1: (float) weight for first predictions
-        w2: (float) weight for second predictions
-        pred_fun (function): Function that used to generate the prediction.
-    """
-    assert callable(pred_fun)
-    assert w1 + w2 == 1
-
-    if pred_fun.__name__ == 'ln_gaussian_cdf':
-        pred1 = np.exp(pred1)
-        pred2 = np.exp(pred2)
-        pred1_tmp = cumulative_derivative(pred1)
-        pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
-        pred = np.log(np.cumsum(pred_tmp, axis=1))
-    elif pred_fun.__name__ == 'gaussian_cdf':
-        pred1_tmp = cumulative_derivative(pred1)
-        pred2_tmp = cumulative_derivative(pred2)
-        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
-        pred = np.cumsum(pred_tmp, axis=1)
-    elif pred_fun.__name__ == 'ln_gaussian_pdf':
-        pred1_tmp = np.exp(pred1)
-        pred2_tmp = np.exp(pred2)
-        pred_tmp = w1 * pred1_tmp + w2 * pred2_tmp
-        pred = np.log(pred_tmp)
-    elif pred_fun.__name__ == 'gaussian_pdf':
-        pred = w1 * pred1 + w2 * pred2
-    else:
-        pred = None
-        RuntimeError('Unknown prediction functional form')
-
-    return pred
-
-
-# TODO: move the test from pv to here and test it not use the old code.
-def condense_residual_matrix(matrix, sequential_diffs, data_density):
-    """
-    Condense the residuals from a residual matrix to three columns
-    that represent how far out the prediction was, the number of data points,
-    and the observed residual.
-
-    Args:
-        matrix: (np.ndarray)
-        sequential_diffs:
-        data_density:
-
-    Returns:
-        numpy.ndarray:
-            Combined matrix.
-    """
-    row_idx, col_idx = np.triu_indices(matrix.shape[0], 1)
-    map1 = np.cumsum(np.insert(sequential_diffs, 0, 0))
-    map2 = data_density
-
-    far_out = map1[col_idx] - map1[row_idx]
-    num_data = map2[row_idx]
-    robs = matrix[row_idx, col_idx]
-
-    # return the results for the residual matrix as a (len(available_times), 3) shaped matrix
-    r_matrix = np.vstack([far_out, num_data, robs]).T
-    return r_matrix
-
-
-def data_translator(data, input_space, output_space,
-                    threshold=1e-16):
-    """Data translator, move data from one space to the other.
-
-    Args:
-        data (np.ndarray): data matrix or vector
-        input_space (str | callable): input data space.
-        output_space (str | callable): output data space.
-        threshold (float, optional):
-            Thresholding for the number below 0 in the linear space.
-
-    Returns:
-        np.ndarray:
-            translated data.
-    """
-    if callable(input_space):
-        input_space = input_space.__name__
-    if callable(output_space):
-        output_space = output_space.__name__
-
-    total_space = ['gaussian_cdf', 'gaussian_pdf', 'ln_gaussian_cdf', 'ln_gaussian_pdf']
-
-    assert input_space in total_space
-    assert output_space in total_space
-    assert isinstance(data, np.ndarray)
-    assert threshold > 0.0
-
-    data_ndim = data.ndim
-    if data_ndim == 1:
-        data = data[None, :]
-
-    # thresholding the data in the linear space
-    if input_space in ['gaussian_cdf', 'gaussian_pdf']:
-        data = np.maximum(threshold, data)
-
-    if input_space == output_space:
-        output_data = data.copy()
-    elif output_space == 'ln_' + input_space:
-        output_data = np.log(data)
-    elif input_space == 'ln_' + output_space:
-        output_data = np.exp(data)
-    elif 'gaussian_pdf' in input_space:
-        if 'ln' in input_space:
-            data = np.exp(data)
-        output_data = np.cumsum(data, axis=1)
-        if 'ln' in output_space:
-            output_data = np.log(output_data)
-    else:
-        if 'ln' in input_space:
-            data = np.exp(data)
-        output_data = data - np.insert(data[:, :-1], 0, 0.0, axis=1)
-        if 'ln' in output_space:
-            output_data = np.log(output_data)
-
-    # reverting the shape back if necessary
-    if data_ndim == 1:
-        output_data = output_data.ravel()
-
-    return output_data
-
-
-def get_initial_params(model, groups, fit_arg_dict):
-    """
-    Runs a separate model for each group fixing the random effects to 0
-    and calculates what the initial values should be for the optimization
-    of the whole model.
-
-    Args:
-        model: (curvefit.CurveModel)
-        groups: (list) list of groups to get smart starting params for
-        fit_arg_dict: keyword arguments in dict that are passed to the
-            fit_params function
-
-    Returns:
-        (np.array) fe_init: fixed effects initial value
-        (np.array) re_init: random effects initial value
-    """
-    fixed_effects = OrderedDict()
-    fit_kwargs = deepcopy(fit_arg_dict)
-
-    # Fit a model for each group with fit_kwargs carried over
-    # from the settings for the overall model with a couple of adjustments.
-    for g in groups:
-        fixed_effects[g] = model.run_one_group_model(group=g, **fit_kwargs)
-    return fixed_effects
-
-
-def compute_starting_params(fe_dict):
-    """
-    Compute the starting parameters for a dictionary of fixed effects
-    by averaging them to get fixed effects for overall model and finding
-    deviation from average as the random effect.
-    Args:
-        fe_dict: OrderedDict of fixed effects to put together that are ordered
-            in the way that you want them to go into the model
-
-    Returns:
-        (np.array) fe_init: fixed effects initial value
-        (np.array) re_init: random effects initial value
-    """
-    fe_values = []
-    for k, v in fe_dict.items():
-        fe_values.append(v)
-    all_fixed_effects = np.vstack(fe_values)
-
-    # The new fixed effects initial value is the mean of the fixed effects
-    # across all single-group models.
-    fe_init = all_fixed_effects.mean(axis=0)
-
-    # The new random effects initial value is the single-group models' deviations
-    # from the mean, which is now the new fixed effects initial value.
-    re_init = (all_fixed_effects - fe_init).ravel()
-    return fe_init, re_init
 
 
 def solve_p_from_dgaussian_pdf(alpha, beta, slopes, slope_at=14):
@@ -566,73 +234,6 @@ def truncate_draws(t, draws, draw_space, last_day, last_obs, last_obs_space):
     return final_draws
 
 
-def convolve_sum(mat, radius=None):
-    """Convolve sum a 2D matrix by given radius.
-
-    Args:
-        mat (numpy.ndarray):
-            Matrix of interest.
-        radius (arraylike{int} | None, optional):
-            Given radius, if None assume radius = (0, 0).
-
-    Returns:
-        numpy.ndarray:
-            The convolved sum, with the same shape with original matrix.
-    """
-    mat = np.array(mat).astype(float)
-    assert mat.ndim == 2
-    if radius is None:
-        return mat
-    assert hasattr(radius, '__iter__')
-    radius = np.array(radius).astype(int)
-    assert radius.size == 2
-    assert all([r >= 0 for r in radius])
-    # import pdb; pdb.set_trace()
-    shape = np.array(mat.shape)
-    window_shape = tuple(radius*2 + 1)
-
-    mat = np.pad(mat, ((radius[0],),
-                       (radius[1],)), 'constant', constant_values=np.nan)
-    view_shape = tuple(np.subtract(mat.shape, window_shape) + 1) + window_shape
-    strides = mat.strides*2
-    sub_mat = np.lib.stride_tricks.as_strided(mat, view_shape, strides)
-    sub_mat = sub_mat.reshape(*shape, np.prod(window_shape))
-
-    return np.nansum(sub_mat, axis=2)
-
-
-def df_to_mat(df, col_val, col_axis, return_indices=False):
-    """Convert columns in data frame to matrix.
-
-    Args:
-        df (pandas.DataFrame): Given data frame.
-        col_val (str): Value column.
-        col_axis (list{str}): Axis column.
-        return_indices (bool, optional):
-            If True, return indices of the original values and the corresponding
-            axis values in the data frame.
-
-    Returns:
-        numpy.ndarray: Converted matrix.
-    """
-    assert col_val in df
-    assert all([c in df for c in col_axis])
-
-    vals = df[col_val].values
-    axis = df[col_axis].values.astype(int)
-    indices = (axis - axis.min(axis=0)).astype(int)
-    shape = tuple(indices.max(axis=0).astype(int) + 1)
-
-    mat = np.empty(shape)
-    mat.fill(np.nan)
-    mat[indices[:, 0], indices[:, 1]] = vals
-
-    if return_indices:
-        return mat, indices, axis
-    else:
-        return mat
-
-
 def smooth_draws(mat, radius=0, sort=False):
     """Smooth the draw matrix in the column direction.
 
@@ -709,8 +310,7 @@ def smooth_mat(mat, radius=None):
 
 
 def split_by_group(df, col_group):
-    """{begin_markdown split_by_group}
-    {spell_markdown dataframe}
+    """
     # Split the dataframe by the group definition.
 
     ## Syntax
@@ -727,8 +327,7 @@ def split_by_group(df, col_group):
     corresponding dataframe.
 
     ## Example
-
-    {end_markdown split_by_group}"""
+    """
     assert col_group in df
     data = {
         group: df[df[col_group] == group].reset_index(drop=True)

@@ -33,10 +33,15 @@ started, you can either do
 ```
 git clone https://github.com/ihmeuw-msca/CurveFit.git
 cd CurveFit
-pip install .
+make install
 ```
 
-or use `make install`.
+### A Note on `cppad_py`
+
+One of the dependencies for this package is cppad_py, a python interface for algorithmic differentiation.
+If you experience issues installing or importing `cppad_py` after doing `make install`, 
+please see [this page](https://github.com/bradbell/cppad_py) to clone and debug the build for `cppad_py`
+with `setup.py`.
 
 ## Maintainers
 

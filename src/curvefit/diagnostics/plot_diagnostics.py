@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import numpy as np
-from curvefit.core.utils import data_translator
+from curvefit.utils.data import data_translator
 
 
 def plot_fits(generator, prediction_times, sharex, sharey, draw_space, plot_obs=None, plot_uncertainty=False):

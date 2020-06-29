@@ -13,23 +13,26 @@ ifdef prefix
 else
 	python3 setup.py install
 endif
+	conda install swig
+	pip install -i https://test.pypi.org/simple/ cppad_py --verbose
 
 sdist: setup.py
 	python3 setup.py sdist
 
 tests:
-	pytest tests cppad_py
+	pytest tests
 
 examples:
-	example/get_started.py
-	example/covariate.py
-	example/random_effect.py
-	example/sizes_to_indices.py
-	example/param_time_fun.py
-	example/unzip_x.py
-	example/effects2params.py
-	example/objective_fun.py
-	# example/loss.py
+	python example/get_started.py
+	python example/model_runner.py
+	python example/covariate.py
+	python example/random_effects.py
+	python example/sizes_to_indices.py
+	python example/param_time_fun.py
+	python example/unzip_x.py
+	python example/effects2params.py
+	python example/objective_fun.py
+	python example/prior_initializer.py
 
 # Use mkdocs gh-deploy to make changes to the gh-pages branch.
 # This is for running extract_md.py and checking the differences before

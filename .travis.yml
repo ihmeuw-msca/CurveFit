@@ -4,8 +4,13 @@ python:
 install:
   - sudo apt-get install swig
   - python setup.py install
+  - pip install mkdocs mkdocs-material mkautodoc
+  - pip install pymdown-extensions python-markdown-math
+  - pip install pyspellchecker
   - pip install -i https://test.pypi.org/simple/ cppad_py
   - pip install -U numpy
 script:
   - pytest tests
+  - bin/extract_md.py
   - make examples
+  - mkdocs build
