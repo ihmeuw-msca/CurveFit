@@ -7,6 +7,7 @@ file_list = [
     'example/get_started.py',
     'example/covariate.py',
     'example/sizes_to_indices.py',
+    'example/loss.py',
     'example/param_time_fun.py',
     'example/unzip_x.py',
     'example/effects2params.py',
@@ -48,6 +49,7 @@ extra_special_words = [
     'bool',
     'covariates',
     'covariate',
+    'cppad',
     'curvefit',
     'curvemodel',
     'dict',
@@ -80,6 +82,7 @@ extra_special_words = [
     r'\mbox',
     r'\partial',
     r'\right',
+    r'\sqrt',
     r'\sum',
 ]
 # ----------------------------------------------------------------------------
@@ -134,6 +137,20 @@ For each *section_name* in the documentation there must be a line in the
 where there can be any number of spaces around the dash character (-)
 and the colon character (:).
 
+## Suspend Markdown
+It is possible do suspend the markdown output during a section.
+One begins the suspension with the command
+<p style="margin-left:10%">
+{<i></i>suspend_markdown}
+</p>
+and resumes the output with the command
+<p style="margin-left:10%">
+{<i></i>resume_markdown}
+</p>
+Note that this will also suspend the markdown processing; e.g., spell checking.
+Each suspend markdown must have a corresponding resume markdown in same
+section (between the corresponding begin markdown and end markdown commands).
+
 ## End Section
 The end of a markdown section of the input file is indicated by the following
 text:
@@ -146,7 +163,7 @@ Here *section_name* must be the same as in the start of this markdown section.
 Special words can be added to the correct spelling list for a particular
 section as follows:
 <p style="margin-left:10%">
-{spell_markdown
+{<i></i>spell_markdown
     <i>special_1 ...  special_n</i>
 }
 </p>
@@ -167,12 +184,17 @@ Any latex commands in the
 [extra_special_words](#extra_special_words)
 are also automatically included.
 
+
 ## Code Blocks
 A code block within a markdown section begins and ends with three back quotes.
-Thus there must be an even number of occurrences of three back quotes.
-The first three back quotes must have a language name directly after it.
-The language name must be a sequence of letters; e.g., `python`.
-The other characters on the same line as the three back quotes
+
+1. Thus there must be an even number of occurrences of three back quotes.
+
+2. The first three back quotes, for each code block, must have a language name
+directly after it.  The language name must be a sequence of letters; e.g.,
+`python`.
+
+3. The other characters on the same line as the three back quotes
 are not included in the markdown output. This enables one to begin or end
 a comment block without having those characters in the markdown output.
 
@@ -181,6 +203,31 @@ If all of the extracted markdown documentation for a section is indented
 by the same number of space characters, those space characters
 are not included in the markdown output. This enables one to indent the
 markdown so it is grouped with the proper code block in the source.
+
+## Wish List
+The following is a wish list for future improvements to `extract_md.py`:
+
+### Testing
+Include an optional command line argument that indicates test mode
+and runs the extractor through some test files and makes sure the result
+is correct.
+
+### Error Messaging
+Improve the error messaging so that it include the line number of the
+input file that the error occurred on.
+
+### Source File
+Include the path to the source code file that the documentation was
+extracted from (probably at the end of the section).
+
+### Double Word Errors
+Detect double word errors and allow for exceptions by specifying them in a
+`double_word_markdown` command.
+
+### Moving Code Blocks
+Have a way to include code blocks that are not directly below and in the same
+file; e.g., one my automatically transfer the prototype for a function,
+in the same file or a different file, to the documentation for a section.
 
 {end_markdown extract_md.py}'''
 # ----------------------------------------------------------------------------
@@ -228,8 +275,12 @@ spell_checker.word_frequency.load_words(extra_special_words)
 # ---------------------------------------------------------------------------
 #
 # add program name to system error call
-def sys_exit(msg) :
-    sys.exit( 'bin/extract_md.py: ' + msg )
+def sys_exit(msg, file_in=None, section_name=None) :
+    if file_in != None :
+        msg += '\nfile = ' + file_in
+        if section_name != None :
+            msg += ', section = ' + section_name
+    sys.exit( 'bin/extract_md.py:\n' + msg )
 #
 # check working directory
 if not os.path.isdir('.git') :
@@ -251,9 +302,11 @@ section_list       = list()
 corresponding_file = list()
 #
 # pattern for start of markdown section
-pattern_begin_markdown = re.compile( r'{begin_markdown \s*([A-Za-z0-9_.]*)}' )
-pattern_end_markdown   = re.compile( r'{end_markdown \s*([A-Za-z0-9_.]*)}' )
-pattern_spell_markdown = re.compile( r'{spell_markdown([^}]*)}' )
+pattern_suspend_markdown = re.compile( r'\{suspend_markdown\}' )
+pattern_resume_markdown  = re.compile( r'\{resume_markdown\}' )
+pattern_begin_markdown = re.compile( r'\{begin_markdown \s*([A-Za-z0-9_.]*)\}' )
+pattern_end_markdown   = re.compile( r'\{end_markdown \s*([A-Za-z0-9_.]*)\}' )
+pattern_spell_markdown = re.compile( r'\{spell_markdown([^}]*)\}' )
 pattern_begin_3quote   = re.compile( r'[^\n]*(```([a-zA-Z]*))[^\n]*' )
 pattern_end_3quote     = re.compile( r'[^\n]*(```)[^\n]*' )
 pattern_newline        = re.compile( r'\n')
@@ -281,16 +334,14 @@ for file_in in file_list :
                 # Use @ so does not match pattern_begin_markdown in this file.
                 msg  = 'can not find: @begin_markdown section_name}\n'
                 msg  = msg.replace('@', '{')
-                msg += 'in ' + file_in + '\n'
-                sys_exit(msg)
+                sys_exit(msg, file_in)
             file_index = len(file_data)
         else :
             # section_name
             section_name = match_begin_markdown.group(1)
             if section_name == '' :
-                msg  = 'section_name after begin_markdown is empty; see file\n'
-                msg += file_in
-                sys_exit(msg)
+                msg  = 'section_name after begin_markdown is empty'
+                sys_exit(msg, file_in)
             #
             if section_name in section_list :
                 # this section appears multiple times
@@ -310,9 +361,8 @@ for file_in in file_list :
             match_end_markdown = pattern_end_markdown.search(data_rest)
             #
             if match_end_markdown == None :
-                msg  = 'can not find: "{end_markdown section_name}\n'
-                msg += 'in ' + file_in + ', section ' + section_name + '\n'
-                sys_exit(msg)
+                msg  = 'can not find: "{end_markdown section_name}'
+                sys_exit(msg, file_in, section_name)
             if match_end_markdown.group(1) != section_name :
                 msg = 'in file ' + file_in + '\nsection names do not match\n'
                 msg += 'begin_markdown section name = '+section_name + '\n'
@@ -324,35 +374,61 @@ for file_in in file_list :
             output_start = file_index
             output_end   = file_index + match_end_markdown.start()
             output_data  = file_data[ output_start : output_end ]
-            #
+            # ----------------------------------------------------------------
+            # process suspend markdown commands
+            match_suspend = pattern_suspend_markdown.search(output_data)
+            while match_suspend != None :
+                suspend_start = match_suspend.start()
+                suspend_end   = match_suspend.end()
+                output_rest   = output_data[ suspend_end : ]
+                match_resume  = pattern_resume_markdown.search(output_rest)
+                match_suspend = pattern_suspend_markdown.search(output_rest)
+                if match_resume == None :
+                    msg  = 'there is a {suspend_markdown} without a '
+                    msg += 'corresponding {resume_markdown}'
+                    sys_exit(msg, file_in, section_name)
+                if match_suspend != None :
+                    if match_suspend.start() < match_resume.start() :
+                        pdb.set_trace()
+                        msg  = 'there are two {suspend_markdown} without a '
+                        msg += '{resume_markdown} between them'
+                        sys_exit(msg, file_in, section_name)
+                resume_end  = match_resume.end() + suspend_end
+                output_rest = output_data[ resume_end :]
+                output_data = output_data[: suspend_start] + output_rest
+                # redo match_suppend so relative to new output_data
+                match_suspend = pattern_suspend_markdown.search(output_data)
+            # ----------------------------------------------------------------
             # process spell command
             match_spell = pattern_spell_markdown.search(output_data)
             spell_list  = list()
             if match_spell != None :
+                output_rest   = output_data[ match_spell.end() : ]
+                match_another = pattern_spell_markdown.search(output_rest)
+                if match_another :
+                    msg  = 'there are two spell markdonw commands'
+                    sys_exit(msg, file_in, section_name)
                 for itr in pattern_word.finditer( match_spell.group(1) ) :
                     spell_list.append( itr.group(0).lower() )
                 start       = match_spell.start()
                 end         = match_spell.end()
                 output_data = output_data[: start] + output_data[end :]
-            #
+            # ----------------------------------------------------------------
             # remove characters on same line as triple back quote
             output_index  = 0
             match_begin_3quote = pattern_begin_3quote.search(output_data)
             while match_begin_3quote != None :
                 if match_begin_3quote.group(2) == '' :
                     msg  = 'language missing directly after first'
-                    msg += ' ``` for a code block\n'
-                    msg += 'in ' + file_in
-                    msg += ', section ' + section_name + '\n'
-                    sys_exit(msg)
+                    msg += ' ``` for a code block'
+                    sys_exit(msg, file_in, section_name)
                 begin_start = match_begin_3quote.start() + output_index
                 begin_end   = match_begin_3quote.end()   + output_index
                 output_rest = output_data[ begin_end : ]
                 match_end_3quote   = pattern_end_3quote.search( output_rest )
                 if match_end_3quote == None :
-                    msg  = 'number of triple backquotes is not even in '
-                    msg += file_in + ', section ' + section_name + '\n'
-                    sys_exit(msg)
+                    msg  = 'number of triple backquotes is not even'
+                    sys_exit(msg, file_in, section_name)
                 end_start = match_end_3quote.start() + begin_end
                 end_end   = match_end_3quote.end()   + begin_end
                 #
@@ -365,7 +441,7 @@ for file_in in file_list :
                 output_data  = data_left + data_right
                 output_index = len(data_left)
                 match_begin_3quote  = pattern_begin_3quote.search(data_right)
-            #
+            # ---------------------------------------------------------------
             # num_remove (for indented documentation)
             len_output   = len(output_data)
             num_remove   = len(output_data)
@@ -381,14 +457,12 @@ for file_in in file_list :
                         next_ += 1
                         ch = output_data[next_]
                     if ch == '\t' :
-                        msg  = 'tab in white space at begining of a line\n'
-                        msg += 'in ' + file_in
-                        msg +=+ ', section ' + section_name + '\n'
-                        sys_exit(msg)
+                        msg  = 'tab in white space at begining of a line'
+                        sys_exit(msg, file_in, section_name)
                     tripple_back_quote = output_data[next_:].startswith('```')
                     if ch != '\n' and ch != ' ' and not tripple_back_quote :
                         num_remove = min(num_remove, next_ - start - 1)
-            #
+            # ---------------------------------------------------------------
             # write file for this section
             file_out          = output_dir + '/' + section_name + '.md'
             file_ptr          = open(file_out, 'w')

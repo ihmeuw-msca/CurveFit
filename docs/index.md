@@ -48,5 +48,7 @@ with `setup.py`.
 - [Aleksandr Aravkin](https://uw-amo.github.io/saravkin/) ([saravkin@uw.edu](mailto:saravkin@uw.edu))
 - [Peng Zheng](https://zhengp0.github.io/PengSite/) ([zhengp@uw.edu](mailto:zhengp@uw.edu))
 - [Marlena Bannick](http://www.healthdata.org/about/marlena-norwood) ([mbannick@uw.edu](mailto:mbannick@uw.edu))
-
+- Jize Zhang ([jizez@uw.edu](mailto:jizez@uw.edu))
+- Alexey Sholokov ([aksh@uw.edu](mailto:aksh@uw.edu))
+- [Bradley Bell](https://www.seanet.com/~bradbell/home.htm) ([bradbell@seanet.com](mailto:bradbell@seanet.com))
 

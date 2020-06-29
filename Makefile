@@ -4,20 +4,20 @@
 phony:
 
 build: setup.py
-	python setup.py build
+	python3 setup.py build
 
 # make install with optional prefix=directory on command line
 install: setup.py
 ifdef prefix
-	python setup.py install --prefix=$(prefix)
+	python3 setup.py install --prefix=$(prefix)
 else
-	python setup.py install
+	python3 setup.py install
 endif
 	conda install swig
 	pip install -i https://test.pypi.org/simple/ cppad_py --verbose
 
 sdist: setup.py
-	python setup.py sdist
+	python3 setup.py sdist
 
 tests:
 	pytest tests
