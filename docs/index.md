@@ -2,8 +2,9 @@
 
 ## Background
 
-`CurveFit` is a Python package for fitting curves using nonlinear mixed effects. It can be used to do only that if desired.
-However, due to its current usage for the [IHME COVID-19 project](https://covid19.healthdata.org/united-states-of-america),
+`CurveFit` is a primarily a Python package for fitting curves using nonlinear mixed effects.
+It can be used to do only that if desired. However, due to its **former** usage for the
+ [IHME COVID-19 project](https://covid19.healthdata.org/united-states-of-america),
  it has modules specifically for evaluating model performance out beyond the range of time observed in the data.
  Likewise, it has modules for creating uncertainty intervals based on out of sample performance.
 
@@ -11,19 +12,19 @@ In our [methods documentation](methods.md) we discuss the statistical methods fo
 In our [code documentation](code.md), we explain the core model code and also the extensions that allow for 
 evaluating model performance and generating uncertainty intervals.
 
-*NOTE: This documentation is currently under construction and being updated regularly.*
-
 ## IHME COVID-19 Project
+
+**This repository and method is no longer being used for the IHME COVID-19 project. IHME uses
+a SEIIR based approach, and the code can be found here:
+
+- [Core Code](https://github.com/ihmeuw/covid-model-seiir)
+- [Pipeline](https://github.com/ihmeuw/covid-model-seiir-pipeline)
 
 **For any IHME COVID-19 related inquiries, please contact
  [covid19@healthdata.org](mailto:covid19@healthdata.org)**.
  
 To see the IHME projections visualization, click [here](https://covid19.healthdata.org/united-states-of-america).
-To read the paper, click [here](https://www.medrxiv.org/content/10.1101/2020.03.27.20043752v1). For 
-FAQs, click [here](http://www.healthdata.org/covid/faqs).
-
-Please note that this code base makes up only one part of the IHME COVID-19 projection process, in particular the
- COVID-19 deaths forecasting.
+For FAQs, click [here](http://www.healthdata.org/covid/faqs).
 
 ## Getting Started
 
