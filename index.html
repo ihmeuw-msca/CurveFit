@@ -1980,22 +1980,25 @@
                 
                 <h1 id="welcome-to-curve-fit">Welcome to Curve Fit!</h1>
 <h2 id="background">Background</h2>
-<p><code>CurveFit</code> is a Python package for fitting curves using nonlinear mixed effects. It can be used to do only that if desired.
-However, due to its current usage for the <a href="https://covid19.healthdata.org/united-states-of-america">IHME COVID-19 project</a>,
+<p><code>CurveFit</code> is a primarily a Python package for fitting curves using nonlinear mixed effects.
+It can be used to do only that if desired. However, due to its <strong>former</strong> usage for the
+ <a href="https://covid19.healthdata.org/united-states-of-america">IHME COVID-19 project</a>,
  it has modules specifically for evaluating model performance out beyond the range of time observed in the data.
  Likewise, it has modules for creating uncertainty intervals based on out of sample performance.</p>
 <p>In our <a href="methods/">methods documentation</a> we discuss the statistical methods for <code>CurveFit</code>.
 In our <a href="code/">code documentation</a>, we explain the core model code and also the extensions that allow for 
 evaluating model performance and generating uncertainty intervals.</p>
-<p><em>NOTE: This documentation is currently under construction and being updated regularly.</em></p>
 <h2 id="ihme-covid-19-project">IHME COVID-19 Project</h2>
+<p>**This repository and method is no longer being used for the IHME COVID-19 project. IHME uses
+a SEIIR based approach, and the code can be found here:</p>
+<ul>
+<li><a href="https://github.com/ihmeuw/covid-model-seiir">Core Code</a></li>
+<li><a href="https://github.com/ihmeuw/covid-model-seiir-pipeline">Pipeline</a></li>
+</ul>
 <p><strong>For any IHME COVID-19 related inquiries, please contact
  <a href="mailto:covid19@healthdata.org">covid19@healthdata.org</a></strong>.</p>
 <p>To see the IHME projections visualization, click <a href="https://covid19.healthdata.org/united-states-of-america">here</a>.
-To read the paper, click <a href="https://www.medrxiv.org/content/10.1101/2020.03.27.20043752v1">here</a>. For 
-FAQs, click <a href="http://www.healthdata.org/covid/faqs">here</a>.</p>
-<p>Please note that this code base makes up only one part of the IHME COVID-19 projection process, in particular the
- COVID-19 deaths forecasting.</p>
+For FAQs, click <a href="http://www.healthdata.org/covid/faqs">here</a>.</p>
 <h2 id="getting-started">Getting Started</h2>
 <p>To clone the repository and get
 started, you can either do</p>
