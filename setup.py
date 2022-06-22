@@ -10,7 +10,7 @@ setup(
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     install_requires=[
-        'numpy==1.18.4',
+        'numpy==1.22.0',
         'scipy',
         'pandas',
         'pytest',
