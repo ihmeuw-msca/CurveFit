@@ -18,7 +18,7 @@ Clone or download the repository and then do:
 make install
 ```
 
-If you want to install somewhere other than the defualt for your system:
+If you want to install somewhere other than the default for your system:
 ```
 make install prefix=install_prefix_directory
 ```
